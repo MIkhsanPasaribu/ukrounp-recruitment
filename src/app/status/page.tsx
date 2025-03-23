@@ -10,7 +10,6 @@ export default function StatusPage() {
     submittedAt: string;
   }>(null);
   const [isLoading, setIsLoading] = useState(false);
-  // Changed variable name from error to errorMessage
   const [errorMessage, setErrorMessage] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,14 +34,14 @@ export default function StatusPage() {
       } else {
         setErrorMessage(data.message || 'Failed to fetch application status');
       }
-    } catch (err) {
+    } catch (_) {
+      // Using underscore to indicate unused parameter
       setErrorMessage('An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Make sure to use errorMessage in your JSX
   return (
     <div className="max-w-2xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
       <div className="bg-white shadow overflow-hidden sm:rounded-lg p-6">
