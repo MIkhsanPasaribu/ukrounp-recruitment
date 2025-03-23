@@ -27,6 +27,11 @@ export default function Home() {
     setIsSubmitting(true);
     
     try {
+      // Make sure section1Data is not null before creating formData
+      if (!section1Data) {
+        throw new Error('Missing email information');
+      }
+      
       const formData: FormData = {
         ...section1Data,
         ...data
