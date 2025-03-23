@@ -10,6 +10,7 @@ interface Section2FormProps {
   onBack: () => void; // Add this new prop
 }
 
+// Fix the unused onBack parameter
 export default function Section2Form({ onSubmit, isSubmitting, onBack }: Section2FormProps) {
   const [formData, setFormData] = useState<Section2Data>({
     fullName: '',
@@ -104,6 +105,14 @@ export default function Section2Form({ onSubmit, isSubmitting, onBack }: Section
     }
   };
 
+  // Add a back button that uses the onBack prop
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    }
+  };
+
+  // In your return statement, add a back button in the form buttons section:
   return (
     <div className="bg-white shadow overflow-hidden sm:rounded-lg p-6">
       <h2 className="text-xl font-semibold mb-6">Step 2: Personal Information</h2>

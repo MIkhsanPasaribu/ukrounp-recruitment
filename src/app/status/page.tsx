@@ -9,12 +9,13 @@ export default function StatusPage() {
     status: string;
     submittedAt: string;
   }>(null);
-  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  // Remove or use the error variable
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setErrorMessage('');
     setStatus(null);
     setIsLoading(true);
     
@@ -29,20 +30,13 @@ export default function StatusPage() {
       
       const data = await response.json();
       
-      if (data.success) {
-        setStatus({
-          status: data.status,
-          submittedAt: new Date(data.submittedAt).toLocaleDateString('id-ID', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          }),
-        });
+      if (response.ok) {
+        setStatus(data.application);
       } else {
-        setError(data.message);
+        setErrorMessage(data.message || 'Failed to fetch application status');
       }
-    } catch (error) {
-      setError('An error occurred while checking your application status. Please try again.');
+    } catch (err) {
+      setErrorMessage('An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }

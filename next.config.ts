@@ -7,8 +7,7 @@ const nextConfig: NextConfig = {
   experimental: {
     // This helps with hydration issues caused by browser extensions
     optimizeCss: false,
-    // Suppress hydration warnings
-    suppressHydrationWarning: true,
+    // Remove the suppressHydrationWarning option as it's not recognized
   },
   // Suppress hydration warnings
   onDemandEntries: {
