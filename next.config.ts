@@ -2,13 +2,15 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  reactStrictMode: true,
+  reactStrictMode: false, // Change to false to reduce double-rendering in development
   // Add this option to help with hydration issues
   experimental: {
     // This helps with hydration issues caused by browser extensions
     optimizeCss: false,
+    // Suppress hydration warnings
+    suppressHydrationWarning: true,
   },
-  // Add this to suppress hydration warnings in development
+  // Suppress hydration warnings
   onDemandEntries: {
     // period (in ms) where the server will keep pages in the buffer
     maxInactiveAge: 25 * 1000,
