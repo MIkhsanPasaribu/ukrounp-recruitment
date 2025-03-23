@@ -7,9 +7,10 @@ import FileUpload from './FileUpload';
 interface Section2FormProps {
   onSubmit: (data: Section2Data) => void;
   isSubmitting: boolean;
+  onBack: () => void; // Add this new prop
 }
 
-export default function Section2Form({ onSubmit, isSubmitting }: Section2FormProps) {
+export default function Section2Form({ onSubmit, isSubmitting, onBack }: Section2FormProps) {
   const [formData, setFormData] = useState<Section2Data>({
     fullName: '',
     nickname: '',
