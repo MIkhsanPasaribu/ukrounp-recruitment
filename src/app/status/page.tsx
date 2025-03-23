@@ -34,8 +34,8 @@ export default function StatusPage() {
       } else {
         setErrorMessage(data.message || 'Failed to fetch application status');
       }
-    } catch (_) {
-      // Using underscore to indicate unused parameter
+    } catch {
+      // Removed the unused parameter completely
       setErrorMessage('An error occurred. Please try again.');
     } finally {
       setIsLoading(false);

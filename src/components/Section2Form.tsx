@@ -594,5 +594,33 @@ export default function Section2Form({ onSubmit, isSubmitting, onBack }: Section
         </div>
       </form>
     </div>
-  );
+    // At the end of your form, add a back button that uses onBack
+    return (
+      <div className="bg-white shadow overflow-hidden sm:rounded-lg p-6">
+        <h2 className="text-xl font-semibold mb-6">Step 2: Personal Information</h2>
+        
+        <form onSubmit={handleSubmit}>
+          {/* Form fields remain the same */}
+          
+          {/* At the bottom of the form, add this button section */}
+          <div className="flex justify-between mt-6">
+            <button
+              type="button"
+              onClick={() => onBack()}
+              className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Back to Step 1
+            </button>
+            
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit Application'}
+            </button>
+          </div>
+        </form>
+      </div>
+    );
 }
