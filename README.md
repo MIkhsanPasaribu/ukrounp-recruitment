@@ -31,7 +31,7 @@ A comprehensive web application for managing the recruitment process at ITitanix
 1. Clone the repository:
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/recruitment-titanix.git
+   git clone https://github.com/MIkhsanPasaribu/ititanix-recruitment.git
    cd recruitment-titanix
    ```
 
