@@ -103,7 +103,44 @@ export default function AdminPage() {
                       View Details
                     </button>
                   </td>
-                </tr>
+                  // Add this function to your AdminPage component
+                  const updateApplicationStatus = async (id: string, newStatus: string) => {
+                    try {
+                      const response = await fetch('/api/admin/update-status', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ id, status: newStatus }),
+                      });
+                      
+                      if (response.ok) {
+                        // Update the local state to reflect the change
+                        setApplications(applications.map(app => 
+                          app._id === id ? { ...app, status: newStatus } : app
+                        ));
+                      }
+                    } catch (error) {
+                      console.error('Error updating status:', error);
+                    }
+                  };
+                  
+                  // Then modify your table to include status management
+                  // Inside your table row:
+                  <td className="px-4 py-2 border">
+                    <select 
+                      value={app.status || "Under Review"} 
+                      onChange={(e) => updateApplicationStatus(app._id, e.target.value)}
+                      className="border rounded px-2 py-1"
+                    >
+                      <option value="Under Review">Under Review</option>
+                      <option value="Shortlisted">Shortlisted</option>
+                      <option value="Interview">Interview</option>
+                      <option value="Accepted">Accepted</option>
+                      <option value="Rejected">Rejected</option>
+                    </select>
+                  </td>
+                });
               ))}
             </tbody>
           </table>
@@ -112,3 +149,104 @@ export default function AdminPage() {
     </div>
   );
 }
+
+// Add this function to your AdminPage component
+const exportToCSV = () => {
+  if (applications.length === 0) return;
+  
+  // Define the headers
+  const headers = [
+    'Email', 'Full Name', 'Nickname', 'Gender', 'Birth Date',
+    'Faculty', 'Department', 'Study Program', 'Previous School',
+    'Padang Address', 'Phone Number', 'Status', 'Submitted At'
+  ];
+  
+  // Create CSV content
+  let csvContent = headers.join(',') + '\n';
+  
+  applications.forEach(app => {
+    const row = [
+      `"${app.email || ''}"`,
+      `"${app.fullName || ''}"`,
+      `"${app.nickname || ''}"`,
+      `"${app.gender || ''}"`,
+      `"${app.birthDate || ''}"`,
+      `"${app.faculty || ''}"`,
+      `"${app.department || ''}"`,
+      `"${app.studyProgram || ''}"`,
+      `"${app.previousSchool || ''}"`,
+      `"${app.padangAddress || ''}"`,
+      `"${app.phoneNumber || ''}"`,
+      `"${app.status || 'Under Review'}"`,
+      `"${app.submittedAt ? new Date(app.submittedAt).toLocaleString() : ''}"`,
+    ];
+    csvContent += row.join(',') + '\n';
+  });
+  
+  // Create a download link
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `applications_${new Date().toISOString().split('T')[0]}.csv`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+// Add this button to your admin page UI
+<div className="mb-4 flex justify-end">
+  <button
+    onClick={exportToCSV}
+    className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+    disabled={applications.length === 0}
+  >
+    Export to CSV
+  </button>
+</div>
+
+// Add these state variables
+const [searchTerm, setSearchTerm] = useState('');
+const [statusFilter, setStatusFilter] = useState('all');
+
+// Add a function to filter applications
+const filteredApplications = applications.filter(app => {
+  const matchesSearch = 
+    app.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    app.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    app.phoneNumber?.includes(searchTerm);
+    
+  const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
+  
+  return matchesSearch && matchesStatus;
+});
+
+// Add search and filter UI
+<div className="mb-4 flex flex-col sm:flex-row gap-4">
+  <div className="flex-1">
+    <input
+      type="text"
+      placeholder="Search by name, email or phone"
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+    />
+  </div>
+  <div>
+    <select
+      value={statusFilter}
+      onChange={(e) => setStatusFilter(e.target.value)}
+      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+    >
+      <option value="all">All Statuses</option>
+      <option value="Under Review">Under Review</option>
+      <option value="Shortlisted">Shortlisted</option>
+      <option value="Interview">Interview</option>
+      <option value="Accepted">Accepted</option>
+      <option value="Rejected">Rejected</option>
+    </select>
+  </div>
+</div>
+
+// Then use filteredApplications instead of applications in your table

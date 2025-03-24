@@ -4,10 +4,10 @@ import clientPromise from '@/lib/mongodb';
 export async function GET() {
   try {
     const client = await clientPromise;
-    const db = client.db();
+    const db = client.db("ititanix");
     
-    // Fetch all applications from the applications collection
-    const applications = await db.collection('applications').find({}).toArray();
+    // Change this line to match the collection name used in submit route
+    const applications = await db.collection('applicants').find({}).toArray();
     
     return NextResponse.json({ applications });
   } catch (error) {
