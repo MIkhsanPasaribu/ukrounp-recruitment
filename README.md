@@ -23,7 +23,6 @@ A comprehensive web application for managing the recruitment process at ITitanix
 - Node.js 14.x or later
 - npm (v6.x or later) or yarn (v1.22.x or later)
 - MongoDB Atlas account (for database)
-- Gmail account (for email notifications)
 - Vercel account (for deployment)
 
 ### Installation
