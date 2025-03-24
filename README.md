@@ -32,7 +32,7 @@ A comprehensive web application for managing the recruitment process at ITitanix
 1. Clone the repository:
    ```bash
    git clone https://github.com/MIkhsanPasaribu/ititanix-recruitment.git
-   cd recruitment-titanix
+   cd ititanix-recruitment
    ```
 
 2. Install dependencies:
@@ -49,9 +49,6 @@ A comprehensive web application for managing the recruitment process at ITitanix
    Fill in the required environment variables in `.env`:
    ```
    MONGODB_URI=your_mongodb_connection_string
-   GMAIL_USER=your_gmail_address
-   GMAIL_PASS=your_gmail_app_password
-   JWT_SECRET=your_jwt_secret_key
    ```
 
 4. Run the development server:
@@ -65,5 +62,3 @@ A comprehensive web application for managing the recruitment process at ITitanix
    ```
    http://localhost:3000
    ```
-
-The application should now be running locally on your machine.
