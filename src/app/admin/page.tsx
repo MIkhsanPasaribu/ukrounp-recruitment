@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ApplicationData } from "@/types";
 
 export default function AdminPage() {
@@ -11,12 +11,29 @@ export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [adminPassword, setAdminPassword] = useState("");
+
+  // Fetch admin password from API
+  useEffect(() => {
+    const fetchAdminPassword = async () => {
+      try {
+        const response = await fetch("/api/admin/get-password");
+        if (response.ok) {
+          const data = await response.json();
+          setAdminPassword(data.password);
+        }
+      } catch (error) {
+        console.error("Error fetching admin password:", error);
+      }
+    };
+    
+    fetchAdminPassword();
+  }, []);
 
   const authenticate = (e: React.FormEvent) => {
     e.preventDefault();
     // Simple authentication - in a real app, use proper auth
-    if (password === "admin123") {
-      // Change this to a secure password
+    if (password === adminPassword && adminPassword !== "") {
       setIsAuthenticated(true);
       fetchApplications();
     } else {
@@ -43,10 +60,12 @@ export default function AdminPage() {
   // Keep only this version of updateApplicationStatus with confirmation dialog
   const updateApplicationStatus = async (id: string, newStatus: string) => {
     // Add confirmation dialog
-    if (!confirm(`Are you sure you want to change the status to "${newStatus}"?`)) {
+    if (
+      !confirm(`Are you sure you want to change the status to "${newStatus}"?`)
+    ) {
       return;
     }
-    
+
     try {
       const response = await fetch("/api/admin/update-status", {
         method: "POST",
@@ -172,10 +191,14 @@ export default function AdminPage() {
   // Add this new function to delete an application
   const deleteApplication = async (id: string) => {
     // Add confirmation dialog
-    if (!confirm("Are you sure you want to delete this application? This action cannot be undone.")) {
+    if (
+      !confirm(
+        "Are you sure you want to delete this application? This action cannot be undone."
+      )
+    ) {
       return;
     }
-    
+
     try {
       const response = await fetch("/api/admin/delete-application", {
         method: "POST",
@@ -187,10 +210,10 @@ export default function AdminPage() {
 
       if (response.ok) {
         // Remove the deleted application from the local state
-        setApplications(applications.filter(app => app._id !== id));
+        setApplications(applications.filter((app) => app._id !== id));
       } else {
         const data = await response.json();
-        alert(`Failed to delete: ${data.message || 'Unknown error'}`);
+        alert(`Failed to delete: ${data.message || "Unknown error"}`);
       }
     } catch (error) {
       console.error("Error deleting application:", error);
@@ -201,7 +224,7 @@ export default function AdminPage() {
   const handleLogout = () => {
     setIsAuthenticated(false);
     setApplications([]);
-    setError('');
+    setError("");
   };
 
   return (
@@ -215,7 +238,7 @@ export default function AdminPage() {
           Logout
         </button>
       </div>
-      
+
       <div className="mb-4 flex justify-end">
         <button
           onClick={exportToCSV}
