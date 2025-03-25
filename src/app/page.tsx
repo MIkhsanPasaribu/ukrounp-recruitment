@@ -30,7 +30,7 @@ export default function Home() {
           {/* Add the robot hand image above the title */}
           <div className="flex justify-center mb-8">
             <Image
-              src="/GAZA-UKRO.gif"
+              src="/GAZA - UKRO.gif"
               alt="Logo Unit Kegiatan Robotika UNP"
               width={300}
               height={300}
