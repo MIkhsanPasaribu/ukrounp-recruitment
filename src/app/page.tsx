@@ -12,14 +12,14 @@ export default function Home() {
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/ukro full.jpg" 
+          src="/ukro full.jpg"
           alt="UKRO Group"
           fill
           priority
           className="object-cover"
-          style={{ 
-            filter: 'brightness(0.3)', // Reduce brightness to 30%
-            opacity: 0.8 // Add some transparency
+          style={{
+            filter: "brightness(0.3)", // Reduce brightness to 30%
+            opacity: 0.8, // Add some transparency
           }}
         />
       </div>
@@ -42,7 +42,9 @@ export default function Home() {
           <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white">
             Unit Kegiatan Robotika <br /> Universitas Negeri Padang
           </h1>
-          <p className="text-xl mb-8 text-white">MARI BERKARYA DENGAN TEKNOLOGI!!!✊🏼</p>
+          <p className="text-xl mb-8 text-white">
+            MARI BERKARYA DENGAN TEKNOLOGI!!!✊🏼
+          </p>
 
           {/* Navigation Menu */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -71,7 +73,7 @@ export default function Home() {
           {/* Social Media Links */}
           <div className="flex justify-center space-x-6">
             <a
-              href="https://www.instagram.com/ititanix/"
+              href="https://www.instagram.com/robotic_unp?igsh=MWZhM2x0bTdvZGN2MQ=="
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
@@ -88,7 +90,7 @@ export default function Home() {
             </a>
 
             <a
-              href="https://www.tiktok.com/@ititanix"
+              href="https://www.tiktok.com/@robotic_unp?is_from_webapp=1&sender_device=pc"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
