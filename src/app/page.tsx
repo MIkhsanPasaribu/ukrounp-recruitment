@@ -8,14 +8,29 @@ export default function Home() {
   //const router = useRouter();
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col relative">
+      {/* Background Image */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="/ukro full.jpg" 
+          alt="UKRO Group"
+          fill
+          priority
+          className="object-cover"
+          style={{ 
+            filter: 'brightness(0.3)', // Reduce brightness to 30%
+            opacity: 0.8 // Add some transparency
+          }}
+        />
+      </div>
+
       {/* Hero Section */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center relative z-10">
         <div className="max-w-4xl">
           {/* Add the robot hand image above the title */}
           <div className="flex justify-center mb-8">
             <Image
-              src="/public/GAZA - UKRO.gif"
+              src="/GAZA-UKRO.gif"
               alt="Logo Unit Kegiatan Robotika UNP"
               width={300}
               height={300}
@@ -24,10 +39,10 @@ export default function Home() {
             />
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">
+          <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white">
             Unit Kegiatan Robotika Universitas Negeri Padang
           </h1>
-          <p className="text-xl mb-8">MARI BERKARYA DENGAN TEKNOLOGI!!!✊🏼</p>
+          <p className="text-xl mb-8 text-white">MARI BERKARYA DENGAN TEKNOLOGI!!!✊🏼</p>
 
           {/* Navigation Menu */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -93,8 +108,8 @@ export default function Home() {
       </div>
 
       {/* Footer */}
-      <footer className="bg-gray-100 py-6 text-center">
-        <p className="text-gray-600">
+      <footer className="bg-gray-900 bg-opacity-70 py-6 text-center relative z-10">
+        <p className="text-gray-300">
           © {new Date().getFullYear()} Unit Kegiatan Robotika UNP. All rights
           reserved.
         </p>
