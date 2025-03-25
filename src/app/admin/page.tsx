@@ -169,34 +169,34 @@ export default function AdminPage() {
     );
   }
 
-  // Remove this duplicate function
-  // const updateApplicationStatus = async (id: string, newStatus: string) => {
-  //   // Add confirmation dialog
-  //   if (!confirm(`Are you sure you want to change the status to "${newStatus}"?`)) {
-  //     return;
-  //   }
-  //   
-  //   try {
-  //     const response = await fetch("/api/admin/update-status", {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify({ id, status: newStatus }),
-  //     });
-  // 
-  //     if (response.ok) {
-  //       // Update the local state to reflect the change
-  //       setApplications(
-  //         applications.map((app) => {
-  //           return app._id === id ? { ...app, status: newStatus } : app;
-  //         })
-  //       );
-  //     }
-  //   } catch (error) {
-  //     console.error("Error updating status:", error);
-  //   }
-  // };
+  // Add this new function to delete an application
+  const deleteApplication = async (id: string) => {
+    // Add confirmation dialog
+    if (!confirm("Are you sure you want to delete this application? This action cannot be undone.")) {
+      return;
+    }
+    
+    try {
+      const response = await fetch("/api/admin/delete-application", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id }),
+      });
+
+      if (response.ok) {
+        // Remove the deleted application from the local state
+        setApplications(applications.filter(app => app._id !== id));
+      } else {
+        const data = await response.json();
+        alert(`Failed to delete: ${data.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error("Error deleting application:", error);
+      alert("An error occurred while deleting the application");
+    }
+  };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
@@ -299,12 +299,20 @@ export default function AdminPage() {
                     </select>
                   </td>
                   <td className="px-4 py-2 border">
-                    <button
-                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-sm"
-                      onClick={() => alert(JSON.stringify(app, null, 2))}
-                    >
-                      View Details
-                    </button>
+                    <div className="flex space-x-2">
+                      <button
+                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-sm"
+                        onClick={() => alert(JSON.stringify(app, null, 2))}
+                      >
+                        View
+                      </button>
+                      <button
+                        className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-sm"
+                        onClick={() => deleteApplication(app._id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
