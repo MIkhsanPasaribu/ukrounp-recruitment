@@ -13,10 +13,10 @@ export default function Home() {
       <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
         <div className="max-w-4xl">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">
-            ITitanix Recruitment
+            Unit Kegiatan Robotika Universitas Negeri Padang
           </h1>
           <p className="text-xl mb-8">
-            Bergabunglah dengan tim ITitanix dan jadilah bagian dari sesuatu yang luar biasa!
+            Bergabunglah dengan tim Robotika UNP dan jadilah bagian dari sesuatu yang luar biasa!
           </p>
           
           {/* Navigation Menu */}
@@ -75,7 +75,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-gray-100 py-6 text-center">
         <p className="text-gray-600">
-          © {new Date().getFullYear()} ITitanix. All rights reserved.
+          © {new Date().getFullYear()} Unit Kegiatan Robotika UNP. All rights reserved.
         </p>
       </footer>
     </div>
