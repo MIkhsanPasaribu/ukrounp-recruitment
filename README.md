@@ -1,4 +1,4 @@
-# ITitanix Recruitment Platform
+# UKRO UNP Recruitment Platform
 
 A comprehensive web application for managing the recruitment process at ITitanix organization, streamlining candidate applications and hiring workflows.
 
@@ -28,8 +28,8 @@ A comprehensive web application for managing the recruitment process at ITitanix
 ### Installation
 1. Clone the repository:
    ```bash
-   git clone https://github.com/MIkhsanPasaribu/ititanix-recruitment.git
-   cd ititanix-recruitment
+   git clone https://github.com/MIkhsanPasaribu/ukrounp-recruitment.git
+   cd ukrounp-recruitment
    ```
 
 2. Install dependencies:
