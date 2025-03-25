@@ -2,9 +2,16 @@
 
 import { useState } from 'react';
 
+interface StatusResponse {
+  success: boolean;
+  status?: string;
+  submittedAt?: string;
+  message?: string;
+}
+
 export default function StatusPage() {
   const [email, setEmail] = useState('');
-  const [status, setStatus] = useState<any>(null);
+  const [status, setStatus] = useState<StatusResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -30,6 +37,7 @@ export default function StatusPage() {
         setError(data.message || 'Failed to retrieve application status');
       }
     } catch (err) {
+      console.error(err);
       setError('An error occurred while checking your status');
     } finally {
       setLoading(false);
@@ -78,7 +86,7 @@ export default function StatusPage() {
           </div>
           <div className="mb-4">
             <p className="text-sm text-gray-600">Submitted on:</p>
-            <p className="font-medium">{new Date(status.submittedAt).toLocaleDateString()}</p>
+            <p className="font-medium">{new Date(status.submittedAt!).toLocaleString()}</p>
           </div>
         </div>
       )}
