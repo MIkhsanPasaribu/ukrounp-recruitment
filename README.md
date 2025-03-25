@@ -1,20 +1,36 @@
-# ITitanix Recruitment Platform
+# Unit Kegiatan Robotika UNP - Recruitment Platform
+A modern web application for managing the recruitment process at Unit Kegiatan Robotika Universitas Negeri Padang (UNP). Built with cutting-edge technologies to provide a seamless experience for both applicants and administrators.
+![Robotika UNP Logo](public/GAZA - UKRO.gif)
 
-A comprehensive web application for managing the recruitment process at ITitanix organization, streamlining candidate applications and hiring workflows.
+## Key Features
+### For Applicants
+- Intuitive multi-step registration form with real-time progress tracking
+- Secure document upload system for student cards and required materials
+- Real-time application status monitoring
+- Mobile-responsive interface for on-the-go access
 
-## Features
+### For Administrators
+- Comprehensive dashboard for application management
+- Advanced search and filtering capabilities
+- Bulk application processing
+- CSV export functionality
+- Automated status update notifications
 
-- Multi-step form for applicant registration with progress tracking
-- MongoDB integration for secure and scalable data storage
-- Responsive design with Tailwind CSS for optimal viewing on all devices
-- Easy deployment to Vercel with CI/CD integration
-- User authentication and role-based access control
-- Email notifications for applicants and recruiters
-- Dashboard for tracking application status
-- Document upload functionality for resumes and portfolios
-- Interview scheduling system
-- Custom assessment modules
-- Analytics and reporting features
+## Technology Stack
+### Frontend
+- Next.js 15 with React 19
+- Tailwind CSS 4 for modern, responsive styling
+- TypeScript for enhanced code reliability
+
+### Backend
+- Next.js API Routes for serverless architecture
+- MongoDB for robust data persistence
+- Secure authentication system
+
+### Infrastructure
+- Vercel for automated deployment
+- CI/CD pipeline integration
+- MongoDB Atlas for managed database services
 
 ## Getting Started
 ### System Requirements
