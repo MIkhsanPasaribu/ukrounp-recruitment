@@ -40,7 +40,7 @@ export default function Home() {
           </div>
 
           <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white">
-            Unit Kegiatan Robotika Universitas Negeri Padang
+            Unit Kegiatan Robotika <br /> Universitas Negeri Padang
           </h1>
           <p className="text-xl mb-8 text-white">MARI BERKARYA DENGAN TEKNOLOGI!!!✊🏼</p>
 
