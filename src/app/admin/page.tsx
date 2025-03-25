@@ -3,8 +3,13 @@
 import { useState } from 'react';
 import { FormData } from '@/types';
 
+// Extend FormData type locally to include _id
+interface ApplicationData extends FormData {
+  _id: string;
+}
+
 export default function AdminPage() {
-  const [applications, setApplications] = useState<FormData[]>([]);
+  const [applications, setApplications] = useState<ApplicationData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [password, setPassword] = useState('');
@@ -51,9 +56,9 @@ export default function AdminPage() {
       
       if (response.ok) {
         // Update the local state to reflect the change
-        setApplications(applications.map(app => 
-          app._id === id ? { ...app, status: newStatus } : app
-        ));
+        setApplications(applications.map(app => {
+          return app._id === id ? { ...app, status: newStatus } : app;
+        }));
       }
     } catch (error) {
       console.error('Error updating status:', error);
@@ -171,6 +176,7 @@ export default function AdminPage() {
         </div>
         <div>
           <select
+            title="Filter by Status"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md"
@@ -212,7 +218,8 @@ export default function AdminPage() {
                   <td className="px-4 py-2 border">{app.department}</td>
                   <td className="px-4 py-2 border">{app.phoneNumber}</td>
                   <td className="px-4 py-2 border">
-                    <select 
+                    <select
+                      title="Application Status"
                       value={app.status || "Under Review"} 
                       onChange={(e) => updateApplicationStatus(app._id, e.target.value)}
                       className="border rounded px-2 py-1"
