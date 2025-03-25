@@ -2,10 +2,34 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useState, useEffect } from "react";
 //import { useRouter } from 'next/navigation';
 
 export default function Home() {
   //const router = useRouter();
+  const [showVideo, setShowVideo] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [ballPosition, setBallPosition] = useState({ x: 0, y: 0 });
+
+  // Add floating animation effect to the quick ball
+  useEffect(() => {
+    const floatInterval = setInterval(() => {
+      setBallPosition({
+        x: Math.sin(Date.now() / 1000) * 5,
+        y: Math.cos(Date.now() / 1500) * 5,
+      });
+    }, 50);
+
+    return () => clearInterval(floatInterval);
+  }, []);
+
+  const toggleVideo = () => {
+    setIsAnimating(true);
+    setTimeout(() => {
+      setShowVideo(!showVideo);
+      setIsAnimating(false);
+    }, 300);
+  };
 
   return (
     <div className="min-h-screen flex flex-col relative">
@@ -38,14 +62,13 @@ export default function Home() {
               className="animate-pulse"
             />
           </div>
-
           <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white">
             Unit Kegiatan Robotika <br /> Universitas Negeri Padang
           </h1>
           <p className="text-xl mb-8 text-white">
             MARI BERKARYA DENGAN TEKNOLOGI!!!✊🏼
           </p>
-
+          
           {/* Navigation Menu */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <Link
@@ -69,9 +92,9 @@ export default function Home() {
               ADMIN
             </Link>
           </div>
-
+          
           {/* Social Media Links */}
-          <div className="flex justify-center space-x-6">
+          <div className="flex justify-center space-x-6 mb-10">
             <a
               href="https://www.instagram.com/robotic_unp?igsh=MWZhM2x0bTdvZGN2MQ=="
               target="_blank"
@@ -108,6 +131,126 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Quick Ball for Video - Enhanced with floating animation */}
+      <div 
+        className="fixed bottom-8 right-8 z-50"
+        style={{
+          transform: `translate(${ballPosition.x}px, ${ballPosition.y}px)`,
+          transition: 'transform 0.5s ease-out'
+        }}
+      >
+        <div className="relative">
+          {/* Pulsing ring effect */}
+          <div className={`absolute inset-0 rounded-full bg-blue-400 opacity-30 ${showVideo ? '' : 'animate-ping'}`}></div>
+          
+          {/* Main button */}
+          <button
+            onClick={toggleVideo}
+            className={`relative bg-gradient-to-r from-blue-500 to-purple-600 text-white w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all duration-500 transform hover:scale-110 hover:rotate-12 ${
+              isAnimating ? "animate-ping-once" : ""
+            }`}
+            aria-label="Show UKRO UNP Video"
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              className={`h-8 w-8 transition-all duration-500 ${showVideo ? "rotate-90 scale-110" : ""}`}
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d={showVideo 
+                  ? "M6 18L18 6M6 6l12 12" 
+                  : "M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"}
+              />
+              {!showVideo && (
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+                />
+              )}
+            </svg>
+          </button>
+          
+          {/* Text label that appears on hover */}
+          <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 text-white px-3 py-1 rounded-full text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+            {showVideo ? "Close Video" : "Watch Video"}
+          </div>
+        </div>
+      </div>
+
+      {/* Video Modal - Enhanced with better animations */}
+      {showVideo && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-0 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-backdropFadeIn"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) toggleVideo();
+          }}
+        >
+          <div className="bg-white rounded-lg shadow-2xl overflow-hidden max-w-4xl w-full animate-modalEntrance">
+            <div className="flex justify-between items-center p-4 border-b bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+              <h3 className="text-xl font-semibold flex items-center">
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className="h-6 w-6 mr-2 animate-pulse" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" 
+                  />
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+                  />
+                </svg>
+                Kenali UKRO UNP
+              </h3>
+              <button 
+                onClick={toggleVideo}
+                className="text-white hover:text-gray-200 transition-colors duration-200 transform hover:rotate-90 hover:scale-125"
+                aria-label="Close video"
+              >
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className="h-6 w-6" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M6 18L18 6M6 6l12 12" 
+                  />
+                </svg>
+              </button>
+            </div>
+            <div className="relative pt-[56.25%] w-full">
+              <iframe
+                className="absolute top-0 left-0 w-full h-full"
+                src="https://www.youtube.com/embed/6M-3vLsxfJU"
+                title="UKRO UNP Profile Video"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="bg-gray-900 bg-opacity-70 py-6 text-center relative z-10">
