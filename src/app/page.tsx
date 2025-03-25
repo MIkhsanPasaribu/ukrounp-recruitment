@@ -16,7 +16,7 @@ export default function Home() {
             Unit Kegiatan Robotika Universitas Negeri Padang
           </h1>
           <p className="text-xl mb-8">
-            Bergabunglah dengan tim Robotika UNP dan jadilah bagian dari sesuatu yang luar biasa!
+            MARI BERKARYA DENGAN TEKNOLOGI!!!✊🏼
           </p>
           
           {/* Navigation Menu */}
