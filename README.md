@@ -1,6 +1,6 @@
 # Unit Kegiatan Robotika UNP - Recruitment Platform
 A modern web application for managing the recruitment process at Unit Kegiatan Robotika Universitas Negeri Padang (UNP). Built with cutting-edge technologies to provide a seamless experience for both applicants and administrators.
-![Robotika UNP Logo](public/GAZA-UKRO.gif)
+![Robotika UNP Logo](public/GAZA - UKRO.gif)
 
 ## Key Features
 ### For Applicants
