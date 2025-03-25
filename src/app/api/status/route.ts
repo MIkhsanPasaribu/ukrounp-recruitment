@@ -25,15 +25,13 @@ export async function POST(request: Request) {
       );
     }
     
-    // For now, we'll return a simple status
-    // In a real application, you might have more complex status logic
     return NextResponse.json({ 
       success: true,
       status: application.status || "Under Review",
-      submittedAt: application._id.getTimestamp()
+      submittedAt: application.submittedAt
     });
   } catch (error) {
-    console.error("Error checking application status:", error);
+    console.error("Error checking status:", error);
     return NextResponse.json(
       { success: false, message: "Failed to check application status" },
       { status: 500 }
