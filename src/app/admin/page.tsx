@@ -1,123 +1,142 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { FormData } from '@/types';
-
-// Extend FormData type locally to include _id
-interface ApplicationData extends FormData {
-  _id: string;
-}
+import { useState } from "react";
+import { ApplicationData } from "@/types";
 
 export default function AdminPage() {
   const [applications, setApplications] = useState<ApplicationData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [password, setPassword] = useState('');
+  const [error, setError] = useState("");
+  const [password, setPassword] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const authenticate = (e: React.FormEvent) => {
     e.preventDefault();
     // Simple authentication - in a real app, use proper auth
-    if (password === 'admin123') { // Change this to a secure password
+    if (password === "admin123") {
+      // Change this to a secure password
       setIsAuthenticated(true);
       fetchApplications();
     } else {
-      setError('Invalid password');
+      setError("Invalid password");
     }
   };
 
   const fetchApplications = async () => {
     try {
-      const response = await fetch('/api/admin/applications');
+      const response = await fetch("/api/admin/applications");
       if (!response.ok) {
-        throw new Error('Failed to fetch applications');
+        throw new Error("Failed to fetch applications");
       }
       const data = await response.json();
       setApplications(data.applications);
     } catch (err) {
-      setError('Error fetching applications');
+      setError("Error fetching applications");
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
+  // Keep only this version of updateApplicationStatus with confirmation dialog
   const updateApplicationStatus = async (id: string, newStatus: string) => {
+    // Add confirmation dialog
+    if (!confirm(`Are you sure you want to change the status to "${newStatus}"?`)) {
+      return;
+    }
+    
     try {
-      const response = await fetch('/api/admin/update-status', {
-        method: 'POST',
+      const response = await fetch("/api/admin/update-status", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ id, status: newStatus }),
       });
-      
+
       if (response.ok) {
         // Update the local state to reflect the change
-        setApplications(applications.map(app => {
-          return app._id === id ? { ...app, status: newStatus } : app;
-        }));
+        setApplications(
+          applications.map((app) => {
+            return app._id === id ? { ...app, status: newStatus } : app;
+          })
+        );
       }
     } catch (error) {
-      console.error('Error updating status:', error);
+      console.error("Error updating status:", error);
     }
   };
 
   const exportToCSV = () => {
     if (applications.length === 0) return;
-    
+
     // Define the headers
     const headers = [
-      'Email', 'Full Name', 'Nickname', 'Gender', 'Birth Date',
-      'Faculty', 'Department', 'Study Program', 'Previous School',
-      'Padang Address', 'Phone Number', 'Status', 'Submitted At'
+      "Email",
+      "Full Name",
+      "Nickname",
+      "Gender",
+      "Birth Date",
+      "Faculty",
+      "Department",
+      "Study Program",
+      "Previous School",
+      "Padang Address",
+      "Phone Number",
+      "Status",
+      "Submitted At",
     ];
-    
+
     // Create CSV content
-    let csvContent = headers.join(',') + '\n';
-    
-    applications.forEach(app => {
+    let csvContent = headers.join(",") + "\n";
+
+    applications.forEach((app) => {
       const row = [
-        `"${app.email || ''}"`,
-        `"${app.fullName || ''}"`,
-        `"${app.nickname || ''}"`,
-        `"${app.gender || ''}"`,
-        `"${app.birthDate || ''}"`,
-        `"${app.faculty || ''}"`,
-        `"${app.department || ''}"`,
-        `"${app.studyProgram || ''}"`,
-        `"${app.previousSchool || ''}"`,
-        `"${app.padangAddress || ''}"`,
-        `"${app.phoneNumber || ''}"`,
-        `"${app.status || 'Under Review'}"`,
-        `"${app.submittedAt ? new Date(app.submittedAt).toLocaleString() : ''}"`,
+        `"${app.email || ""}"`,
+        `"${app.fullName || ""}"`,
+        `"${app.nickname || ""}"`,
+        `"${app.gender || ""}"`,
+        `"${app.birthDate || ""}"`,
+        `"${app.faculty || ""}"`,
+        `"${app.department || ""}"`,
+        `"${app.studyProgram || ""}"`,
+        `"${app.previousSchool || ""}"`,
+        `"${app.padangAddress || ""}"`,
+        `"${app.phoneNumber || ""}"`,
+        `"${app.status || "Under Review"}"`,
+        `"${
+          app.submittedAt ? new Date(app.submittedAt).toLocaleString() : ""
+        }"`,
       ];
-      csvContent += row.join(',') + '\n';
+      csvContent += row.join(",") + "\n";
     });
-    
+
     // Create a download link
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `applications_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `applications_${new Date().toISOString().split("T")[0]}.csv`
+    );
+    link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
   // Filter applications based on search term and status
-  const filteredApplications = applications.filter(app => {
-    const matchesSearch = 
+  const filteredApplications = applications.filter((app) => {
+    const matchesSearch =
       app.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       app.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       app.phoneNumber?.includes(searchTerm);
-      
-    const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
-    
+
+    const matchesStatus = statusFilter === "all" || app.status === statusFilter;
+
     return matchesSearch && matchesStatus;
   });
 
@@ -150,9 +169,52 @@ export default function AdminPage() {
     );
   }
 
+  // Remove this duplicate function
+  // const updateApplicationStatus = async (id: string, newStatus: string) => {
+  //   // Add confirmation dialog
+  //   if (!confirm(`Are you sure you want to change the status to "${newStatus}"?`)) {
+  //     return;
+  //   }
+  //   
+  //   try {
+  //     const response = await fetch("/api/admin/update-status", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({ id, status: newStatus }),
+  //     });
+  // 
+  //     if (response.ok) {
+  //       // Update the local state to reflect the change
+  //       setApplications(
+  //         applications.map((app) => {
+  //           return app._id === id ? { ...app, status: newStatus } : app;
+  //         })
+  //       );
+  //     }
+  //   } catch (error) {
+  //     console.error("Error updating status:", error);
+  //   }
+  // };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setApplications([]);
+    setError('');
+  };
+
   return (
     <div className="max-w-6xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Applications</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Applications</h1>
+        <button
+          onClick={handleLogout}
+          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+        >
+          Logout
+        </button>
+      </div>
       
       <div className="mb-4 flex justify-end">
         <button
@@ -190,7 +252,7 @@ export default function AdminPage() {
           </select>
         </div>
       </div>
-      
+
       {loading ? (
         <p>Loading applications...</p>
       ) : error ? (
@@ -211,7 +273,10 @@ export default function AdminPage() {
             </thead>
             <tbody>
               {filteredApplications.map((app, index) => (
-                <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                <tr
+                  key={index}
+                  className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
+                >
                   <td className="px-4 py-2 border">{app.email}</td>
                   <td className="px-4 py-2 border">{app.fullName}</td>
                   <td className="px-4 py-2 border">{app.faculty}</td>
@@ -220,8 +285,10 @@ export default function AdminPage() {
                   <td className="px-4 py-2 border">
                     <select
                       title="Application Status"
-                      value={app.status || "Under Review"} 
-                      onChange={(e) => updateApplicationStatus(app._id, e.target.value)}
+                      value={app.status || "Under Review"}
+                      onChange={(e) =>
+                        updateApplicationStatus(app._id, e.target.value)
+                      }
                       className="border rounded px-2 py-1"
                     >
                       <option value="Under Review">Under Review</option>
@@ -232,7 +299,7 @@ export default function AdminPage() {
                     </select>
                   </td>
                   <td className="px-4 py-2 border">
-                    <button 
+                    <button
                       className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-sm"
                       onClick={() => alert(JSON.stringify(app, null, 2))}
                     >
