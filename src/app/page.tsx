@@ -32,8 +32,8 @@ export default function Home() {
             <Image
               src="/GAZA - UKRO.gif"
               alt="Logo Unit Kegiatan Robotika UNP"
-              width={300}
-              height={300}
+              width={150}
+              height={150}
               priority
               className="animate-pulse"
             />
