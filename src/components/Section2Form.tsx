@@ -14,7 +14,7 @@ export default function Section2Form({ onSubmit, isSubmitting, onBack }: Section
   const [formData, setFormData] = useState<Section2Data>({
     fullName: '',
     nickname: '',
-    gender: 'male',
+    gender: 'male', // Default to male
     birthDate: '',
     faculty: '',
     department: '',
@@ -84,6 +84,12 @@ export default function Section2Form({ onSubmit, isSubmitting, onBack }: Section
     // Validate phone number
     if (formData.phoneNumber && !/^[0-9+\-\s]+$/.test(formData.phoneNumber)) {
       newErrors.phoneNumber = 'Please enter a valid phone number';
+    }
+    
+    if (!formData.gender) {
+      newErrors.gender = "Jenis kelamin harus dipilih";
+    } else if (formData.gender !== 'male' && formData.gender !== 'female') {
+      newErrors.gender = "Jenis kelamin harus laki-laki atau perempuan";
     }
     
     setErrors(newErrors);
@@ -158,7 +164,6 @@ export default function Section2Form({ onSubmit, isSubmitting, onBack }: Section
               >
                 <option value="male">Laki-laki</option>
                 <option value="female">Perempuan</option>
-                <option value="other">Lainnya</option>
               </select>
               {errors.gender && <p className="mt-1 text-sm text-red-600">{errors.gender}</p>}
             </div>

@@ -6,7 +6,7 @@ export interface Section1Data {
 export interface Section2Data {
   fullName: string;
   nickname: string;
-  gender: 'male' | 'female' | 'other';
+  gender: 'male' | 'female';
   birthDate: string;
   faculty: string;
   department: string;

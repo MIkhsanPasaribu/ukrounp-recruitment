@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { ApplicationData } from "@/types";
 import Link from 'next/link';
+import AdminDashboard from '@/components/AdminDashboard';
 
 export default function AdminPage() {
   const [applications, setApplications] = useState<ApplicationData[]>([]);
@@ -15,6 +16,7 @@ export default function AdminPage() {
   const [adminPassword, setAdminPassword] = useState("");
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(true);
   const [registrationStatusLoading, setRegistrationStatusLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('applications'); // Add this state
 
   // Fetch admin password from API
   useEffect(() => {
@@ -339,110 +341,142 @@ export default function AdminPage() {
         </p>
       </div>
 
-      {/* Search and filter controls */}
-      <div className="mb-4 flex flex-col sm:flex-row gap-4">
-        <div className="flex-1">
-          <input
-            type="text"
-            placeholder="Search by name, email or phone"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-          />
-        </div>
-        <div>
-          <select
-            title="Filter by Status"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+      {/* Tab navigation */}
+      <div className="mb-6 border-b border-gray-200">
+        <nav className="flex -mb-px">
+          <button
+            onClick={() => setActiveTab('applications')}
+            className={`py-2 px-4 text-center border-b-2 font-medium text-sm ${
+              activeTab === 'applications'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
           >
-            <option value="all">All Statuses</option>
-            <option value="Under Review">Under Review</option>
-            <option value="Shortlisted">Shortlisted</option>
-            <option value="Interview">Interview</option>
-            <option value="Accepted">Accepted</option>
-            <option value="Rejected">Rejected</option>
-          </select>
-        </div>
+            Applications
+          </button>
+          <button
+            onClick={() => setActiveTab('statistics')}
+            className={`py-2 px-4 text-center border-b-2 font-medium text-sm ${
+              activeTab === 'statistics'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Statistics
+          </button>
+        </nav>
       </div>
 
-      {/* Applications table */}
-      {loading ? (
-        <p>Loading applications...</p>
-      ) : error ? (
-        <p className="text-red-500">{error}</p>
+      {activeTab === 'statistics' ? (
+        <AdminDashboard />
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border border-gray-200">
-            <thead>
-              <tr>
-                <th className="px-4 py-2 border">Email</th>
-                <th className="px-4 py-2 border">Full Name</th>
-                <th className="px-4 py-2 border">Faculty</th>
-                <th className="px-4 py-2 border">Department</th>
-                <th className="px-4 py-2 border">Phone</th>
-                <th className="px-4 py-2 border">Status</th>
-                <th className="px-4 py-2 border">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredApplications.map((app, index) => (
-                <tr
-                  key={index}
-                  className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
-                >
-                  <td className="px-4 py-2 border">{app.email}</td>
-                  <td className="px-4 py-2 border">{app.fullName}</td>
-                  <td className="px-4 py-2 border">{app.faculty}</td>
-                  <td className="px-4 py-2 border">{app.department}</td>
-                  <td className="px-4 py-2 border">{app.phoneNumber}</td>
-                  <td className="px-4 py-2 border">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        app.status === "Accepted"
-                          ? "bg-green-100 text-green-800"
-                          : app.status === "Rejected"
-                          ? "bg-red-100 text-red-800"
-                          : app.status === "Interview"
-                          ? "bg-blue-100 text-blue-800"
-                          : app.status === "Shortlisted"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
+        <>
+          {/* Search and filter controls */}
+          <div className="mb-4 flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder="Search by name, email or phone"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              />
+            </div>
+            <div>
+              <select
+                title="Filter by Status"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              >
+                <option value="all">All Statuses</option>
+                <option value="Under Review">Under Review</option>
+                <option value="Shortlisted">Shortlisted</option>
+                <option value="Interview">Interview</option>
+                <option value="Accepted">Accepted</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Applications table */}
+          {loading ? (
+            <p>Loading applications...</p>
+          ) : error ? (
+            <p className="text-red-500">{error}</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-white border border-gray-200">
+                <thead>
+                  <tr>
+                    <th className="px-4 py-2 border">Email</th>
+                    <th className="px-4 py-2 border">Full Name</th>
+                    <th className="px-4 py-2 border">Faculty</th>
+                    <th className="px-4 py-2 border">Department</th>
+                    <th className="px-4 py-2 border">Phone</th>
+                    <th className="px-4 py-2 border">Status</th>
+                    <th className="px-4 py-2 border">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredApplications.map((app, index) => (
+                    <tr
+                      key={index}
+                      className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
                     >
-                      {app.status || "Under Review"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2 border">
-                    <div className="flex space-x-2">
-                      <select
-                        title="Change Status"
-                        onChange={(e) =>
-                          updateApplicationStatus(app._id, e.target.value)
-                        }
-                        className="px-2 py-1 border border-gray-300 rounded-md text-sm"
-                        value={app.status || "Under Review"}
-                      >
-                        <option value="Under Review">Under Review</option>
-                        <option value="Shortlisted">Shortlisted</option>
-                        <option value="Interview">Interview</option>
-                        <option value="Accepted">Accepted</option>
-                        <option value="Rejected">Rejected</option>
-                      </select>
-                      <button
-                        onClick={() => deleteApplication(app._id)}
-                        className="px-2 py-1 bg-red-600 text-white rounded-md text-sm hover:bg-red-700"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                      <td className="px-4 py-2 border">{app.email}</td>
+                      <td className="px-4 py-2 border">{app.fullName}</td>
+                      <td className="px-4 py-2 border">{app.faculty}</td>
+                      <td className="px-4 py-2 border">{app.department}</td>
+                      <td className="px-4 py-2 border">{app.phoneNumber}</td>
+                      <td className="px-4 py-2 border">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            app.status === "Accepted"
+                              ? "bg-green-100 text-green-800"
+                              : app.status === "Rejected"
+                              ? "bg-red-100 text-red-800"
+                              : app.status === "Interview"
+                              ? "bg-blue-100 text-blue-800"
+                              : app.status === "Shortlisted"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {app.status || "Under Review"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2 border">
+                        <div className="flex space-x-2">
+                          <select
+                            title="Change Status"
+                            onChange={(e) =>
+                              updateApplicationStatus(app._id, e.target.value)
+                            }
+                            className="px-2 py-1 border border-gray-300 rounded-md text-sm"
+                            value={app.status || "Under Review"}
+                          >
+                            <option value="Under Review">Under Review</option>
+                            <option value="Shortlisted">Shortlisted</option>
+                            <option value="Interview">Interview</option>
+                            <option value="Accepted">Accepted</option>
+                            <option value="Rejected">Rejected</option>
+                          </select>
+                          <button
+                            onClick={() => deleteApplication(app._id)}
+                            className="px-2 py-1 bg-red-600 text-white rounded-md text-sm hover:bg-red-700"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
