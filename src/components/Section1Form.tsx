@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Section1Data } from '@/types';
 import FileUpload from './FileUpload';
+import { validateEmail, validateFileType, validateFileSize } from '@/utils/validation';
 
 interface Section1FormProps {
   onSubmit: (data: Section1Data) => void;
@@ -16,14 +17,27 @@ export default function Section1Form({ onSubmit }: Section1FormProps) {
   const validateForm = () => {
     const newErrors: { email?: string; paymentProof?: string } = {};
     
-    if (!email) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Email is invalid';
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.valid) {
+      newErrors.email = emailValidation.message;
     }
     
     if (!paymentProof) {
-      newErrors.paymentProof = 'Payment proof is required';
+      newErrors.paymentProof = 'Bukti pembayaran harus diunggah';
+    } else {
+      const sizeValidation = validateFileSize(paymentProof, 2); // 2MB max
+      if (!sizeValidation.valid) {
+        newErrors.paymentProof = sizeValidation.message;
+      }
+      
+      const typeValidation = validateFileType(
+        paymentProof, 
+        ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'], 
+        'Bukti pembayaran'
+      );
+      if (!typeValidation.valid) {
+        newErrors.paymentProof = typeValidation.message;
+      }
     }
     
     setErrors(newErrors);
