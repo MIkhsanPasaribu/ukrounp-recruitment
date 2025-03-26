@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 //import { useRouter } from 'next/navigation';
 import Section1Form from '@/components/Section1Form';
 import Section2Form from '@/components/Section2Form';
@@ -14,6 +14,27 @@ export default function FormPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isRegistrationOpen, setIsRegistrationOpen] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Add this useEffect to check registration status when component mounts
+  useEffect(() => {
+    const checkRegistrationStatus = async () => {
+      try {
+        const response = await fetch('/api/admin/registration-status');
+        if (response.ok) {
+          const data = await response.json();
+          setIsRegistrationOpen(data.isOpen);
+        }
+      } catch (error) {
+        console.error('Error checking registration status:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkRegistrationStatus();
+  }, []);
 
   const handleSection1Submit = (data: Section1Data) => {
     setFormData({ ...formData, ...data });
@@ -57,9 +78,24 @@ export default function FormPage() {
     window.scrollTo(0, 0);
   };
 
+  // Update the return statement to show a message when registration is closed
   return (
     <div className="max-w-3xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-      {isSubmitted ? (
+      {isLoading ? (
+        <div className="text-center py-10">
+          <p className="text-gray-500">Loading...</p>
+        </div>
+      ) : !isRegistrationOpen ? (
+        <div className="bg-red-50 border border-red-200 rounded-md p-6 text-center">
+          <h2 className="text-2xl font-bold text-red-700 mb-4">Registration Closed</h2>
+          <p className="text-gray-700 mb-4">
+            We are sorry, but registration for Unit Kegiatan Robotika UNP is currently closed.
+          </p>
+          <p className="text-gray-700">
+            Please check back later or contact us for more information.
+          </p>
+        </div>
+      ) : isSubmitted ? (
         <SuccessMessage />
       ) : (
         <>
