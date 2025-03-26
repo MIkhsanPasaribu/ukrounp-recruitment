@@ -3,6 +3,15 @@
 import { useState } from 'react';
 import { Section2Data } from '@/types';
 import FileUpload from './FileUpload';
+import { 
+  validateRequired, 
+  validatePhoneNumber, 
+  validateDate, 
+  validateTextLength,
+  validateSelect,
+  validateFileType,
+  validateFileSize
+} from '@/utils/validation';
 
 interface Section2FormProps {
   onSubmit: (data: Section2Data) => void;
@@ -86,12 +95,120 @@ export default function Section2Form({ onSubmit, isSubmitting, onBack }: Section
       newErrors.phoneNumber = 'Please enter a valid phone number';
     }
     
+    const fullNameValidation = validateRequired(formData.fullName, 'Nama lengkap');
+    if (!fullNameValidation.valid && fullNameValidation.message) newErrors.fullName = fullNameValidation.message;
+    
+    const nicknameValidation = validateRequired(formData.nickname, 'Nama panggilan');
+    if (!nicknameValidation.valid && nicknameValidation.message) newErrors.nickname = nicknameValidation.message;
+    
+    // Validate gender
     if (!formData.gender) {
       newErrors.gender = "Jenis kelamin harus dipilih";
     } else if (formData.gender !== 'male' && formData.gender !== 'female') {
       newErrors.gender = "Jenis kelamin harus laki-laki atau perempuan";
     }
     
+    // Validate date
+    const birthDateValidation = validateDate(formData.birthDate, 'Tanggal lahir');
+    if (!birthDateValidation.valid && birthDateValidation.message) {
+      newErrors.birthDate = birthDateValidation.message;
+    }
+    
+    // Validate select fields
+    const facultyValidation = validateSelect(formData.faculty, 'Fakultas');
+    if (!facultyValidation.valid && facultyValidation.message) {
+      newErrors.faculty = facultyValidation.message;
+    }
+    
+    const departmentValidation = validateSelect(formData.department, 'Jurusan');
+    if (!departmentValidation.valid && departmentValidation.message) {
+      newErrors.department = departmentValidation.message;
+    }
+    
+    const studyProgramValidation = validateSelect(formData.studyProgram, 'Program studi');
+    if (!studyProgramValidation.valid && studyProgramValidation.message) {
+      newErrors.studyProgram = studyProgramValidation.message;
+    }
+    
+    // Validate other required fields
+    const previousSchoolValidation = validateRequired(formData.previousSchool, 'Asal sekolah');
+    if (!previousSchoolValidation.valid && previousSchoolValidation.message) {
+      newErrors.previousSchool = previousSchoolValidation.message;
+    }
+    
+    const padangAddressValidation = validateRequired(formData.padangAddress, 'Alamat di Padang');
+    if (!padangAddressValidation.valid && padangAddressValidation.message) {
+      newErrors.padangAddress = padangAddressValidation.message;
+    }
+    
+    // Validate phone number
+    const phoneValidation = validatePhoneNumber(formData.phoneNumber);
+    if (!phoneValidation.valid && phoneValidation.message) {
+      newErrors.phoneNumber = phoneValidation.message;
+    }
+    
+    // Validate text areas with minimum length
+    const motivationValidation = validateTextLength(formData.motivation, 'Motivasi', 10, 500);
+    if (!motivationValidation.valid && motivationValidation.message) {
+      newErrors.motivation = motivationValidation.message;
+    }
+    
+    const futurePlansValidation = validateTextLength(formData.futurePlans, 'Rencana masa depan', 10, 500);
+    if (!futurePlansValidation.valid && futurePlansValidation.message) {
+      newErrors.futurePlans = futurePlansValidation.message;
+    }
+    
+    const whyAcceptedValidation = validateTextLength(formData.whyYouShouldBeAccepted, 'Alasan diterima', 10, 500);
+    if (!whyAcceptedValidation.valid && whyAcceptedValidation.message) {
+      newErrors.whyYouShouldBeAccepted = whyAcceptedValidation.message;
+    }
+    
+    // Validate file uploads
+    const allowedImageTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    const maxFileSizeMB = 10;
+    
+    // Helper function to validate file uploads
+    const validateFileUpload = (
+      file: string,
+      fieldName: string,
+      label: string,
+      allowedTypes: string[] = allowedImageTypes
+    ) => {
+      if (!file) {
+        newErrors[fieldName] = `${label} harus diunggah`;
+        return;
+      }
+
+      // Validate file size first
+      const sizeValidation = validateFileSize(file, maxFileSizeMB);
+      if (!sizeValidation.valid && sizeValidation.message) {
+        newErrors[fieldName] = sizeValidation.message;
+        return;
+      }
+
+      // Then validate file type
+      const typeValidation = validateFileType(file, allowedTypes, label);
+      if (!typeValidation.valid && typeValidation.message) {
+        newErrors[fieldName] = typeValidation.message;
+      }
+    };
+
+    // Validate all file uploads
+    validateFileUpload(formData.photo, 'photo', 'Pasfoto');
+    validateFileUpload(formData.studentCard, 'studentCard', 'Kartu mahasiswa');
+    validateFileUpload(
+      formData.studyPlanCard,
+      'studyPlanCard',
+      'KRS',
+      [...allowedImageTypes, 'application/pdf']
+    );
+    validateFileUpload(formData.igFollowProof, 'igFollowProof', 'Bukti follow IG');
+    validateFileUpload(
+      formData.tiktokFollowProof,
+      'tiktokFollowProof',
+      'Bukti follow TikTok'
+    );
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
