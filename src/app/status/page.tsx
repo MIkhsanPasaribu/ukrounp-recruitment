@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 
 interface StatusResponse {
   success: boolean;
@@ -46,6 +47,16 @@ export default function StatusPage() {
 
   return (
     <div className="max-w-md mx-auto py-8 px-4">
+      {/* Back button to landing page */}
+      <div className="mb-6">
+        <Link href="/" className="inline-flex items-center text-blue-600 hover:text-blue-800">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L4.414 9H17a1 1 0 110 2H4.414l5.293 5.293a1 1 0 010 1.414z" clipRule="evenodd" />
+          </svg>
+          Back to Home
+        </Link>
+      </div>
+      
       <h1 className="text-2xl font-bold mb-6">Check Application Status</h1>
       
       <form onSubmit={checkStatus} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
