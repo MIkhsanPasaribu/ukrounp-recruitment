@@ -43,16 +43,28 @@ function ClientLayout({ children }: { children: React.ReactNode }) {
         {/* Logo and Title Container */}
         <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="flex items-center">
+            {/* UKRO Logo */}
             <div className="mr-4 flex-shrink-0">
               <Image 
                 src="/GAZA - UKRO.gif" 
                 alt="UKRO Logo" 
                 width={50} 
                 height={50}
-                className="rounded-full animate-pulse"
+                className="rounded-full"
               />
             </div>
+
+            {/* Title and Subtitle */}
+            <div className="flex-grow">
+              <h1 className="text-4xl font-bold text-white">
+                UKRO KM UNP
+              </h1>
+              <p className="text-sm text-gray-200">
+                Recruitment Platform
+              </p>
+            </div>
             
+            {/* Marquee Text */}
             <div className="overflow-hidden">
               <h1 
                 id="running-text"
