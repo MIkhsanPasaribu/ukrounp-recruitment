@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { ApplicationData } from "@/types";
 import Link from "next/link";
 import AdminDashboard from "@/components/AdminDashboard";
+import Pagination from "@/components/Pagination";
 
 export default function AdminPage() {
   const [applications, setApplications] = useState<ApplicationData[]>([]);
@@ -25,6 +26,8 @@ export default function AdminPage() {
   const [selectedApplication, setSelectedApplication] =
     useState<ApplicationData | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [applicationsPerPage, setApplicationsPerPage] = useState(10);
 
   // Fetch admin password from API
   useEffect(() => {
@@ -261,6 +264,16 @@ export default function AdminPage() {
 
     return matchesSearch && matchesStatus;
   });
+
+  // Calculate pagination indexes and current page data
+  const indexOfLastApplication = currentPage * applicationsPerPage;
+  const indexOfFirstApplication = indexOfLastApplication - applicationsPerPage;
+  const currentApplications = filteredApplications.slice(
+    indexOfFirstApplication,
+    indexOfLastApplication
+  );
+  // Calculate total pages
+  const totalPages = Math.ceil(filteredApplications.length / applicationsPerPage);
 
   const handleBulkStatusUpdate = async (newStatus: string) => {
     if (selectedApplications.length === 0) {
@@ -643,7 +656,7 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredApplications.map((app, index) => (
+                  {currentApplications.length > 0 ? currentApplications.map((app, index) => (
                     <tr
                       key={app._id || index}
                       className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
@@ -1076,10 +1089,37 @@ export default function AdminPage() {
                         </div>
                       )}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  )) : (
+                    <tr>
+                      <td
+                        colSpan={8}
+                        className="px-4 py-8 text-center text-gray-500"
+                      >
+                        No applications found.
+                      </td>
+                    </tr>
+                  )}
+              </tbody>
+            </table>
+          </div>
+          )}
+          {/* Pagination Controls */}
+          {filteredApplications.length > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              itemsPerPage={applicationsPerPage}
+              totalItems={filteredApplications.length}
+              onPageChange={(pageNumber) => {
+                setCurrentPage(pageNumber);
+                // Optionally scroll to top of table when changing pages
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onItemsPerPageChange={(newItemsPerPage) => {
+                setApplicationsPerPage(newItemsPerPage);
+                setCurrentPage(1); // Reset to first page when changing items per page
+              }}
+            />
           )}
         </>
       )}
