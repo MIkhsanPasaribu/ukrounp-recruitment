@@ -5,6 +5,7 @@ import { ApplicationData } from "@/types";
 import Link from "next/link";
 import AdminDashboard from "@/components/AdminDashboard";
 import Pagination from "@/components/Pagination";
+import AdminHeaderButtons from "@/components/AdminHeaderButtons";
 
 export default function AdminPage() {
   const [applications, setApplications] = useState<ApplicationData[]>([]);
@@ -476,39 +477,14 @@ export default function AdminPage() {
           </Link>
           <h1 className="text-2xl font-bold">Admin Dashboard</h1>
         </div>
-        <div className="flex space-x-4">
-          {/* Registration control button */}
-          <button
-            onClick={toggleRegistrationStatus}
-            className={`px-4 py-2 rounded-md font-medium ${
-              isRegistrationOpen
-                ? "bg-red-600 hover:bg-red-700 text-white"
-                : "bg-green-600 hover:bg-green-700 text-white"
-            }`}
-            disabled={registrationStatusLoading}
-          >
-            {registrationStatusLoading
-              ? "Updating..."
-              : isRegistrationOpen
-              ? "Close Registration"
-              : "Open Registration"}
-          </button>
-
-          <button
-            onClick={exportToCSV}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium"
-            disabled={applications.length === 0}
-          >
-            Export to CSV
-          </button>
-
-          <button
-            onClick={handleLogout}
-            className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md font-medium"
-          >
-            Logout
-          </button>
-        </div>
+          <AdminHeaderButtons 
+              isRegistrationOpen={isRegistrationOpen}
+              registrationStatusLoading={registrationStatusLoading}
+              hasApplications={applications.length > 0}
+              onToggleRegistration={toggleRegistrationStatus}
+              onExportCSV={exportToCSV}
+              onLogout={handleLogout}
+            />
       </div>
 
       {/* Registration status indicator */}
