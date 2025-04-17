@@ -8,6 +8,7 @@ import Pagination from "@/components/Pagination";
 import AdminHeaderButtons from "@/components/AdminHeaderButtons";
 import ApplicationDetailModal from "@/components/ApplicationDetailModal";
 import { exportApplicationsToCSV } from "@/utils/csvExport";
+import BulkEmailButton from '@/components/BulkEmailButton';
 
 export default function AdminPage() {
   const [applications, setApplications] = useState<ApplicationData[]>([]);
@@ -529,27 +530,33 @@ export default function AdminPage() {
                       }
                     }}
                     value=""
+                    disabled={selectedApplications.length === 0}
                   >
                     <option value="" disabled>
-                      Change status to...
+                      Change status...
                     </option>
                     <option value="Under Review">Under Review</option>
-                    <option value="Shortlisted">Shortlisted</option>
                     <option value="Interview">Interview</option>
                     <option value="Accepted">Accepted</option>
                     <option value="Rejected">Rejected</option>
                   </select>
+                  
+                  {/* Add the BulkEmailButton component here */}
+                  <BulkEmailButton 
+                    selectedApplications={selectedApplications}
+                    onEmailsSent={() => {
+                      // Clear selections after emails are sent
+                      setSelectedApplications([]);
+                      setSelectAll(false);
+                    }}
+                  />
+                  
                   <button
                     onClick={handleBulkDelete}
+                    disabled={selectedApplications.length === 0}
                     className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md font-medium"
                   >
                     Delete Selected
-                  </button>
-                  <button
-                    onClick={() => setSelectedApplications([])}
-                    className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md font-medium"
-                  >
-                    Clear Selection
                   </button>
                 </div>
               </div>
