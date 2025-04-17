@@ -7,6 +7,7 @@ import AdminDashboard from "@/components/AdminDashboard";
 import Pagination from "@/components/Pagination";
 import AdminHeaderButtons from "@/components/AdminHeaderButtons";
 import ApplicationDetailModal from "@/components/ApplicationDetailModal";
+import { exportApplicationsToCSV } from "@/utils/csvExport";
 
 export default function AdminPage() {
   const [applications, setApplications] = useState<ApplicationData[]>([]);
@@ -191,62 +192,12 @@ export default function AdminPage() {
   };
 
   const exportToCSV = () => {
-    if (applications.length === 0) return;
-
-    // Define the headers
-    const headers = [
-      "Email",
-      "Full Name",
-      "Nickname",
-      "Gender",
-      "Birth Date",
-      "Faculty",
-      "Department",
-      "Study Program",
-      "Previous School",
-      "Padang Address",
-      "Phone Number",
-      "Status",
-      "Submitted At",
-    ];
-
-    // Create CSV content
-    let csvContent = headers.join(",") + "\n";
-
-    applications.forEach((app) => {
-      const row = [
-        `"${app.email || ""}"`,
-        `"${app.fullName || ""}"`,
-        `"${app.nickname || ""}"`,
-        `"${app.gender || ""}"`,
-        `"${app.birthDate || ""}"`,
-        `"${app.faculty || ""}"`,
-        `"${app.department || ""}"`,
-        `"${app.studyProgram || ""}"`,
-        `"${app.previousSchool || ""}"`,
-        `"${app.padangAddress || ""}"`,
-        `"${app.phoneNumber || ""}"`,
-        `"${app.status || "Under Review"}"`,
-        `"${
-          app.submittedAt ? new Date(app.submittedAt).toLocaleString() : ""
-        }"`,
-      ];
-      csvContent += row.join(",") + "\n";
-    });
-
-    // Create a download link
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute(
-      "download",
-      `applications_${new Date().toISOString().split("T")[0]}.csv`
-    );
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    if (applications.length === 0) {
+      alert("No applications to export");
+      return;
+    }
+    
+    exportApplicationsToCSV(applications);
   };
 
   const handleLogout = () => {
