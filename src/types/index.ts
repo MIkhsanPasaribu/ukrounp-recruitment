@@ -11,6 +11,8 @@ export interface Section2Data {
   faculty: string;
   department: string;
   studyProgram: string;
+  nim: string;
+  nia: string;
   previousSchool: string;
   padangAddress: string;
   phoneNumber: string;
@@ -39,7 +41,7 @@ export interface Section2Data {
   tiktokFollowProof: string; // Base64 encoded image
 }
 
-// Consolidated FormData interface with all necessary fields
+// Also update the FormData interface to include nia
 export interface FormData extends Section1Data {
   _id?: string; // MongoDB document ID
   fullName: string;
@@ -53,6 +55,8 @@ export interface FormData extends Section1Data {
   faculty?: string;
   department?: string;
   studyProgram?: string;
+  nim?: string;
+  nia?: string; // Add NIA field
   previousSchool?: string;
   padangAddress?: string;
   phoneNumber?: string;

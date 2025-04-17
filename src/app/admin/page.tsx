@@ -6,6 +6,7 @@ import Link from "next/link";
 import AdminDashboard from "@/components/AdminDashboard";
 import Pagination from "@/components/Pagination";
 import AdminHeaderButtons from "@/components/AdminHeaderButtons";
+import ApplicationDetailModal from "@/components/ApplicationDetailModal";
 
 export default function AdminPage() {
   const [applications, setApplications] = useState<ApplicationData[]>([]);
@@ -454,7 +455,7 @@ export default function AdminPage() {
 
   // If authenticated, show the admin dashboard
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center space-x-4">
           <Link
@@ -715,355 +716,6 @@ export default function AdminPage() {
                           </button>
                         </div>
                       </td>
-
-                      {/* Add the application detail modal */}
-                      {showDetailModal && selectedApplication && (
-                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                            <div className="sticky top-0 bg-white p-4 border-b flex justify-between items-center">
-                              <h2 className="text-xl font-bold">
-                                Application Details
-                              </h2>
-                              <button
-                                title="Close Detail"
-                                onClick={closeDetailModal}
-                                className="text-gray-500 hover:text-gray-700"
-                              >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  className="h-6 w-6"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M6 18L18 6M6 6l12 12"
-                                  />
-                                </svg>
-                              </button>
-                            </div>
-
-                            <div className="p-6">
-                              {/* Application Status */}
-                              <div className="mb-6">
-                                <div className="flex flex-wrap items-center gap-4 mb-4">
-                                  <div>
-                                    <span className="font-medium mr-2">
-                                      Status:
-                                    </span>
-                                    <select
-                                      value={
-                                        selectedApplication.status ||
-                                        "Under Review"
-                                      }
-                                      onChange={(e) => {
-                                        updateApplicationStatus(
-                                          selectedApplication._id,
-                                          e.target.value
-                                        );
-                                        setSelectedApplication({
-                                          ...selectedApplication,
-                                          status: e.target.value,
-                                        });
-                                      }}
-                                      className="px-2 py-1 border border-gray-300 rounded"
-                                    >
-                                      <option value="Under Review">
-                                        Under Review
-                                      </option>
-                                      <option value="Shortlisted">
-                                        Shortlisted
-                                      </option>
-                                      <option value="Interview">
-                                        Interview
-                                      </option>
-                                      <option value="Accepted">Accepted</option>
-                                      <option value="Rejected">Rejected</option>
-                                    </select>
-                                  </div>
-                                  <div>
-                                    <span className="font-medium mr-2">
-                                      Submitted:
-                                    </span>
-                                    <span>
-                                      {selectedApplication.submittedAt
-                                        ? new Date(
-                                            selectedApplication.submittedAt
-                                          ).toLocaleString()
-                                        : "N/A"}
-                                    </span>
-                                  </div>
-                                  <div>
-                                    <span className="font-medium mr-2">
-                                      Application ID:
-                                    </span>
-                                    <span className="font-mono text-sm">
-                                      {selectedApplication._id}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Personal Information */}
-                              <div className="mb-6">
-                                <h3 className="text-lg font-semibold mb-3 pb-2 border-b">
-                                  Personal Information
-                                </h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  <div>
-                                    <p className="font-medium">Full Name</p>
-                                    <p>
-                                      {selectedApplication.fullName || "N/A"}
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <p className="font-medium">Nickname</p>
-                                    <p>
-                                      {selectedApplication.nickname || "N/A"}
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <p className="font-medium">Gender</p>
-                                    <p>
-                                      {selectedApplication.gender === "male"
-                                        ? "Laki-laki"
-                                        : "Perempuan"}
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <p className="font-medium">Birth Date</p>
-                                    <p>
-                                      {selectedApplication.birthDate || "N/A"}
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <p className="font-medium">Email</p>
-                                    <p>{selectedApplication.email || "N/A"}</p>
-                                  </div>
-                                  <div>
-                                    <p className="font-medium">Phone Number</p>
-                                    <p>
-                                      {selectedApplication.phoneNumber || "N/A"}
-                                    </p>
-                                  </div>
-                                  <div className="md:col-span-2">
-                                    <p className="font-medium">
-                                      Padang Address
-                                    </p>
-                                    <p>
-                                      {selectedApplication.padangAddress ||
-                                        "N/A"}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Academic Information */}
-                              <div className="mb-6">
-                                <h3 className="text-lg font-semibold mb-3 pb-2 border-b">
-                                  Academic Information
-                                </h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  <div>
-                                    <p className="font-medium">Faculty</p>
-                                    <p>
-                                      {selectedApplication.faculty || "N/A"}
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <p className="font-medium">Department</p>
-                                    <p>
-                                      {selectedApplication.department || "N/A"}
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <p className="font-medium">Study Program</p>
-                                    <p>
-                                      {selectedApplication.studyProgram ||
-                                        "N/A"}
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <p className="font-medium">
-                                      Previous School
-                                    </p>
-                                    <p>
-                                      {selectedApplication.previousSchool ||
-                                        "N/A"}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Software Experience */}
-                              <div className="mb-6">
-                                <h3 className="text-lg font-semibold mb-3 pb-2 border-b">
-                                  Software Experience
-                                </h3>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                                  {selectedApplication.software && (
-                                    <>
-                                      {selectedApplication.software
-                                        .corelDraw && (
-                                        <div className="bg-blue-50 p-2 rounded">
-                                          CorelDraw
-                                        </div>
-                                      )}
-                                      {selectedApplication.software
-                                        .photoshop && (
-                                        <div className="bg-blue-50 p-2 rounded">
-                                          Photoshop
-                                        </div>
-                                      )}
-                                      {selectedApplication.software
-                                        .adobePremierePro && (
-                                        <div className="bg-blue-50 p-2 rounded">
-                                          Adobe Premiere Pro
-                                        </div>
-                                      )}
-                                      {selectedApplication.software
-                                        .adobeAfterEffect && (
-                                        <div className="bg-blue-50 p-2 rounded">
-                                          Adobe After Effect
-                                        </div>
-                                      )}
-                                      {selectedApplication.software
-                                        .autodeskEagle && (
-                                        <div className="bg-blue-50 p-2 rounded">
-                                          Autodesk Eagle
-                                        </div>
-                                      )}
-                                      {selectedApplication.software
-                                        .arduinoIde && (
-                                        <div className="bg-blue-50 p-2 rounded">
-                                          Arduino IDE
-                                        </div>
-                                      )}
-                                      {selectedApplication.software
-                                        .androidStudio && (
-                                        <div className="bg-blue-50 p-2 rounded">
-                                          Android Studio
-                                        </div>
-                                      )}
-                                      {selectedApplication.software
-                                        .visualStudio && (
-                                        <div className="bg-blue-50 p-2 rounded">
-                                          Visual Studio
-                                        </div>
-                                      )}
-                                      {selectedApplication.software
-                                        .missionPlaner && (
-                                        <div className="bg-blue-50 p-2 rounded">
-                                          Mission Planer
-                                        </div>
-                                      )}
-                                      {selectedApplication.software
-                                        .autodeskInventor && (
-                                        <div className="bg-blue-50 p-2 rounded">
-                                          Autodesk Inventor
-                                        </div>
-                                      )}
-                                      {selectedApplication.software
-                                        .autodeskAutocad && (
-                                        <div className="bg-blue-50 p-2 rounded">
-                                          Autodesk Autocad
-                                        </div>
-                                      )}
-                                      {selectedApplication.software
-                                        .solidworks && (
-                                        <div className="bg-blue-50 p-2 rounded">
-                                          Solidworks
-                                        </div>
-                                      )}
-                                      {selectedApplication.software.others && (
-                                        <div className="bg-blue-50 p-2 rounded col-span-full">
-                                          <span className="font-medium">
-                                            Others:{" "}
-                                          </span>
-                                          {selectedApplication.software.others}
-                                        </div>
-                                      )}
-                                    </>
-                                  )}
-                                  {!selectedApplication.software ||
-                                    (Object.values(
-                                      selectedApplication.software
-                                    ).every((val) => !val) && (
-                                      <p>No software experience specified</p>
-                                    ))}
-                                </div>
-                              </div>
-
-                              {/* Essays */}
-                              <div className="mb-6">
-                                <h3 className="text-lg font-semibold mb-3 pb-2 border-b">
-                                  Essays
-                                </h3>
-
-                                <div className="mb-4">
-                                  <h4 className="font-medium mb-2">
-                                    Motivation for Joining Robotics:
-                                  </h4>
-                                  <div className="bg-gray-50 p-3 rounded border">
-                                    {selectedApplication.motivation ||
-                                      "Not provided"}
-                                  </div>
-                                </div>
-
-                                <div className="mb-4">
-                                  <h4 className="font-medium mb-2">
-                                    Future Plans After Joining:
-                                  </h4>
-                                  <div className="bg-gray-50 p-3 rounded border">
-                                    {selectedApplication.futurePlans ||
-                                      "Not provided"}
-                                  </div>
-                                </div>
-
-                                <div>
-                                  <h4 className="font-medium mb-2">
-                                    Why Should Be Accepted:
-                                  </h4>
-                                  <div className="bg-gray-50 p-3 rounded border">
-                                    {selectedApplication.whyYouShouldBeAccepted ||
-                                      "Not provided"}
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Actions */}
-                              <div className="flex justify-end gap-3 mt-8 pt-4 border-t">
-                                <button
-                                  onClick={() => {
-                                    if (
-                                      confirm(
-                                        "Are you sure you want to delete this application? This action cannot be undone."
-                                      )
-                                    ) {
-                                      deleteApplication(
-                                        selectedApplication._id
-                                      );
-                                      closeDetailModal();
-                                    }
-                                  }}
-                                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
-                                >
-                                  Delete Application
-                                </button>
-                                <button
-                                  onClick={closeDetailModal}
-                                  className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-md"
-                                >
-                                  Close
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
                     </tr>
                   )) : (
                     <tr>
@@ -1075,10 +727,27 @@ export default function AdminPage() {
                       </td>
                     </tr>
                   )}
-              </tbody>
-            </table>
-          </div>
+                </tbody>
+              </table>
+            </div>
           )}
+          
+          {/* Move the modal outside of the table structure */}
+          {showDetailModal && selectedApplication && (
+            <ApplicationDetailModal
+              application={selectedApplication}
+              onClose={closeDetailModal}
+              onDelete={deleteApplication}
+              onStatusChange={(id, status) => {
+                updateApplicationStatus(id, status);
+                setSelectedApplication({
+                  ...selectedApplication,
+                  status: status,
+                });
+              }}
+            />
+          )}
+          
           {/* Pagination Controls */}
           {filteredApplications.length > 0 && (
             <Pagination

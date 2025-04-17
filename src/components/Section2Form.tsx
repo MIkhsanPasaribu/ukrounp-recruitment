@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { useState } from 'react';
@@ -23,11 +24,13 @@ export default function Section2Form({ onSubmit, isSubmitting, onBack }: Section
   const [formData, setFormData] = useState<Section2Data>({
     fullName: '',
     nickname: '',
-    gender: 'male', // Default to male
+    gender: 'male',
     birthDate: '',
     faculty: '',
     department: '',
     studyProgram: '',
+    nim: '',
+    nia: '',
     previousSchool: '',
     padangAddress: '',
     phoneNumber: '',
@@ -58,6 +61,21 @@ export default function Section2Form({ onSubmit, isSubmitting, onBack }: Section
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const getNiaFromNim = (nim: string): string => {
+    // Remove any non-numeric characters
+    const numericNim = nim.replace(/\D/g, '');
+    
+    if (!numericNim) return '';
+    
+    // Convert to integer and then to hexadecimal
+    try {
+      const hexValue = parseInt(numericNim, 10).toString(16).toUpperCase();
+      return `15.${hexValue}`;
+    } catch (error) {
+      return '';
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -79,7 +97,7 @@ export default function Section2Form({ onSubmit, isSubmitting, onBack }: Section
     const newErrors: Record<string, string> = {};
     const requiredFields = [
       'fullName', 'nickname', 'gender', 'birthDate', 'faculty', 
-      'department', 'studyProgram', 'previousSchool', 'padangAddress', 
+      'department', 'studyProgram', 'nim' , 'previousSchool', 'padangAddress', 
       'phoneNumber', 'motivation', 'futurePlans', 'whyYouShouldBeAccepted',
       'photo', 'studentCard', 'studyPlanCard', 'igFollowProof', 'tiktokFollowProof'
     ];
@@ -129,6 +147,14 @@ export default function Section2Form({ onSubmit, isSubmitting, onBack }: Section
     if (!studyProgramValidation.valid && studyProgramValidation.message) {
       newErrors.studyProgram = studyProgramValidation.message;
     }
+
+    // NIM validation
+    const nimValidation = validateRequired(formData.nim, 'NIM');
+    if (!nimValidation.valid && nimValidation.message) {
+      newErrors.nim = nimValidation.message;
+    } else if (!/^\d+$/.test(formData.nim)) {
+      newErrors.nim = 'NIM harus berupa angka';
+    }
     
     // Validate other required fields
     const previousSchoolValidation = validateRequired(formData.previousSchool, 'Asal sekolah');
@@ -162,7 +188,7 @@ export default function Section2Form({ onSubmit, isSubmitting, onBack }: Section
     if (!whyAcceptedValidation.valid && whyAcceptedValidation.message) {
       newErrors.whyYouShouldBeAccepted = whyAcceptedValidation.message;
     }
-    
+
     // Validate file uploads
     const allowedImageTypes = ['image/jpeg', 'image/png', 'image/jpg'];
     const maxFileSizeMB = 10;
@@ -217,9 +243,15 @@ export default function Section2Form({ onSubmit, isSubmitting, onBack }: Section
     e.preventDefault();
     
     if (validateForm()) {
-      onSubmit(formData);
+      const calculatedNia = getNiaFromNim(formData.nim);
+      
+      const formDataWithNia = {
+        ...formData,
+        nia: calculatedNia
+      };
+      
+      onSubmit(formDataWithNia);
     } else {
-      // Scroll to the first error
       const firstErrorField = document.querySelector('[aria-invalid="true"]');
       if (firstErrorField) {
         firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -351,7 +383,7 @@ export default function Section2Form({ onSubmit, isSubmitting, onBack }: Section
               />
               {errors.studyProgram && <p className="mt-1 text-sm text-red-600">{errors.studyProgram}</p>}
             </div>
-            
+
             <div>
               <label htmlFor="previousSchool" className="block text-sm font-medium text-gray-700 mb-1">
                 Sekolah Asal <span className="text-red-500">*</span>
@@ -366,6 +398,30 @@ export default function Section2Form({ onSubmit, isSubmitting, onBack }: Section
                 aria-invalid={!!errors.previousSchool}
               />
               {errors.previousSchool && <p className="mt-1 text-sm text-red-600">{errors.previousSchool}</p>}
+            </div>
+            
+            <div>
+              <label htmlFor="nim" className="block text-sm font-medium text-gray-700 mb-1">
+                NIM (Nomor Induk Mahasiswa) <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="nim"
+                name="nim"
+                value={formData.nim}
+                onChange={handleInputChange}
+                className={`block w-full rounded-md border ${errors.nim ? 'border-red-500' : 'border-gray-300'} shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                aria-invalid={!!errors.nim}
+                placeholder="Masukkan NIM Anda"
+              />
+              {errors.nim && <p className="mt-1 text-sm text-red-600">{errors.nim}</p>}
+              
+              {formData.nim && (
+                <div className="mt-2">
+                  <p className="text-sm text-gray-600">NIA (Nomor Induk Anggota):</p>
+                  <p className="font-medium text-blue-600">{getNiaFromNim(formData.nim)}</p>
+                </div>
+              )}
             </div>
           </div>
           
