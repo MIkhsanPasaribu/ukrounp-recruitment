@@ -1,71 +1,309 @@
-# Unit Kegiatan Robotika UNP - Recruitment Platform
+# UKRO UNP - Recruitment Platform 🤖
 
-A modern web application for managing the recruitment process at Unit Kegiatan Robotika Universitas Negeri Padang (UNP). Built with cutting-edge technologies to provide a seamless experience for both applicants and administrators.
+Platform rekrutmen modern untuk Unit Kegiatan Robotika Universitas Negeri Padang (UNP). Dibangun dengan teknologi terdepan untuk memberikan pengalaman terbaik bagi pendaftar dan administrator.
 
-## Key Features
+## ✨ Fitur Utama
 
-### For Applicants
-- Intuitive multi-step registration form with real-time progress tracking
-- Secure document upload system for student cards and required materials
-- Real-time application status monitoring
-- Mobile-responsive interface for on-the-go access
+### 👥 Untuk Pendaftar
 
-### For Administrators
-- Comprehensive dashboard for application management
-- Advanced search and filtering capabilities
-- Bulk application processing
-- CSV export functionality for offline analysis
-- Automated status update notifications
-- Data visualization via charts (using Chart.js integrated with React-ChartJS-2)
+- **Form Pendaftaran Multi-Step** dengan progress tracking real-time
+- **Upload Dokumen Aman** untuk kartu mahasiswa dan berkas lainnya
+- **Konfirmasi Otomatis** via email dengan PDF receipt
+- **Monitoring Status** aplikasi secara real-time
+- **Responsive Design** untuk akses mobile dan desktop
 
-## Technology Stack
+### 🔧 Untuk Administrator
+
+- **Dashboard Komprehensif** untuk manajemen aplikasi
+- **Search & Filter** aplikasi lanjutan
+- **Bulk Processing** untuk efisiensi
+- **Export CSV** untuk analisis offline
+- **Notifikasi Status** otomatis
+- **Visualisasi Data** dengan Chart.js
+
+## 🛠️ Teknologi
 
 ### Frontend
-- **Next.js (v15.2.3)** – A React framework providing server-side rendering, routing, and optimized performance.
-- **React (v19.0.0)** – The JavaScript library for building interactive user interfaces.
-- **TypeScript** – A superset of JavaScript that enables type safety and improved code reliability.
-- **Tailwind CSS (v4)** – A utility-first CSS framework for creating modern, responsive designs.
-- **Chart.js (v4.4.8) & React-ChartJS-2 (v5.3.0)** – For building data visualizations and analytics charts in the admin dashboard.
+
+- **Next.js 15.2.3** - React framework dengan SSR
+- **React 19** - Library UI interaktif
+- **TypeScript** - Type safety & reliability
+- **Tailwind CSS 4** - Utility-first CSS framework
+- **Chart.js 4.4.8** - Data visualization
 
 ### Backend
-- **Next.js API Routes** – Serverless API functions that manage backend logic such as form submissions, status checking, application management, and statistics.
-- **MongoDB (v6.15.0)** – A robust NoSQL database used for storing application data; the connection is handled using the MongoDB Node.js driver.
-- **Collections:**
-  - `applicants` - Stores detailed application information.
-  - `settings` - Manages application settings like registration status.
-- **API Endpoints:**
-  - `/api/submit` – Handles new application submissions.
-  - `/api/status` – Provides applicants with real-time status checks.
-  - `/api/admin/applications` – Retrieves all applications for the administrator view.
-  - `/api/admin/update-status` – Updates application statuses.
-  - `/api/admin/delete-application` – Deletes selected applications.
-  - `/api/admin/statistics` – Generates analytic data for dashboard visualizations.
-  - `/api/admin/registration-status` – Allows toggling the registration status (open/closed).
+
+- **Next.js API Routes** - Serverless functions
+- **MySQL** - Database relasional dengan phpMyAdmin
+- **mysql2** - MySQL client untuk Node.js
+- **Nodemailer 6.10.1** - Email automation
+- **PDFKit** - PDF generation
+
+### Database Schema
+
+- `applicants` - Data pendaftar lengkap
+- `settings` - Konfigurasi aplikasi sistem
+
+## 🚀 Quick Start
+
+### 1. Environment Setup
+
+```bash
+# Copy environment template
+cp .env.example .env.local
+
+# Install dependencies
+npm install
+```
+
+### 2. Database Setup
+
+```bash
+# Buat database MySQL menggunakan script yang disediakan
+npm run db:setup
+# atau jalankan manual
+mysql -u root -p < database-setup-mysql.sql
+```
+
+### 3. Development
+
+```bash
+# Start development server
+npm run dev
+
+# Open browser
+# http://localhost:3000
+```
+
+## 📧 Email Configuration
+
+### Testing dengan Mailtrap (Recommended)
+
+```env
+EMAIL_SERVICE=mailtrap
+EMAIL_USER=your_mailtrap_username
+EMAIL_PASS=your_mailtrap_password
+```
+
+### Production dengan Gmail
+
+```env
+EMAIL_SERVICE=gmail
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_app_password
+```
+
+## 🗄️ Database Migration
+
+### Setup MySQL Database
+
+```bash
+# Jalankan script database-setup-mysql.sql
+npm run db:setup
+
+# Script akan membuat database robotik_oprec dengan:
+# - Tabel applicants (data pendaftar)
+# - Tabel settings (pengaturan aplikasi)
+# - Indeks untuk optimasi query
+# - Trigger untuk update timestamp
+```
+
+### Konfigurasi Koneksi
+
+Buat file `.env.local` dengan konfigurasi berikut:
+
+```env
+# Database Configuration
+MYSQL_HOST=localhost
+MYSQL_USER=root
+MYSQL_PASSWORD=your_password
+MYSQL_DATABASE=robotik_oprec
+
+# Email Configuration
+EMAIL_SERVICE=gmail
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_app_password
+```
+
+## 📱 API Endpoints
+
+### Public APIs
+
+- `GET /api/status` - Check application status
+- `POST /api/submit` - Submit new application
+
+### Admin APIs
+
+- `GET /api/admin/applications` - Get all applications
+- `GET /api/admin/statistics` - Get dashboard statistics
+- `PUT /api/admin/update-status` - Update application status
+- `DELETE /api/admin/delete-application` - Delete application
+- `GET /api/admin/registration-status` - Get/set registration status
+
+## 🧪 Testing
+
+### Automated Testing
+
+```bash
+# Run setup tests
+npm run test:setup
+
+# Manual email testing
+npm run test:email
+
+# Database setup
+npm run db:setup
+
+# Database check
+npm run db:check
+```
+
+### Manual Testing
+
+1. **Registration**: `/form` - Test form submission
+2. **Status Check**: `/status` - Test status checking
+3. **Admin Panel**: `/admin` - Test admin features
+
+## 📂 Project Structure
+
+```
+ukro-recruitment/
+├── src/
+│   ├── app/                    # Next.js app directory
+│   │   ├── api/               # API routes
+│   │   ├── form/              # Registration form
+│   │   ├── status/            # Status checking
+│   │   └── admin/             # Admin dashboard
+│   ├── components/            # React components
+│   ├── lib/                   # Libraries & utilities
+│   │   └── supabase.ts       # Database connection
+│   ├── types/                 # TypeScript types
+│   └── utils/                 # Utility functions
+│       ├── emailService.ts   # Email templates
+│       ├── registrationService.ts  # Email sending
+│       ├── pdfGenerator.ts   # PDF generation
+│       └── validation.ts     # Form validation
+├── database-check.sql         # Full database schema
+├── database-setup-minimal.sql # Quick setup
+├── test-automation.js         # Testing script
+├── DEPLOYMENT-GUIDE.md        # Deployment guide
+└── .env.example              # Environment template
+```
+
+## 🚢 Deployment
+
+### Vercel (Recommended)
+
+1. Push to GitHub
+2. Connect to Vercel
+3. Set environment variables
+4. Deploy
+
+### Environment Variables untuk Production
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_production_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_production_key
+EMAIL_SERVICE=gmail
+GMAIL_USER=your_production_email
+GMAIL_PASS=your_app_password
+ADMIN_PASSWORD=your_secure_password
+```
+
+## 📋 Checklist Deployment
+
+- [ ] Environment variables configured
+- [ ] Database migrated (Supabase)
+- [ ] Email service tested
+- [ ] Local testing passed
+- [ ] Production deployment
+- [ ] Production testing
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+**Database Connection Error**
+
+```bash
+# Check Supabase URL and key in .env.local
+# Verify database tables exist
+```
+
+**Email Authentication Error**
+
+```bash
+# For Gmail: Use App Password, not regular password
+# For Mailtrap: Check username/password
+```
+
+**Build Errors**
+
+```bash
+# Clear cache and reinstall
+rm -rf .next node_modules
+npm install
+npm run build
+```
+
+## 📚 Documentation
+
+- [Deployment Guide](DEPLOYMENT-GUIDE.md) - Step-by-step deployment
+- [Database Schema](database-check.sql) - Complete database structure
+- [Environment Setup](.env.example) - Environment variables template
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create feature branch
+3. Commit changes
+4. Push to branch
+5. Create Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🎯 About
+
+Dikembangkan untuk Unit Kegiatan Robotika Universitas Negeri Padang (UNP) dengan teknologi modern dan pengalaman pengguna terbaik.
+
+**Team**: UKRO UNP Development Team  
+**Year**: 2024  
+**Status**: Production Ready ✅
+
+---
+
+_Untuk informasi lebih lanjut, baca [DEPLOYMENT-GUIDE.md](DEPLOYMENT-GUIDE.md)_
 
 ### Development Tools & Infrastructure
+
 - **ESLint (v9)** – Ensures code quality and adherence to style guidelines.
 - **Tailwind PostCSS plugin** – Processes Tailwind CSS classes effectively.
 - **Vercel** – Used for automated deployment, enabling seamless CI/CD integration.
-- **MongoDB Atlas** – Provides a managed database service.
+- **Supabase** – Provides a managed PostgreSQL database service with real-time capabilities.
 - Single codebase that integrates both client and server logic, streamlining the development and deployment process.
 
 ## Getting Started
 
 ### System Requirements
+
 - Node.js 18.x or newer
 - npm 8.x+ or yarn 1.22.x+
-- MongoDB Atlas account
+- Supabase account
 - Vercel account for deployment
 
 ### Installation Steps
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/MIkhsanPasaribu/ukrounp-recruitment.git
    cd ukrounp-recruitment
    ```
 
 2. Install dependencies:
+
    ```bash
    npm install
    # or
@@ -73,17 +311,28 @@ A modern web application for managing the recruitment process at Unit Kegiatan R
    ```
 
 3. Configure environment:
+
    ```bash
-   cp .env.example .env.local
-   ```
-   Then set the following required environment variables in your .env.local file:
-   ```
-   MONGODB_URI=your_mongodb_connection_string
-   NEXT_PUBLIC_API_URL=http://localhost:3000/api
-   JWT_SECRET=your_secret_key
+   cp .env.local.example .env.local
    ```
 
+   Then set the following required environment variables in your .env.local file:
+
+   ```
+   SUPABASE_URL=your_supabase_url
+   SUPABASE_KEY=your_supabase_key
+   SUPABASE_SECRET=your_supabase_secret
+
+   # Email configuration for registration confirmations
+   EMAIL_SERVICE=gmail
+   EMAIL_USER=your_email@gmail.com
+   EMAIL_PASS=your_app_password_here
+   ```
+
+   Note: For Gmail, you'll need to use an App Password instead of your regular password. See [Google's documentation](https://support.google.com/accounts/answer/185833) for instructions on setting up an App Password.
+
 4. Start the development server:
+
    ```bash
    npm run dev
    # or
@@ -97,12 +346,11 @@ A modern web application for managing the recruitment process at Unit Kegiatan R
 
 - /src/app  
   Contains Next.js app router pages, including both the frontend and API routes.
-  
 - /src/components  
   Reusable React components used throughout the application.
 
 - /src/lib  
-  Utility functions and the database connection logic (e.g., MongoDB connection in mongodb.ts).
+  Utility functions and the database connection logic (e.g., Supabase connection in supabase.ts).
 
 - /src/types  
   TypeScript type definitions for ensuring type safety.
@@ -116,12 +364,13 @@ The admin panel is accessible at `/admin`. A simple password-based authenticatio
 
 ## Database Structure
 
-The application uses a MongoDB collection named `applicants` with the following structure:
-- _id : MongoDB ObjectId
-- email : Applicant's email address
-- fullName : Applicant's full name
-- status : Application status (e.g., Under Review, Shortlisted, Interview, Accepted, Rejected)
-- submittedAt : Timestamp of application submission
+The application uses a Supabase collection named `applicants` with the following structure:
+
+- `id` : Supabase ID
+- `email` : Applicant's email address
+- `fullName` : Applicant's full name
+- `status` : Application status (e.g., Under Review, Shortlisted, Interview, Accepted, Rejected)
+- `submittedAt` : Timestamp of application submission
 - Various fields for personal and academic information
 - Document uploads (stored as base64 strings or appropriate file references)
 

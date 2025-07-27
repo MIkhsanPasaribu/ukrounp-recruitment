@@ -1,14 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ApplicationData } from "@/types";
+import { ApplicationData, ApplicationStatus } from "@/types";
 import Link from "next/link";
 import AdminDashboard from "@/components/AdminDashboard";
 import Pagination from "@/components/Pagination";
 import AdminHeaderButtons from "@/components/AdminHeaderButtons";
 import ApplicationDetailModal from "@/components/ApplicationDetailModal";
 import { exportApplicationsToCSV } from "@/utils/csvExport";
-import BulkEmailButton from '@/components/BulkEmailButton';
 
 export default function AdminPage() {
   const [applications, setApplications] = useState<ApplicationData[]>([]);
@@ -22,7 +21,7 @@ export default function AdminPage() {
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(true);
   const [registrationStatusLoading, setRegistrationStatusLoading] =
     useState(false);
-  const [activeTab, setActiveTab] = useState("applications"); // Add this state
+  const [activeTab, setActiveTab] = useState("applications");
   const [selectedApplications, setSelectedApplications] = useState<string[]>(
     []
   );
@@ -130,10 +129,24 @@ export default function AdminPage() {
     }
   };
 
-  const updateApplicationStatus = async (id: string, newStatus: string) => {
+  const updateApplicationStatus = async (
+    id: string,
+    newStatus: ApplicationStatus
+  ) => {
+    // Create display map for confirmation
+    const displayMap: Record<ApplicationStatus, string> = {
+      UNDER_REVIEW: "Under Review",
+      SHORTLISTED: "Shortlisted",
+      INTERVIEW: "Interview",
+      ACCEPTED: "Accepted",
+      REJECTED: "Rejected",
+    };
+
     // Add confirmation dialog
     if (
-      !confirm(`Are you sure you want to change the status to "${newStatus}"?`)
+      !confirm(
+        `Are you sure you want to change the status to "${displayMap[newStatus]}"?`
+      )
     ) {
       return;
     }
@@ -150,8 +163,8 @@ export default function AdminPage() {
       if (response.ok) {
         // Update the local state to reflect the change
         setApplications(
-          applications.map((app) => {
-            return app._id === id ? { ...app, status: newStatus } : app;
+          applications.map((app: ApplicationData) => {
+            return app.id === id ? { ...app, status: newStatus } : app;
           })
         );
       }
@@ -181,7 +194,7 @@ export default function AdminPage() {
 
       if (response.ok) {
         // Remove the deleted application from the local state
-        setApplications(applications.filter((app) => app._id !== id));
+        setApplications(applications.filter((app) => app.id !== id));
       } else {
         const data = await response.json();
         alert(`Failed to delete: ${data.message || "Unknown error"}`);
@@ -197,7 +210,7 @@ export default function AdminPage() {
       alert("No applications to export");
       return;
     }
-    
+
     exportApplicationsToCSV(applications);
   };
 
@@ -227,9 +240,20 @@ export default function AdminPage() {
     indexOfLastApplication
   );
   // Calculate total pages
-  const totalPages = Math.ceil(filteredApplications.length / applicationsPerPage);
+  const totalPages = Math.ceil(
+    filteredApplications.length / applicationsPerPage
+  );
 
-  const handleBulkStatusUpdate = async (newStatus: string) => {
+  const handleBulkStatusUpdate = async (newStatus: ApplicationStatus) => {
+    // Create display map for confirmation
+    const displayMap: Record<ApplicationStatus, string> = {
+      UNDER_REVIEW: "Under Review",
+      SHORTLISTED: "Shortlisted",
+      INTERVIEW: "Interview",
+      ACCEPTED: "Accepted",
+      REJECTED: "Rejected",
+    };
+
     if (selectedApplications.length === 0) {
       alert("No applications selected");
       return;
@@ -237,7 +261,7 @@ export default function AdminPage() {
 
     if (
       !confirm(
-        `Are you sure you want to change the status to "${newStatus}" for ${selectedApplications.length} applications?`
+        `Are you sure you want to change the status to "${displayMap[newStatus]}" for ${selectedApplications.length} applications?`
       )
     ) {
       return;
@@ -258,18 +282,18 @@ export default function AdminPage() {
 
       // Update the local state to reflect the changes
       setApplications(
-        applications.map((app) => {
-          return selectedApplications.includes(app._id)
+        applications.map((app: ApplicationData) =>
+          selectedApplications.includes(app.id)
             ? { ...app, status: newStatus }
-            : app;
-        })
+            : app
+        )
       );
 
       // Clear selections after successful update
       setSelectedApplications([]);
       setSelectAll(false);
       alert(
-        `Successfully updated ${selectedApplications.length} applications to "${newStatus}"`
+        `Successfully updated ${selectedApplications.length} applications to "${displayMap[newStatus]}"`
       );
     } catch (error) {
       console.error("Error updating statuses:", error);
@@ -307,7 +331,7 @@ export default function AdminPage() {
 
       // Update the local state to reflect the changes
       setApplications(
-        applications.filter((app) => !selectedApplications.includes(app._id))
+        applications.filter((app) => !selectedApplications.includes(app.id))
       );
 
       // Clear selections after successful delete
@@ -325,7 +349,7 @@ export default function AdminPage() {
     if (selectAll) {
       setSelectedApplications([]);
     } else {
-      setSelectedApplications(filteredApplications.map((app) => app._id));
+      setSelectedApplications(filteredApplications.map((app) => app.id));
     }
     setSelectAll(!selectAll);
   };
@@ -430,14 +454,14 @@ export default function AdminPage() {
           </Link>
           <h1 className="text-2xl font-bold">Admin Dashboard</h1>
         </div>
-          <AdminHeaderButtons 
-              isRegistrationOpen={isRegistrationOpen}
-              registrationStatusLoading={registrationStatusLoading}
-              hasApplications={applications.length > 0}
-              onToggleRegistration={toggleRegistrationStatus}
-              onExportCSV={exportToCSV}
-              onLogout={handleLogout}
-            />
+        <AdminHeaderButtons
+          isRegistrationOpen={isRegistrationOpen}
+          registrationStatusLoading={registrationStatusLoading}
+          hasApplications={applications.length > 0}
+          onToggleRegistration={toggleRegistrationStatus}
+          onExportCSV={exportToCSV}
+          onLogout={handleLogout}
+        />
       </div>
 
       {/* Registration status indicator */}
@@ -502,11 +526,11 @@ export default function AdminPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
               >
                 <option value="all">All Statuses</option>
-                <option value="Under Review">Under Review</option>
-                <option value="Shortlisted">Shortlisted</option>
-                <option value="Interview">Interview</option>
-                <option value="Accepted">Accepted</option>
-                <option value="Rejected">Rejected</option>
+                <option value="UNDER_REVIEW">Under Review</option>
+                <option value="SHORTLISTED">Shortlisted</option>
+                <option value="INTERVIEW">Interview</option>
+                <option value="ACCEPTED">Accepted</option>
+                <option value="REJECTED">Rejected</option>
               </select>
             </div>
           </div>
@@ -525,7 +549,7 @@ export default function AdminPage() {
                     onChange={(e) => {
                       const value = e.target.value;
                       if (value) {
-                        handleBulkStatusUpdate(value);
+                        handleBulkStatusUpdate(value as ApplicationStatus);
                         e.target.value = "";
                       }
                     }}
@@ -535,22 +559,11 @@ export default function AdminPage() {
                     <option value="" disabled>
                       Change status...
                     </option>
-                    <option value="Under Review">Under Review</option>
-                    <option value="Interview">Interview</option>
-                    <option value="Accepted">Accepted</option>
-                    <option value="Rejected">Rejected</option>
+                    <option value="UNDER_REVIEW">Under Review</option>
+                    <option value="INTERVIEW">Interview</option>
+                    <option value="ACCEPTED">Accepted</option>
+                    <option value="REJECTED">Rejected</option>
                   </select>
-                  
-                  {/* Add the BulkEmailButton component here */}
-                  <BulkEmailButton 
-                    selectedApplications={selectedApplications}
-                    onEmailsSent={() => {
-                      // Clear selections after emails are sent
-                      setSelectedApplications([]);
-                      setSelectAll(false);
-                    }}
-                  />
-                  
                   <button
                     onClick={handleBulkDelete}
                     disabled={selectedApplications.length === 0}
@@ -591,91 +604,96 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentApplications.length > 0 ? currentApplications.map((app, index) => (
-                    <tr
-                      key={app._id || index}
-                      className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
-                    >
-                      <td className="px-4 py-2 border text-center">
-                        <input
-                          type="checkbox"
-                          checked={selectedApplications?.includes(app._id)}
-                          onChange={() => handleSelectApplication(app._id)}
-                          className="h-4 w-4"
-                        />
-                      </td>
-                      <td className="px-4 py-2 border">{app.email}</td>
-                      <td className="px-4 py-2 border">{app.fullName}</td>
-                      <td className="px-4 py-2 border">{app.faculty}</td>
-                      <td className="px-4 py-2 border">{app.department}</td>
-                      <td className="px-4 py-2 border">{app.phoneNumber}</td>
-                      <td className="px-4 py-2 border">
-                        <select
-                          value={app.status || "Under Review"}
-                          onChange={(e) =>
-                            updateApplicationStatus(app._id, e.target.value)
-                          }
-                          className="w-full p-1 border border-gray-300 rounded"
-                        >
-                          <option value="Under Review">Under Review</option>
-                          <option value="Shortlisted">Shortlisted</option>
-                          <option value="Interview">Interview</option>
-                          <option value="Accepted">Accepted</option>
-                          <option value="Rejected">Rejected</option>
-                        </select>
-                      </td>
-                      <td className="px-4 py-2 border">
-                        <div className="flex items-center">
-                          <button
-                            onClick={() => viewApplicationDetails(app)}
-                            className="text-blue-600 hover:text-blue-800 mr-2"
-                            title="View Details"
+                  {currentApplications.length > 0 ? (
+                    currentApplications.map((app, index) => (
+                      <tr
+                        key={app.id || index}
+                        className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
+                      >
+                        <td className="px-4 py-2 border text-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedApplications?.includes(app.id)}
+                            onChange={() => handleSelectApplication(app.id)}
+                            className="h-4 w-4"
+                          />
+                        </td>
+                        <td className="px-4 py-2 border">{app.email}</td>
+                        <td className="px-4 py-2 border">{app.fullName}</td>
+                        <td className="px-4 py-2 border">{app.faculty}</td>
+                        <td className="px-4 py-2 border">{app.department}</td>
+                        <td className="px-4 py-2 border">{app.phoneNumber}</td>
+                        <td className="px-4 py-2 border">
+                          <select
+                            value={app.status || "UNDER_REVIEW"}
+                            onChange={(e) =>
+                              updateApplicationStatus(
+                                app.id,
+                                e.target.value as ApplicationStatus
+                              )
+                            }
+                            className="w-full p-1 border border-gray-300 rounded"
                           >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-5 w-5"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
+                            <option value="UNDER_REVIEW">Under Review</option>
+                            <option value="SHORTLISTED">Shortlisted</option>
+                            <option value="INTERVIEW">Interview</option>
+                            <option value="ACCEPTED">Accepted</option>
+                            <option value="REJECTED">Rejected</option>
+                          </select>
+                        </td>
+                        <td className="px-4 py-2 border">
+                          <div className="flex items-center">
+                            <button
+                              onClick={() => viewApplicationDetails(app)}
+                              className="text-blue-600 hover:text-blue-800 mr-2"
+                              title="View Details"
                             >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                              />
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                              />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() => deleteApplication(app._id)}
-                            className="text-red-600 hover:text-red-800 mr-2"
-                            title="Delete Application"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-5 w-5"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-5 w-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                />
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => deleteApplication(app.id)}
+                              className="text-red-600 hover:text-red-800 mr-2"
+                              title="Delete Application"
                             >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                              />
-                            </svg>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )) : (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-5 w-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
                     <tr>
                       <td
                         colSpan={8}
@@ -689,7 +707,7 @@ export default function AdminPage() {
               </table>
             </div>
           )}
-          
+
           {/* Move the modal outside of the table structure */}
           {showDetailModal && selectedApplication && (
             <ApplicationDetailModal
@@ -697,15 +715,15 @@ export default function AdminPage() {
               onClose={closeDetailModal}
               onDelete={deleteApplication}
               onStatusChange={(id, status) => {
-                updateApplicationStatus(id, status);
+                updateApplicationStatus(id, status as ApplicationStatus);
                 setSelectedApplication({
                   ...selectedApplication,
-                  status: status,
+                  status: status as ApplicationStatus,
                 });
               }}
             />
           )}
-          
+
           {/* Pagination Controls */}
           {filteredApplications.length > 0 && (
             <Pagination
@@ -716,7 +734,7 @@ export default function AdminPage() {
               onPageChange={(pageNumber) => {
                 setCurrentPage(pageNumber);
                 // Optionally scroll to top of table when changing pages
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                window.scrollTo({ top: 0, behavior: "smooth" });
               }}
               onItemsPerPageChange={(newItemsPerPage) => {
                 setApplicationsPerPage(newItemsPerPage);

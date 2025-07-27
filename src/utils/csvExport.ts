@@ -43,7 +43,7 @@ export const exportApplicationsToCSV = (applications: ApplicationData[]) => {
     "Solidworks",
     "Other Software",
     // File references
-    "Payment Proof",
+    "MBTI Test Proof",
     "Photo",
     "Student Card",
     "Study Plan Card",
@@ -88,7 +88,7 @@ export const exportApplicationsToCSV = (applications: ApplicationData[]) => {
       escapeField(app.email),
       escapeField(app.fullName),
       escapeField(app.nickname),
-      `"${app.gender === 'male' ? 'Laki-laki' : app.gender === 'female' ? 'Perempuan' : ""}"`,
+      `"${app.gender === 'MALE' ? 'Laki-laki' : app.gender === 'FEMALE' ? 'Perempuan' : ""}"`,
       `"${app.birthDate || ""}"`,
       escapeField(app.faculty),
       escapeField(app.department),
@@ -118,7 +118,7 @@ export const exportApplicationsToCSV = (applications: ApplicationData[]) => {
       `"${formatBoolean(app.software?.solidworks)}"`,
       escapeField(app.software?.others),
       // File references
-      `"${getFileInfo(app.paymentProof)}"`,
+      `"${getFileInfo(app.mbtiProof)}"`,
       `"${getFileInfo(app.photo)}"`,
       `"${getFileInfo(app.studentCard)}"`,
       `"${getFileInfo(app.studyPlanCard)}"`,
