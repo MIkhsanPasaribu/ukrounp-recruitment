@@ -25,7 +25,7 @@ export async function generateRegistrationConfirmation(
 
   // Add title
   doc.setFontSize(12);
-  doc.text("SURAT KONFIRMASI PENDAFTARAN", 105, 55, { align: "center" });
+  doc.text("FORMULIR PENDAFTARAN", 105, 55, { align: "center" });
 
   // Add applicant information
   let yPosition = 75;

@@ -135,7 +135,7 @@ export default function StatusPage() {
         </Link>
       </div>
 
-      <h1 className="text-2xl font-bold mb-6">Cek Status Aplikasi</h1>
+      <h1 className="text-2xl font-bold mb-6">Cek Status Pendaftaran</h1>
 
       <form
         onSubmit={checkStatus}
@@ -174,7 +174,7 @@ export default function StatusPage() {
 
       {status?.application && (
         <div className="bg-white shadow-md rounded px-8 pt-6 pb-8">
-          <h2 className="text-xl font-semibold mb-4">Status Aplikasi</h2>
+          <h2 className="text-xl font-semibold mb-4">Status Pendaftaran</h2>
           <div className="mb-4">
             <p className="text-sm text-gray-600">Nama:</p>
             <p className="font-medium">{status.application.fullName}</p>
@@ -196,11 +196,11 @@ export default function StatusPage() {
           {/* Download PDF Section */}
           <div className="border-t pt-6">
             <h3 className="text-lg font-semibold mb-4">
-              Download Surat Konfirmasi
+              Download Formulir Pendaftaran
             </h3>
             <p className="text-sm text-gray-600 mb-4">
-              Untuk mendownload surat konfirmasi Anda, silakan masukkan tanggal
-              lahir Anda untuk verifikasi.
+              Untuk mendownload formulir pendaftaran Anda, silakan masukkan
+              tanggal lahir Anda untuk verifikasi.
             </p>
 
             <div className="mb-4">

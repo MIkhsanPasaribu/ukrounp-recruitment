@@ -82,7 +82,7 @@ export async function POST(request: Request) {
         status: 200,
         headers: {
           "Content-Type": "application/pdf",
-          "Content-Disposition": `attachment; filename="surat-konfirmasi-${formattedData.fullName.replace(
+          "Content-Disposition": `attachment; filename="formulir-pendaftaran-${formattedData.fullName.replace(
             /\s+/g,
             "-"
           )}.pdf"`,

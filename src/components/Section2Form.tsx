@@ -938,7 +938,8 @@ export default function Section2Form({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Kartu Tanda Mahasiswa <span className="text-red-500">*</span>
+                Kartu Tanda Mahasiswa atau Kartu Tanda Mahasiswa Sementara{" "}
+                <span className="text-red-500">*</span>
               </label>
               <FileUpload
                 onFileSelected={(base64) =>

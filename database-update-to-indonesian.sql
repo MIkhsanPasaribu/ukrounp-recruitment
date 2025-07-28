@@ -15,8 +15,8 @@ UPDATE applicants SET status = 'DITOLAK' WHERE status = 'REJECTED';
 -- Alter table untuk mengubah enum values jika menggunakan ENUM type di MySQL
 -- Hapus komentar di bawah jika tabel menggunakan ENUM type
 
--- ALTER TABLE applicants MODIFY COLUMN gender ENUM('LAKI_LAKI', 'PEREMPUAN');
--- ALTER TABLE applicants MODIFY COLUMN status ENUM('SEDANG_DITINJAU', 'DAFTAR_PENDEK', 'INTERVIEW', 'DITERIMA', 'DITOLAK') DEFAULT 'SEDANG_DITINJAU';
+ALTER TABLE applicants MODIFY COLUMN gender ENUM('LAKI_LAKI', 'PEREMPUAN');
+ALTER TABLE applicants MODIFY COLUMN status ENUM('SEDANG_DITINJAU', 'DAFTAR_PENDEK', 'INTERVIEW', 'DITERIMA', 'DITOLAK') DEFAULT 'SEDANG_DITINJAU';
 
 -- Verifikasi hasil update
 SELECT DISTINCT gender FROM applicants;
