@@ -59,18 +59,51 @@ export async function GET(
         futurePlans: applicantData.future_plans,
         whyYouShouldBeAccepted: applicantData.why_you_should_be_accepted,
         software: {
-          corelDraw: Boolean(applicantData.corel_draw),
-          photoshop: Boolean(applicantData.photoshop),
-          adobePremierePro: Boolean(applicantData.adobe_premiere_pro),
-          adobeAfterEffect: Boolean(applicantData.adobe_after_effect),
-          autodeskEagle: Boolean(applicantData.autodesk_eagle),
-          arduinoIde: Boolean(applicantData.arduino_ide),
-          androidStudio: Boolean(applicantData.android_studio),
-          visualStudio: Boolean(applicantData.visual_studio),
-          missionPlaner: Boolean(applicantData.mission_planer),
-          autodeskInventor: Boolean(applicantData.autodesk_inventor),
-          autodeskAutocad: Boolean(applicantData.autodesk_autocad),
-          solidworks: Boolean(applicantData.solidworks),
+          corelDraw: Boolean(
+            applicantData.corel_draw === 1 || applicantData.corel_draw === true
+          ),
+          photoshop: Boolean(
+            applicantData.photoshop === 1 || applicantData.photoshop === true
+          ),
+          adobePremierePro: Boolean(
+            applicantData.adobe_premiere_pro === 1 ||
+              applicantData.adobe_premiere_pro === true
+          ),
+          adobeAfterEffect: Boolean(
+            applicantData.adobe_after_effect === 1 ||
+              applicantData.adobe_after_effect === true
+          ),
+          autodeskEagle: Boolean(
+            applicantData.autodesk_eagle === 1 ||
+              applicantData.autodesk_eagle === true
+          ),
+          arduinoIde: Boolean(
+            applicantData.arduino_ide === 1 ||
+              applicantData.arduino_ide === true
+          ),
+          androidStudio: Boolean(
+            applicantData.android_studio === 1 ||
+              applicantData.android_studio === true
+          ),
+          visualStudio: Boolean(
+            applicantData.visual_studio === 1 ||
+              applicantData.visual_studio === true
+          ),
+          missionPlaner: Boolean(
+            applicantData.mission_planer === 1 ||
+              applicantData.mission_planer === true
+          ),
+          autodeskInventor: Boolean(
+            applicantData.autodesk_inventor === 1 ||
+              applicantData.autodesk_inventor === true
+          ),
+          autodeskAutocad: Boolean(
+            applicantData.autodesk_autocad === 1 ||
+              applicantData.autodesk_autocad === true
+          ),
+          solidworks: Boolean(
+            applicantData.solidworks === 1 || applicantData.solidworks === true
+          ),
           others: applicantData.other_software || "",
         },
         mbtiProof: applicantData.mbti_proof,

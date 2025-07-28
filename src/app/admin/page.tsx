@@ -214,6 +214,37 @@ export default function AdminPage() {
     exportApplicationsToCSV(applications);
   };
 
+  const handleBulkDownloadPDF = async () => {
+    if (applications.length === 0) {
+      alert("Tidak ada aplikasi untuk didownload");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/admin/bulk-download-pdf");
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.style.display = "none";
+        a.href = url;
+
+        const currentDate = new Date().toISOString().split("T")[0];
+        a.download = `formulir-pendaftaran-ukro-${currentDate}.zip`;
+
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        alert("Gagal mendownload PDF");
+      }
+    } catch (error) {
+      console.error("Error downloading bulk PDF:", error);
+      alert("Gagal mendownload PDF");
+    }
+  };
+
   const handleLogout = () => {
     setIsAuthenticated(false);
     setApplications([]);
@@ -460,6 +491,7 @@ export default function AdminPage() {
           hasApplications={applications.length > 0}
           onToggleRegistration={toggleRegistrationStatus}
           onExportCSV={exportToCSV}
+          onBulkDownloadPDF={handleBulkDownloadPDF}
           onLogout={handleLogout}
         />
       </div>
@@ -646,10 +678,10 @@ export default function AdminPage() {
                           </select>
                         </td>
                         <td className="px-4 py-2 border">
-                          <div className="flex items-center">
+                          <div className="flex items-center space-x-1">
                             <button
                               onClick={() => viewApplicationDetails(app)}
-                              className="text-blue-600 hover:text-blue-800 mr-2"
+                              className="text-blue-600 hover:text-blue-800"
                               title="Lihat Detail"
                             >
                               <svg
@@ -674,8 +706,33 @@ export default function AdminPage() {
                               </svg>
                             </button>
                             <button
+                              onClick={() => {
+                                window.open(
+                                  `/api/admin/download-pdf/${app.id}`,
+                                  "_blank"
+                                );
+                              }}
+                              className="text-green-600 hover:text-green-800"
+                              title="Download PDF"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-5 w-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                />
+                              </svg>
+                            </button>
+                            <button
                               onClick={() => deleteApplication(app.id)}
-                              className="text-red-600 hover:text-red-800 mr-2"
+                              className="text-red-600 hover:text-red-800"
                               title="Hapus Aplikasi"
                             >
                               <svg

@@ -13,6 +13,31 @@ export default function ApplicationDetailModal({
   onDelete,
   onStatusChange,
 }: ApplicationDetailModalProps) {
+  const handleDownloadPDF = async () => {
+    try {
+      const response = await fetch(`/api/admin/download-pdf/${application.id}`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.style.display = "none";
+        a.href = url;
+        a.download = `formulir-pendaftaran-${application.fullName.replace(
+          /\s+/g,
+          "-"
+        )}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        alert("Gagal mendownload PDF");
+      }
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      alert("Gagal mendownload PDF");
+    }
+  };
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
@@ -20,13 +45,13 @@ export default function ApplicationDetailModal({
         <div className="bg-gray-50 px-6 py-4 border-b flex justify-between items-center sticky top-0 z-10">
           <div>
             <h2 className="text-xl font-bold text-gray-800">
-              Application Details
+              Detail Pendaftaran
             </h2>
             <p className="text-sm text-gray-500">
-              Submitted:{" "}
+              Dikirim:{" "}
               {application.submittedAt
-                ? new Date(application.submittedAt).toLocaleString()
-                : "N/A"}
+                ? new Date(application.submittedAt).toLocaleString("id-ID")
+                : "Tidak tersedia"}
             </p>
           </div>
           <button
@@ -55,7 +80,7 @@ export default function ApplicationDetailModal({
           <div className="mb-8 bg-white rounded-lg border border-gray-200 shadow-sm">
             <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-200">
               <div className="p-4">
-                <p className="text-sm text-gray-500 mb-1">Status</p>
+                <p className="text-sm text-gray-500 mb-1">Status Pendaftaran</p>
                 <div className="flex items-center">
                   <div
                     className={`w-3 h-3 rounded-full mr-2 ${
@@ -87,14 +112,14 @@ export default function ApplicationDetailModal({
               </div>
 
               <div className="p-4">
-                <p className="text-sm text-gray-500 mb-1">Application ID</p>
+                <p className="text-sm text-gray-500 mb-1">ID Pendaftaran</p>
                 <p className="font-mono text-sm text-gray-800">
                   {application.id}
                 </p>
               </div>
 
               <div className="p-4">
-                <p className="text-sm text-gray-500 mb-1">Contact</p>
+                <p className="text-sm text-gray-500 mb-1">Kontak</p>
                 <a
                   href={`mailto:${application.email}`}
                   className="text-blue-600 hover:text-blue-800 font-medium"
@@ -111,18 +136,18 @@ export default function ApplicationDetailModal({
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
               <div className="bg-blue-50 px-4 py-3 border-b border-gray-200">
                 <h3 className="font-semibold text-blue-800">
-                  Personal Information
+                  Informasi Pribadi
                 </h3>
               </div>
               <div className="p-4 space-y-3">
                 <div className="flex flex-col">
-                  <span className="text-sm text-gray-500">Full Name</span>
+                  <span className="text-sm text-gray-500">Nama Lengkap</span>
                   <span className="font-medium text-gray-900">
                     {application.fullName}
                   </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-sm text-gray-500">Nickname</span>
+                  <span className="text-sm text-gray-500">Nama Panggilan</span>
                   <span className="text-gray-900">{application.nickname}</span>
                 </div>
                 <div className="flex flex-col">
@@ -141,7 +166,13 @@ export default function ApplicationDetailModal({
                 </div>
                 <div className="flex flex-col">
                   <span className="text-sm text-gray-500">Tanggal Lahir</span>
-                  <span className="text-gray-900">{application.birthDate}</span>
+                  <span className="text-gray-900">
+                    {application.birthDate
+                      ? new Date(application.birthDate).toLocaleDateString(
+                          "id-ID"
+                        )
+                      : "Tidak tersedia"}
+                  </span>
                 </div>
                 <div className="flex flex-col">
                   <span className="text-sm text-gray-500">Nomor Telepon</span>
@@ -184,25 +215,25 @@ export default function ApplicationDetailModal({
               </div>
               <div className="p-4 space-y-3">
                 <div className="flex flex-col">
-                  <span className="text-sm text-gray-500">Faculty</span>
+                  <span className="text-sm text-gray-500">Fakultas</span>
                   <span className="font-medium text-gray-900">
                     {application.faculty}
                   </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-sm text-gray-500">Department</span>
+                  <span className="text-sm text-gray-500">Jurusan</span>
                   <span className="text-gray-900">
                     {application.department}
                   </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-sm text-gray-500">Study Program</span>
+                  <span className="text-sm text-gray-500">Program Studi</span>
                   <span className="text-gray-900">
                     {application.studyProgram}
                   </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-sm text-gray-500">Previous School</span>
+                  <span className="text-sm text-gray-500">Sekolah Asal</span>
                   <span className="text-gray-900">
                     {application.previousSchool}
                   </span>
@@ -215,12 +246,12 @@ export default function ApplicationDetailModal({
           <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden mb-8">
             <div className="bg-purple-50 px-4 py-3 border-b border-gray-200">
               <h3 className="font-semibold text-purple-800">
-                Software Experience
+                Pengalaman Software
               </h3>
             </div>
             <div className="p-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {application.software && (
+                {application.software ? (
                   <>
                     {application.software.corelDraw && (
                       <div className="bg-gray-50 p-3 rounded-md border border-gray-200 flex items-center">
@@ -428,18 +459,28 @@ export default function ApplicationDetailModal({
                     )}
                     {application.software.others && (
                       <div className="bg-gray-50 p-3 rounded-md border border-gray-200 col-span-full">
-                        <span className="font-medium">Others: </span>
+                        <span className="font-medium">Lainnya: </span>
                         {application.software.others}
                       </div>
                     )}
                   </>
+                ) : (
+                  <p className="col-span-full text-gray-500 italic">
+                    Tidak ada pengalaman software yang disebutkan
+                  </p>
                 )}
-                {!application.software ||
-                  (Object.values(application.software).every((val) => !val) && (
-                    <p className="col-span-full text-gray-500 italic">
-                      No software experience specified
-                    </p>
-                  ))}
+                {application.software &&
+                Object.values(application.software).every(
+                  (val) =>
+                    val === false ||
+                    val === "" ||
+                    val === null ||
+                    val === undefined
+                ) ? (
+                  <p className="col-span-full text-gray-500 italic">
+                    Tidak ada pengalaman software yang disebutkan
+                  </p>
+                ) : null}
               </div>
             </div>
           </div>
@@ -447,33 +488,33 @@ export default function ApplicationDetailModal({
           {/* Essays */}
           <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden mb-8">
             <div className="bg-amber-50 px-4 py-3 border-b border-gray-200">
-              <h3 className="font-semibold text-amber-800">Essays</h3>
+              <h3 className="font-semibold text-amber-800">Esai Pendaftaran</h3>
             </div>
             <div className="divide-y divide-gray-200">
               <div className="p-4">
                 <h4 className="font-medium text-gray-800 mb-2">
-                  Motivation for Joining Robotics:
+                  Motivasi Bergabung dengan Robotik:
                 </h4>
                 <div className="bg-gray-50 p-4 rounded-md border border-gray-200 text-gray-700">
-                  {application.motivation || "Not provided"}
+                  {application.motivation || "Tidak ada jawaban"}
                 </div>
               </div>
 
               <div className="p-4">
                 <h4 className="font-medium text-gray-800 mb-2">
-                  Future Plans After Joining:
+                  Rencana Setelah Bergabung:
                 </h4>
                 <div className="bg-gray-50 p-4 rounded-md border border-gray-200 text-gray-700">
-                  {application.futurePlans || "Not provided"}
+                  {application.futurePlans || "Tidak ada jawaban"}
                 </div>
               </div>
 
               <div className="p-4">
                 <h4 className="font-medium text-gray-800 mb-2">
-                  Why Should Be Accepted:
+                  Alasan Anda Layak Diterima:
                 </h4>
                 <div className="bg-gray-50 p-4 rounded-md border border-gray-200 text-gray-700">
-                  {application.whyYouShouldBeAccepted || "Not provided"}
+                  {application.whyYouShouldBeAccepted || "Tidak ada jawaban"}
                 </div>
               </div>
             </div>
@@ -482,10 +523,30 @@ export default function ApplicationDetailModal({
           {/* Actions */}
           <div className="flex justify-end gap-3 mt-8 pt-4 border-t">
             <button
+              onClick={handleDownloadPDF}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors flex items-center"
+            >
+              <svg
+                className="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              Download PDF
+            </button>
+            <button
               onClick={() => {
                 if (
                   confirm(
-                    "Are you sure you want to delete this application? This action cannot be undone."
+                    "Apakah Anda yakin ingin menghapus pendaftaran ini? Tindakan ini tidak dapat dibatalkan."
                   )
                 ) {
                   onDelete(application.id);
@@ -508,13 +569,13 @@ export default function ApplicationDetailModal({
                   d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                 />
               </svg>
-              Delete Application
+              Hapus Pendaftaran
             </button>
             <button
               onClick={onClose}
               className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md transition-colors"
             >
-              Close
+              Tutup
             </button>
           </div>
         </div>

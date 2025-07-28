@@ -32,18 +32,38 @@ export async function GET() {
           futurePlans: app.future_plans,
           whyYouShouldBeAccepted: app.why_you_should_be_accepted,
           software: {
-            corelDraw: app.corel_draw,
-            photoshop: app.photoshop,
-            adobePremierePro: app.adobe_premiere_pro,
-            adobeAfterEffect: app.adobe_after_effect,
-            autodeskEagle: app.autodesk_eagle,
-            arduinoIde: app.arduino_ide,
-            androidStudio: app.android_studio,
-            visualStudio: app.visual_studio,
-            missionPlaner: app.mission_planer,
-            autodeskInventor: app.autodesk_inventor,
-            autodeskAutocad: app.autodesk_autocad,
-            solidworks: app.solidworks,
+            corelDraw: Boolean(app.corel_draw === 1 || app.corel_draw === true),
+            photoshop: Boolean(app.photoshop === 1 || app.photoshop === true),
+            adobePremierePro: Boolean(
+              app.adobe_premiere_pro === 1 || app.adobe_premiere_pro === true
+            ),
+            adobeAfterEffect: Boolean(
+              app.adobe_after_effect === 1 || app.adobe_after_effect === true
+            ),
+            autodeskEagle: Boolean(
+              app.autodesk_eagle === 1 || app.autodesk_eagle === true
+            ),
+            arduinoIde: Boolean(
+              app.arduino_ide === 1 || app.arduino_ide === true
+            ),
+            androidStudio: Boolean(
+              app.android_studio === 1 || app.android_studio === true
+            ),
+            visualStudio: Boolean(
+              app.visual_studio === 1 || app.visual_studio === true
+            ),
+            missionPlaner: Boolean(
+              app.mission_planer === 1 || app.mission_planer === true
+            ),
+            autodeskInventor: Boolean(
+              app.autodesk_inventor === 1 || app.autodesk_inventor === true
+            ),
+            autodeskAutocad: Boolean(
+              app.autodesk_autocad === 1 || app.autodesk_autocad === true
+            ),
+            solidworks: Boolean(
+              app.solidworks === 1 || app.solidworks === true
+            ),
             others: app.other_software || "",
           },
           mbtiProof: app.mbti_proof,
