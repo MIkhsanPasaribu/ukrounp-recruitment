@@ -59,29 +59,29 @@ export default function ApplicationDetailModal({
                 <div className="flex items-center">
                   <div
                     className={`w-3 h-3 rounded-full mr-2 ${
-                      application.status === "ACCEPTED"
+                      application.status === "DITERIMA"
                         ? "bg-green-500"
-                        : application.status === "REJECTED"
+                        : application.status === "DITOLAK"
                         ? "bg-red-500"
                         : application.status === "INTERVIEW"
                         ? "bg-purple-500"
-                        : application.status === "SHORTLISTED"
+                        : application.status === "DAFTAR_PENDEK"
                         ? "bg-blue-500"
                         : "bg-yellow-500"
                     }`}
                   ></div>
                   <select
-                    value={application.status || "UNDER_REVIEW"}
+                    value={application.status || "SEDANG_DITINJAU"}
                     onChange={(e) => {
                       onStatusChange(application.id, e.target.value);
                     }}
                     className="font-medium text-gray-800 bg-transparent border-0 focus:ring-0 p-0 pr-7"
                   >
-                    <option value="UNDER_REVIEW">Under Review</option>
-                    <option value="SHORTLISTED">Shortlisted</option>
+                    <option value="SEDANG_DITINJAU">Sedang Ditinjau</option>
+                    <option value="DAFTAR_PENDEK">Masuk Daftar Pendek</option>
                     <option value="INTERVIEW">Interview</option>
-                    <option value="ACCEPTED">Accepted</option>
-                    <option value="REJECTED">Rejected</option>
+                    <option value="DITERIMA">Diterima</option>
+                    <option value="DITOLAK">Ditolak</option>
                   </select>
                 </div>
               </div>
@@ -126,17 +126,25 @@ export default function ApplicationDetailModal({
                   <span className="text-gray-900">{application.nickname}</span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-sm text-gray-500">Gender</span>
+                  <span className="text-sm text-gray-500">Jenis Kelamin</span>
                   <span className="text-gray-900">
-                    {application.gender === "MALE" ? "Laki-laki" : "Perempuan"}
+                    {application.gender === "LAKI_LAKI"
+                      ? "Laki-laki"
+                      : application.gender === "PEREMPUAN"
+                      ? "Perempuan"
+                      : application.gender === "MALE"
+                      ? "Laki-laki"
+                      : application.gender === "FEMALE"
+                      ? "Perempuan"
+                      : application.gender || "Tidak diketahui"}
                   </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-sm text-gray-500">Birth Date</span>
+                  <span className="text-sm text-gray-500">Tanggal Lahir</span>
                   <span className="text-gray-900">{application.birthDate}</span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-sm text-gray-500">Phone Number</span>
+                  <span className="text-sm text-gray-500">Nomor Telepon</span>
                   <a
                     href={`tel:${application.phoneNumber}`}
                     className="text-blue-600 hover:text-blue-800"
@@ -145,7 +153,9 @@ export default function ApplicationDetailModal({
                   </a>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-sm text-gray-500">Padang Address</span>
+                  <span className="text-sm text-gray-500">
+                    Alamat di Padang
+                  </span>
                   <span className="text-gray-900">
                     {application.padangAddress}
                   </span>
@@ -153,13 +163,13 @@ export default function ApplicationDetailModal({
                 <div className="flex flex-col">
                   <span className="text-sm text-gray-500">NIM</span>
                   <span className="font-mono text-gray-900">
-                    {application.nim || "Not provided"}
+                    {application.nim || "Tidak tersedia"}
                   </span>
                 </div>
                 <div className="flex flex-col">
                   <span className="text-sm text-gray-500">NIA</span>
                   <span className="font-mono font-medium text-blue-600">
-                    {application.nia || "Not generated"}
+                    {application.nia || "Belum dibuat"}
                   </span>
                 </div>
               </div>
@@ -169,7 +179,7 @@ export default function ApplicationDetailModal({
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
               <div className="bg-green-50 px-4 py-3 border-b border-gray-200">
                 <h3 className="font-semibold text-green-800">
-                  Academic Information
+                  Informasi Akademik
                 </h3>
               </div>
               <div className="p-4 space-y-3">

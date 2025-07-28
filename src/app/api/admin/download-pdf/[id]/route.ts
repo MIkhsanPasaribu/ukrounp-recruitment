@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { pool } from "@/lib/mysql";
-import { generateRegistrationConfirmation } from "@/utils/pdfGenerator";
+import { generateRegistrationConfirmation } from "@/utils/pdfGeneratorJsPDF";
 import { ApplicationData } from "@/types";
 
 export async function GET(

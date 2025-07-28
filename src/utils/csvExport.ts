@@ -47,7 +47,7 @@ export const exportApplicationsToCSV = (applications: ApplicationData[]) => {
     "Photo",
     "Student Card",
     "Study Plan Card",
-    "Instagram Follow Proof"
+    "Instagram Follow Proof",
   ];
 
   // Create CSV content with proper escaping for Excel compatibility
@@ -56,23 +56,24 @@ export const exportApplicationsToCSV = (applications: ApplicationData[]) => {
 
   applications.forEach((app) => {
     // Format boolean values as "Yes" or "No"
-    const formatBoolean = (value: boolean | undefined) => value ? "Ya" : "Tidak";
-    
+    const formatBoolean = (value: boolean | undefined) =>
+      value ? "Ya" : "Tidak";
+
     // Format date values
     const formatDate = (dateString: string | Date | undefined) => {
       if (!dateString) return "";
-      return new Date(dateString).toLocaleString('id-ID');
+      return new Date(dateString).toLocaleString("id-ID");
     };
-    
+
     // Create a function to get file info
     const getFileInfo = (base64String: string | undefined) => {
       if (!base64String) return "Tidak ada";
-      
+
       // For base64 data, return a placeholder indicating file exists
       if (base64String.startsWith("data:")) {
         return "File terunggah";
       }
-      
+
       return "Tidak ada";
     };
 
@@ -88,7 +89,17 @@ export const exportApplicationsToCSV = (applications: ApplicationData[]) => {
       escapeField(app.email),
       escapeField(app.fullName),
       escapeField(app.nickname),
-      `"${app.gender === 'MALE' ? 'Laki-laki' : app.gender === 'FEMALE' ? 'Perempuan' : ""}"`,
+      `"${
+        app.gender === "LAKI_LAKI"
+          ? "Laki-laki"
+          : app.gender === "PEREMPUAN"
+          ? "Perempuan"
+          : app.gender === "MALE"
+          ? "Laki-laki"
+          : app.gender === "FEMALE"
+          ? "Perempuan"
+          : ""
+      }"`,
       `"${app.birthDate || ""}"`,
       escapeField(app.faculty),
       escapeField(app.department),
@@ -122,9 +133,9 @@ export const exportApplicationsToCSV = (applications: ApplicationData[]) => {
       `"${getFileInfo(app.photo)}"`,
       `"${getFileInfo(app.studentCard)}"`,
       `"${getFileInfo(app.studyPlanCard)}"`,
-      `"${getFileInfo(app.igFollowProof)}"`
+      `"${getFileInfo(app.igFollowProof)}"`,
     ];
-    
+
     csvContent += row.join(",") + "\r\n";
   });
 
