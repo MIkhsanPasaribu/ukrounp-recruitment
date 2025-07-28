@@ -1,8 +1,14 @@
-# Panduan Mengatasi Error "Got a packet bigger than 'max_allowed_packet' bytes"
+# Panduan Mengatasi Error Foto Pendaftar
 
-## 🔍 **Masalah**
+## 🔍 **Masalah Yang Ditemukan**
+
+### 1. Error "Got a packet bigger than 'max_allowed_packet' bytes"
 
 Error ini terjadi karena ukuran data yang dikirim ke MySQL melebihi batas `max_allowed_packet`. Biasanya disebabkan oleh foto base64 yang terlalu besar.
+
+### 2. Foto tidak muncul di PDF meski ada di database
+
+Foto tersimpan di database tapi tidak muncul saat generate PDF karena field `photo` tidak dipetakan dengan benar di beberapa API endpoint.
 
 ## ✅ **Solusi yang Telah Diterapkan**
 
@@ -11,18 +17,23 @@ Error ini terjadi karena ukuran data yang dikirim ke MySQL melebihi batas `max_a
 - **File**: `src/components/FileUpload.tsx`
 - **Fitur**:
   - Kompresi gambar otomatis sebelum upload
-  - Resize gambar maksimal 600px width
-  - Quality JPEG 60% untuk mengurangi ukuran
-  - Validasi ukuran file maksimal 5MB
-  - Kompresi tambahan jika masih terlalu besar
+  - Canvas-based compression dengan kualitas 0.7 (70%)
+  - Fallback ke file original jika kompresi gagal
+  - Validasi ukuran file maksimal 10MB
 
-### 2. **Validasi Ukuran File**
+### 2. **Perbaikan Field Mapping**
 
-- Maksimal ukuran file: **5MB**
-- Validasi sebelum proses kompresi
-- Alert jika file terlalu besar
+- **API yang diperbaiki**:
+  - ✅ `src/app/api/admin/applications/route.ts` (sudah ada)
+  - ✅ `src/app/api/admin/download-pdf/[id]/route.ts` (sudah ada dengan debug log)
+  - ✅ `src/app/api/download-confirmation-pdf/route.ts` (DIPERBAIKI - field photo ditambahkan)
 
-### 3. **Konfigurasi MySQL untuk phpMyAdmin**
+### 3. **Enhanced Debug Logging**
+
+- **PDF Generator**: Debug log untuk checking photo field, data length, prefix, success/error
+- **API Download**: Debug log untuk field photo dari database
+
+### 4. **Konfigurasi MySQL untuk phpMyAdmin**
 
 #### **Cara Manual (Sementara)**
 

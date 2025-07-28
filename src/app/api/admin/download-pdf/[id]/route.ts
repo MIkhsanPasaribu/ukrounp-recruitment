@@ -29,6 +29,17 @@ export async function GET(
       // Format data untuk PDF generator
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const applicantData = (rows as unknown[])[0] as any;
+
+      // Debug: Check if photo exists in database
+      console.log("=== DATABASE DEBUG ===");
+      console.log("Photo field exists:", !!applicantData.photo);
+      console.log("Photo length:", applicantData.photo?.length || 0);
+      console.log(
+        "Photo starts with data:",
+        applicantData.photo?.startsWith("data:") || false
+      );
+      console.log("====================");
+
       const formattedData: ApplicationData = {
         id: String(applicantData.id),
         email: applicantData.email || "",
@@ -79,9 +90,10 @@ export async function GET(
       return new NextResponse(pdfBuffer, {
         headers: {
           "Content-Type": "application/pdf",
-          "Content-Disposition": `attachment; filename="Bukti_Pendaftaran_UKRO-${new Date().getFullYear()}-${String(
-            id
-          ).padStart(6, "0")}.pdf"`,
+          "Content-Disposition": `attachment; filename="formulir-pendaftaran-${formattedData.fullName.replace(
+            /\s+/g,
+            "-"
+          )}.pdf"`,
         },
       });
     } finally {

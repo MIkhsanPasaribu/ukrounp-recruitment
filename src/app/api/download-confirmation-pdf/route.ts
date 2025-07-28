@@ -72,6 +72,7 @@ export async function POST(request: Request) {
         status: applicantData.status,
         submittedAt: applicantData.submitted_at,
         mbtiProof: applicantData.mbti_proof || "",
+        photo: applicantData.photo || "",
       };
 
       // Generate PDF
