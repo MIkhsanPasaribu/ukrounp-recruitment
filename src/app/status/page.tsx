@@ -131,7 +131,7 @@ export default function StatusPage() {
               clipRule="evenodd"
             />
           </svg>
-          Back to Home
+          Kembali ke Beranda
         </Link>
       </div>
 
