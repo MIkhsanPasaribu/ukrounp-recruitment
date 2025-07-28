@@ -21,7 +21,7 @@ export default function SuccessMessage() {
               clipRule="evenodd"
             />
           </svg>
-          Back to Home
+          Kembali ke Beranda
         </Link>
       </div>
 
@@ -41,15 +41,15 @@ export default function SuccessMessage() {
           />
         </svg>{" "}
         <h2 className="mt-3 text-xl font-medium text-gray-900">
-          Application Submitted Successfully!
+          Aplikasi Berhasil Dikirim!
         </h2>
         <p className="mt-2 text-sm text-gray-500">
-          Thank you for applying to Unit Kegiatan Robotika UNP. We will review
-          your application and get back to you soon.
+          Terima kasih telah mendaftar ke Unit Kegiatan Robotika UNP. Kami akan
+          meninjau aplikasi Anda dan menghubungi Anda segera.
         </p>
         <div className="mt-6">
           <Link href="/status" className="text-blue-600 hover:text-blue-800">
-            Check your application status
+            Cek status aplikasi Anda
           </Link>
         </div>
       </div>

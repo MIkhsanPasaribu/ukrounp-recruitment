@@ -64,7 +64,7 @@ export default function Section1Form({ onSubmit }: Section1FormProps) {
 
   return (
     <div className="bg-white shadow overflow-hidden sm:rounded-lg p-6">
-      <h2 className="text-xl font-semibold mb-6">Step 1: Basic Information</h2>
+      <h2 className="text-xl font-semibold mb-6">Langkah 1: Informasi Dasar</h2>
 
       <form onSubmit={handleSubmit}>
         <div className="mb-6">
@@ -103,10 +103,7 @@ export default function Section1Form({ onSubmit }: Section1FormProps) {
               Tes MBTI Disini
             </a>
           </div>
-          <FileUpload
-            onFileSelected={setMbtiProof}
-            error={errors.mbtiProof}
-          />
+          <FileUpload onFileSelected={setMbtiProof} error={errors.mbtiProof} />
           {errors.mbtiProof && (
             <p className="mt-1 text-sm text-red-600">{errors.mbtiProof}</p>
           )}
@@ -117,7 +114,7 @@ export default function Section1Form({ onSubmit }: Section1FormProps) {
             type="submit"
             className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
-            Continue to Step 2
+            Lanjut ke Langkah 2
           </button>
         </div>
       </form>

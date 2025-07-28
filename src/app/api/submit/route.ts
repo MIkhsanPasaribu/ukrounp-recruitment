@@ -14,9 +14,9 @@ export async function POST(request: Request) {
       nickname: body.nickname,
       gender:
         body.gender === "male"
-          ? "MALE"
+          ? "LAKI_LAKI"
           : body.gender === "female"
-          ? "FEMALE"
+          ? "PEREMPUAN"
           : body.gender,
       birth_date: body.birthDate,
       faculty: body.faculty,
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
       ig_follow_proof: body.igFollowProof,
       tiktok_follow_proof: body.tiktokFollowProof,
 
-      status: "UNDER_REVIEW",
+      status: "SEDANG_DITINJAU",
     };
 
     // Insert data using MySQL

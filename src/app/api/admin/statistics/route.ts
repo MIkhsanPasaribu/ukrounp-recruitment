@@ -3,13 +3,19 @@ import { pool } from "@/lib/mysql";
 
 export async function GET() {
   try {
+    console.log("Fetching statistics from MySQL...");
+
     const connection = await pool.getConnection();
     try {
+      // Test connection first
+      await connection.ping();
+
       // Total applications
       const [totalResult] = await connection.query(
         "SELECT COUNT(*) as count FROM applicants"
       );
       const totalApplications = (totalResult as { count: number }[])[0].count;
+      console.log("Total applications:", totalApplications);
 
       // Status counts
       const [statusResult] = await connection.query(
@@ -21,6 +27,7 @@ export async function GET() {
         _id: row.status,
         count: row.count,
       }));
+      console.log("Status counts:", statusCounts);
 
       // Faculty counts
       const [facultyResult] = await connection.query(
@@ -55,24 +62,52 @@ export async function GET() {
       const dailyApplications = (
         dailyResult as { date: string; count: number }[]
       ).map((row) => ({
-        date: row.date,
+        _id: row.date,
         count: row.count,
       }));
 
-      return NextResponse.json({
+      const statisticsData = {
         totalApplications,
         statusCounts,
         facultyCounts,
         genderCounts,
         dailyApplications,
+      };
+
+      console.log("Statistics successfully fetched:", statisticsData);
+
+      return NextResponse.json({
+        success: true,
+        statistics: statisticsData,
       });
     } finally {
       connection.release();
     }
   } catch (error) {
     console.error("Error fetching statistics:", error);
+
+    // Provide more specific error messages
+    let errorMessage = "Failed to fetch statistics";
+    if (error instanceof Error) {
+      if (error.message.includes("ECONNREFUSED")) {
+        errorMessage =
+          "Database connection refused. Check if MySQL is running.";
+      } else if (error.message.includes("ER_NO_SUCH_TABLE")) {
+        errorMessage =
+          "Database table 'applicants' not found. Please setup database.";
+      } else if (error.message.includes("ER_ACCESS_DENIED")) {
+        errorMessage = "Database access denied. Check your credentials.";
+      } else {
+        errorMessage = `Database error: ${error.message}`;
+      }
+    }
+
     return NextResponse.json(
-      { error: "Failed to fetch statistics" },
+      {
+        success: false,
+        error: errorMessage,
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }

@@ -109,7 +109,7 @@ export default function AdminPage() {
       setIsAuthenticated(true);
       fetchApplications();
     } else {
-      setError("Invalid password");
+      setError("Password salah");
     }
   };
 
@@ -117,12 +117,12 @@ export default function AdminPage() {
     try {
       const response = await fetch("/api/admin/applications");
       if (!response.ok) {
-        throw new Error("Failed to fetch applications");
+        throw new Error("Gagal mengambil data aplikasi");
       }
       const data = await response.json();
       setApplications(data.applications);
     } catch (err) {
-      setError("Error fetching applications");
+      setError("Error dalam mengambil data aplikasi");
       console.error(err);
     } finally {
       setLoading(false);
@@ -135,17 +135,17 @@ export default function AdminPage() {
   ) => {
     // Create display map for confirmation
     const displayMap: Record<ApplicationStatus, string> = {
-      UNDER_REVIEW: "Under Review",
-      SHORTLISTED: "Shortlisted",
+      SEDANG_DITINJAU: "Sedang Ditinjau",
+      DAFTAR_PENDEK: "Masuk Daftar Pendek",
       INTERVIEW: "Interview",
-      ACCEPTED: "Accepted",
-      REJECTED: "Rejected",
+      DITERIMA: "Diterima",
+      DITOLAK: "Ditolak",
     };
 
     // Add confirmation dialog
     if (
       !confirm(
-        `Are you sure you want to change the status to "${displayMap[newStatus]}"?`
+        `Apakah Anda yakin ingin mengubah status menjadi "${displayMap[newStatus]}"?`
       )
     ) {
       return;
@@ -177,7 +177,7 @@ export default function AdminPage() {
     // Add confirmation dialog
     if (
       !confirm(
-        "Are you sure you want to delete this application? This action cannot be undone."
+        "Apakah Anda yakin ingin menghapus aplikasi ini? Tindakan ini tidak dapat dibatalkan."
       )
     ) {
       return;
@@ -197,17 +197,17 @@ export default function AdminPage() {
         setApplications(applications.filter((app) => app.id !== id));
       } else {
         const data = await response.json();
-        alert(`Failed to delete: ${data.message || "Unknown error"}`);
+        alert(`Gagal menghapus: ${data.message || "Error tidak diketahui"}`);
       }
     } catch (error) {
       console.error("Error deleting application:", error);
-      alert("An error occurred while deleting the application");
+      alert("Terjadi error saat menghapus aplikasi");
     }
   };
 
   const exportToCSV = () => {
     if (applications.length === 0) {
-      alert("No applications to export");
+      alert("Tidak ada aplikasi untuk diekspor");
       return;
     }
 
@@ -247,21 +247,21 @@ export default function AdminPage() {
   const handleBulkStatusUpdate = async (newStatus: ApplicationStatus) => {
     // Create display map for confirmation
     const displayMap: Record<ApplicationStatus, string> = {
-      UNDER_REVIEW: "Under Review",
-      SHORTLISTED: "Shortlisted",
+      SEDANG_DITINJAU: "Sedang Ditinjau",
+      DAFTAR_PENDEK: "Masuk Daftar Pendek",
       INTERVIEW: "Interview",
-      ACCEPTED: "Accepted",
-      REJECTED: "Rejected",
+      DITERIMA: "Diterima",
+      DITOLAK: "Ditolak",
     };
 
     if (selectedApplications.length === 0) {
-      alert("No applications selected");
+      alert("Tidak ada aplikasi yang dipilih");
       return;
     }
 
     if (
       !confirm(
-        `Are you sure you want to change the status to "${displayMap[newStatus]}" for ${selectedApplications.length} applications?`
+        `Apakah Anda yakin ingin mengubah status menjadi "${displayMap[newStatus]}" untuk ${selectedApplications.length} aplikasi?`
       )
     ) {
       return;
@@ -293,24 +293,24 @@ export default function AdminPage() {
       setSelectedApplications([]);
       setSelectAll(false);
       alert(
-        `Successfully updated ${selectedApplications.length} applications to "${displayMap[newStatus]}"`
+        `Berhasil mengupdate ${selectedApplications.length} aplikasi menjadi "${displayMap[newStatus]}"`
       );
     } catch (error) {
       console.error("Error updating statuses:", error);
-      alert("An error occurred while updating statuses");
+      alert("Terjadi error saat mengupdate status");
     }
   };
 
   // Add function to handle bulk delete
   const handleBulkDelete = async () => {
     if (selectedApplications.length === 0) {
-      alert("No applications selected");
+      alert("Tidak ada aplikasi yang dipilih");
       return;
     }
 
     if (
       !confirm(
-        `Are you sure you want to delete ${selectedApplications.length} applications? This action cannot be undone.`
+        `Apakah Anda yakin ingin menghapus ${selectedApplications.length} aplikasi? Tindakan ini tidak dapat dibatalkan.`
       )
     ) {
       return;
@@ -337,10 +337,10 @@ export default function AdminPage() {
       // Clear selections after successful delete
       setSelectedApplications([]);
       setSelectAll(false);
-      alert(`Successfully deleted ${selectedApplications.length} applications`);
+      alert(`Berhasil menghapus ${selectedApplications.length} aplikasi`);
     } catch (error) {
       console.error("Error deleting applications:", error);
-      alert("An error occurred while deleting applications");
+      alert("Terjadi error saat menghapus aplikasi");
     }
   };
 
@@ -403,7 +403,7 @@ export default function AdminPage() {
           </Link>
         </div>
 
-        <h1 className="text-2xl font-bold mb-6">Admin Login</h1>
+        <h1 className="text-2xl font-bold mb-6">Login Admin</h1>
         <form onSubmit={authenticate}>
           <div className="mb-4">
             <label className="block text-gray-700 mb-2" htmlFor="password">
@@ -450,9 +450,9 @@ export default function AdminPage() {
                 clipRule="evenodd"
               />
             </svg>
-            Back to Home
+            Kembali ke Beranda
           </Link>
-          <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+          <h1 className="text-2xl font-bold">Dashboard Admin</h1>
         </div>
         <AdminHeaderButtons
           isRegistrationOpen={isRegistrationOpen}
@@ -473,7 +473,7 @@ export default function AdminPage() {
         }`}
       >
         <p className="font-medium">
-          Registration is currently {isRegistrationOpen ? "OPEN" : "CLOSED"}
+          Pendaftaran saat ini {isRegistrationOpen ? "DIBUKA" : "DITUTUP"}
         </p>
       </div>
 
@@ -498,7 +498,7 @@ export default function AdminPage() {
                 : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
             }`}
           >
-            Statistics
+            Statistik
           </button>
         </nav>
       </div>
@@ -512,7 +512,7 @@ export default function AdminPage() {
             <div className="flex-1">
               <input
                 type="text"
-                placeholder="Search by name, email or phone"
+                placeholder="Cari berdasarkan nama, email atau telepon"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
@@ -520,17 +520,17 @@ export default function AdminPage() {
             </div>
             <div>
               <select
-                title="Filter by Status"
+                title="Filter berdasarkan Status"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
               >
-                <option value="all">All Statuses</option>
-                <option value="UNDER_REVIEW">Under Review</option>
-                <option value="SHORTLISTED">Shortlisted</option>
+                <option value="all">Semua Status</option>
+                <option value="SEDANG_DITINJAU">Sedang Ditinjau</option>
+                <option value="DAFTAR_PENDEK">Masuk Daftar Pendek</option>
                 <option value="INTERVIEW">Interview</option>
-                <option value="ACCEPTED">Accepted</option>
-                <option value="REJECTED">Rejected</option>
+                <option value="DITERIMA">Diterima</option>
+                <option value="DITOLAK">Ditolak</option>
               </select>
             </div>
           </div>
@@ -540,7 +540,7 @@ export default function AdminPage() {
             <div className="mb-4 p-3 bg-gray-100 rounded-md">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-medium">
-                  {selectedApplications.length} applications selected
+                  {selectedApplications.length} aplikasi dipilih
                 </span>
                 <div className="flex-1"></div>
                 <div className="flex flex-wrap gap-2">
@@ -557,19 +557,19 @@ export default function AdminPage() {
                     disabled={selectedApplications.length === 0}
                   >
                     <option value="" disabled>
-                      Change status...
+                      Ubah status...
                     </option>
-                    <option value="UNDER_REVIEW">Under Review</option>
+                    <option value="SEDANG_DITINJAU">Sedang Ditinjau</option>
                     <option value="INTERVIEW">Interview</option>
-                    <option value="ACCEPTED">Accepted</option>
-                    <option value="REJECTED">Rejected</option>
+                    <option value="DITERIMA">Diterima</option>
+                    <option value="DITOLAK">Ditolak</option>
                   </select>
                   <button
                     onClick={handleBulkDelete}
                     disabled={selectedApplications.length === 0}
                     className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md font-medium"
                   >
-                    Delete Selected
+                    Hapus yang Dipilih
                   </button>
                 </div>
               </div>
@@ -578,7 +578,7 @@ export default function AdminPage() {
 
           {/* Applications table */}
           {loading ? (
-            <p>Loading applications...</p>
+            <p>Memuat aplikasi...</p>
           ) : error ? (
             <p className="text-red-500">{error}</p>
           ) : (
@@ -595,12 +595,12 @@ export default function AdminPage() {
                       />
                     </th>
                     <th className="px-4 py-2 border">Email</th>
-                    <th className="px-4 py-2 border">Full Name</th>
-                    <th className="px-4 py-2 border">Faculty</th>
-                    <th className="px-4 py-2 border">Department</th>
-                    <th className="px-4 py-2 border">Phone</th>
+                    <th className="px-4 py-2 border">Nama Lengkap</th>
+                    <th className="px-4 py-2 border">Fakultas</th>
+                    <th className="px-4 py-2 border">Jurusan</th>
+                    <th className="px-4 py-2 border">Telepon</th>
                     <th className="px-4 py-2 border">Status</th>
-                    <th className="px-4 py-2 border">Actions</th>
+                    <th className="px-4 py-2 border">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -625,7 +625,7 @@ export default function AdminPage() {
                         <td className="px-4 py-2 border">{app.phoneNumber}</td>
                         <td className="px-4 py-2 border">
                           <select
-                            value={app.status || "UNDER_REVIEW"}
+                            value={app.status || "SEDANG_DITINJAU"}
                             onChange={(e) =>
                               updateApplicationStatus(
                                 app.id,
@@ -634,11 +634,15 @@ export default function AdminPage() {
                             }
                             className="w-full p-1 border border-gray-300 rounded"
                           >
-                            <option value="UNDER_REVIEW">Under Review</option>
-                            <option value="SHORTLISTED">Shortlisted</option>
+                            <option value="SEDANG_DITINJAU">
+                              Sedang Ditinjau
+                            </option>
+                            <option value="DAFTAR_PENDEK">
+                              Masuk Daftar Pendek
+                            </option>
                             <option value="INTERVIEW">Interview</option>
-                            <option value="ACCEPTED">Accepted</option>
-                            <option value="REJECTED">Rejected</option>
+                            <option value="DITERIMA">Diterima</option>
+                            <option value="DITOLAK">Ditolak</option>
                           </select>
                         </td>
                         <td className="px-4 py-2 border">
@@ -646,7 +650,7 @@ export default function AdminPage() {
                             <button
                               onClick={() => viewApplicationDetails(app)}
                               className="text-blue-600 hover:text-blue-800 mr-2"
-                              title="View Details"
+                              title="Lihat Detail"
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -672,7 +676,7 @@ export default function AdminPage() {
                             <button
                               onClick={() => deleteApplication(app.id)}
                               className="text-red-600 hover:text-red-800 mr-2"
-                              title="Delete Application"
+                              title="Hapus Aplikasi"
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -699,7 +703,7 @@ export default function AdminPage() {
                         colSpan={8}
                         className="px-4 py-8 text-center text-gray-500"
                       >
-                        No applications found.
+                        Tidak ada aplikasi ditemukan.
                       </td>
                     </tr>
                   )}

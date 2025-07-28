@@ -6,7 +6,7 @@ export interface Section1Data {
 export interface Section2Data {
   fullName: string;
   nickname: string;
-  gender: 'MALE' | 'FEMALE';
+  gender: "LAKI_LAKI" | "PEREMPUAN";
   birthDate: string;
   faculty: string;
   department: string;
@@ -45,12 +45,17 @@ export interface Section2Data {
 export interface FormData extends Section1Data {
   id?: string; // Prisma CUID
   fullName: string;
-  status?: 'UNDER_REVIEW' | 'SHORTLISTED' | 'INTERVIEW' | 'ACCEPTED' | 'REJECTED';
+  status?:
+    | "SEDANG_DITINJAU"
+    | "DAFTAR_PENDEK"
+    | "INTERVIEW"
+    | "DITERIMA"
+    | "DITOLAK";
   submittedAt?: Date | string;
-  
+
   // Optional fields from Section2Data
   nickname?: string;
-  gender?: 'MALE' | 'FEMALE';
+  gender?: "LAKI_LAKI" | "PEREMPUAN";
   birthDate?: string;
   faculty?: string;
   department?: string;
@@ -91,5 +96,10 @@ export interface ApplicationData extends FormData {
 }
 
 // Prisma-compatible types
-export type Gender = 'MALE' | 'FEMALE';
-export type ApplicationStatus = 'UNDER_REVIEW' | 'SHORTLISTED' | 'INTERVIEW' | 'ACCEPTED' | 'REJECTED';
+export type Gender = "LAKI_LAKI" | "PEREMPUAN";
+export type ApplicationStatus =
+  | "SEDANG_DITINJAU"
+  | "DAFTAR_PENDEK"
+  | "INTERVIEW"
+  | "DITERIMA"
+  | "DITOLAK";

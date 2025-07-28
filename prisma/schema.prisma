@@ -54,7 +54,7 @@ model Applicant {
   tiktokFollowProof       String?
   
   // Application metadata
-  status                  ApplicationStatus @default(UNDER_REVIEW)
+  status                  ApplicationStatus @default(SEDANG_DITINJAU)
   submittedAt             DateTime @default(now())
   updatedAt               DateTime @updatedAt
   
@@ -72,18 +72,18 @@ model Settings {
 }
 
 enum Gender {
-  MALE
-  FEMALE
+  LAKI_LAKI
+  PEREMPUAN
   
   @@map("gender")
 }
 
 enum ApplicationStatus {
-  UNDER_REVIEW
-  SHORTLISTED
+  SEDANG_DITINJAU
+  DAFTAR_PENDEK
   INTERVIEW
-  ACCEPTED
-  REJECTED
+  DITERIMA
+  DITOLAK
   
   @@map("application_status")
 }

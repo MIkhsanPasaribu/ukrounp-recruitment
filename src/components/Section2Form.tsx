@@ -28,7 +28,7 @@ export default function Section2Form({
   const [formData, setFormData] = useState<Section2Data>({
     fullName: "",
     nickname: "",
-    gender: "MALE",
+    gender: "LAKI_LAKI",
     birthDate: "",
     faculty: "",
     department: "",
@@ -127,13 +127,13 @@ export default function Section2Form({
 
     requiredFields.forEach((field) => {
       if (!formData[field as keyof Section2Data]) {
-        newErrors[field] = `This field is required`;
+        newErrors[field] = `Field ini wajib diisi`;
       }
     });
 
     // Validate phone number
     if (formData.phoneNumber && !/^[0-9+\-\s]+$/.test(formData.phoneNumber)) {
-      newErrors.phoneNumber = "Please enter a valid phone number";
+      newErrors.phoneNumber = "Mohon masukkan nomor telepon yang valid";
     }
 
     const fullNameValidation = validateRequired(
@@ -153,7 +153,10 @@ export default function Section2Form({
     // Validate gender
     if (!formData.gender) {
       newErrors.gender = "Jenis kelamin harus dipilih";
-    } else if (formData.gender !== "MALE" && formData.gender !== "FEMALE") {
+    } else if (
+      formData.gender !== "LAKI_LAKI" &&
+      formData.gender !== "PEREMPUAN"
+    ) {
       newErrors.gender = "Jenis kelamin harus laki-laki atau perempuan";
     }
 
@@ -322,7 +325,7 @@ export default function Section2Form({
   return (
     <div className="bg-white shadow overflow-hidden sm:rounded-lg p-6">
       <h2 className="text-xl font-semibold mb-6">
-        Step 2: Personal Information
+        Langkah 2: Informasi Personal
       </h2>
 
       <form onSubmit={handleSubmit}>
@@ -392,8 +395,8 @@ export default function Section2Form({
                 } shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
                 aria-invalid={!!errors.gender}
               >
-                <option value="MALE">Laki-laki</option>
-                <option value="FEMALE">Perempuan</option>
+                <option value="LAKI_LAKI">Laki-laki</option>
+                <option value="PEREMPUAN">Perempuan</option>
               </select>
               {errors.gender && (
                 <p className="mt-1 text-sm text-red-600">{errors.gender}</p>
@@ -1012,7 +1015,7 @@ export default function Section2Form({
               onClick={onBack}
               className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
             >
-              Back to Step 1
+              Kembali ke Langkah 1
             </button>
 
             <button
@@ -1024,7 +1027,7 @@ export default function Section2Form({
                   : "bg-blue-600 hover:bg-blue-700"
               } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
             >
-              {isSubmitting ? "Submitting..." : "Submit Application"}
+              {isSubmitting ? "Mengirim..." : "Kirim Aplikasi"}
             </button>
           </div>
         </div>

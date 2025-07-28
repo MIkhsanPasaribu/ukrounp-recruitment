@@ -58,7 +58,23 @@ export async function generateRegistrationConfirmation(
     yPosition += lineHeight;
   }
 
-  doc.text(`Status: ${applicant.status}`, 20, yPosition);
+  // Map status to Indonesian
+  const statusMap: Record<string, string> = {
+    SEDANG_DITINJAU: "Sedang Ditinjau",
+    DAFTAR_PENDEK: "Masuk Daftar Pendek",
+    INTERVIEW: "Interview",
+    DITERIMA: "Diterima",
+    DITOLAK: "Ditolak",
+    // Legacy support for old values
+    UNDER_REVIEW: "Sedang Ditinjau",
+    SHORTLISTED: "Masuk Daftar Pendek",
+    ACCEPTED: "Diterima",
+    REJECTED: "Ditolak",
+  };
+
+  const displayStatus =
+    statusMap[applicant.status || "SEDANG_DITINJAU"] || applicant.status;
+  doc.text(`Status: ${displayStatus}`, 20, yPosition);
   yPosition += lineHeight * 2;
 
   // Add submission date

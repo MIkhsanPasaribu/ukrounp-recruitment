@@ -24,6 +24,20 @@ export default function StatusPage() {
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState("");
 
+  // Status mapping untuk display
+  const statusDisplayMap: Record<string, string> = {
+    SEDANG_DITINJAU: "Sedang Ditinjau",
+    DAFTAR_PENDEK: "Masuk Daftar Pendek",
+    INTERVIEW: "Interview",
+    DITERIMA: "Diterima",
+    DITOLAK: "Ditolak",
+    // Legacy support untuk data lama
+    UNDER_REVIEW: "Sedang Ditinjau",
+    SHORTLISTED: "Masuk Daftar Pendek",
+    ACCEPTED: "Diterima",
+    REJECTED: "Ditolak",
+  };
+
   const checkStatus = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -43,11 +57,11 @@ export default function StatusPage() {
       if (data.success) {
         setStatus(data);
       } else {
-        setError(data.message || "Failed to retrieve application status");
+        setError(data.message || "Gagal mengambil status pendaftaran");
       }
     } catch (err) {
       console.error(err);
-      setError("An error occurred while checking your status");
+      setError("Terjadi kesalahan saat mengecek status Anda");
     } finally {
       setLoading(false);
     }
@@ -87,11 +101,11 @@ export default function StatusPage() {
         document.body.removeChild(a);
       } else {
         const errorData = await response.json();
-        setError(errorData.error || "Failed to download PDF");
+        setError(errorData.error || "Gagal mendownload PDF");
       }
     } catch (err) {
       console.error(err);
-      setError("An error occurred while downloading PDF");
+      setError("Terjadi kesalahan saat mendownload PDF");
     } finally {
       setDownloading(false);
     }
@@ -121,7 +135,7 @@ export default function StatusPage() {
         </Link>
       </div>
 
-      <h1 className="text-2xl font-bold mb-6">Check Application Status</h1>
+      <h1 className="text-2xl font-bold mb-6">Cek Status Aplikasi</h1>
 
       <form
         onSubmit={checkStatus}
@@ -132,13 +146,13 @@ export default function StatusPage() {
             className="block text-gray-700 text-sm font-bold mb-2"
             htmlFor="email"
           >
-            Email Address
+            Alamat Email
           </label>
           <input
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             id="email"
             type="email"
-            placeholder="Enter your email"
+            placeholder="Masukkan email Anda"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -153,24 +167,27 @@ export default function StatusPage() {
             type="submit"
             disabled={loading}
           >
-            {loading ? "Checking..." : "Check Status"}
+            {loading ? "Mengecek..." : "Cek Status"}
           </button>
         </div>
       </form>
 
       {status?.application && (
         <div className="bg-white shadow-md rounded px-8 pt-6 pb-8">
-          <h2 className="text-xl font-semibold mb-4">Application Status</h2>
+          <h2 className="text-xl font-semibold mb-4">Status Aplikasi</h2>
           <div className="mb-4">
-            <p className="text-sm text-gray-600">Name:</p>
+            <p className="text-sm text-gray-600">Nama:</p>
             <p className="font-medium">{status.application.fullName}</p>
           </div>
           <div className="mb-4">
             <p className="text-sm text-gray-600">Status:</p>
-            <p className="font-medium">{status.application.status}</p>
+            <p className="font-medium">
+              {statusDisplayMap[status.application.status] ||
+                status.application.status}
+            </p>
           </div>
           <div className="mb-6">
-            <p className="text-sm text-gray-600">Submitted on:</p>
+            <p className="text-sm text-gray-600">Dikirim pada:</p>
             <p className="font-medium">
               {new Date(status.application.submittedAt).toLocaleString()}
             </p>
@@ -179,11 +196,11 @@ export default function StatusPage() {
           {/* Download PDF Section */}
           <div className="border-t pt-6">
             <h3 className="text-lg font-semibold mb-4">
-              Download Confirmation Letter
+              Download Surat Konfirmasi
             </h3>
             <p className="text-sm text-gray-600 mb-4">
-              To download your confirmation letter, please enter your birth date
-              for verification.
+              Untuk mendownload surat konfirmasi Anda, silakan masukkan tanggal
+              lahir Anda untuk verifikasi.
             </p>
 
             <div className="mb-4">
@@ -191,7 +208,7 @@ export default function StatusPage() {
                 className="block text-gray-700 text-sm font-bold mb-2"
                 htmlFor="birthDate"
               >
-                Birth Date
+                Tanggal Lahir
               </label>
               <input
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -208,7 +225,7 @@ export default function StatusPage() {
               disabled={downloading || !birthDate}
               className="bg-green-500 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
             >
-              {downloading ? "Downloading..." : "Download PDF"}
+              {downloading ? "Mendownload..." : "Download PDF"}
             </button>
           </div>
         </div>

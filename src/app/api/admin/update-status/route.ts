@@ -15,11 +15,11 @@ export async function POST(request: Request) {
 
     // Validate status
     const validStatuses = [
-      "UNDER_REVIEW",
-      "SHORTLISTED",
+      "SEDANG_DITINJAU",
+      "DAFTAR_PENDEK",
       "INTERVIEW",
-      "ACCEPTED",
-      "REJECTED",
+      "DITERIMA",
+      "DITOLAK",
     ];
     if (!validStatuses.includes(status)) {
       return NextResponse.json(
