@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React from 'react';
+import React from "react";
 
 interface PaginationProps {
   currentPage: number;
@@ -17,7 +17,7 @@ export default function Pagination({
   itemsPerPage,
   totalItems,
   onPageChange,
-  onItemsPerPageChange
+  onItemsPerPageChange,
 }: PaginationProps) {
   const indexOfFirstItem = (currentPage - 1) * itemsPerPage + 1;
   const indexOfLastItem = Math.min(currentPage * itemsPerPage, totalItems);
@@ -26,22 +26,21 @@ export default function Pagination({
     <div className="mt-4 flex flex-col sm:flex-row items-center justify-between">
       <div className="flex items-center mb-4 sm:mb-0">
         <span className="text-sm text-gray-700">
-          Showing {totalItems > 0 ? indexOfFirstItem : 0} to{" "}
-          {indexOfLastItem} of{" "}
-          {totalItems} items
+          Showing {totalItems > 0 ? indexOfFirstItem : 0} to {indexOfLastItem}{" "}
+          of {totalItems} items
         </span>
         <select
           className="ml-4 border rounded px-2 py-1 text-sm"
           value={itemsPerPage}
           onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
         >
-          <option value={10}>10 per page</option>
-          <option value={25}>25 per page</option>
-          <option value={50}>50 per page</option>
-          <option value={100}>100 per page</option>
+          <option value={10}>10 per halaman</option>
+          <option value={25}>25 per halaman</option>
+          <option value={50}>50 per halaman</option>
+          <option value={100}>100 per halaman</option>
         </select>
       </div>
-      
+
       <div className="flex">
         <button
           onClick={() => onPageChange(Math.max(1, currentPage - 1))}
@@ -54,7 +53,7 @@ export default function Pagination({
         >
           Previous
         </button>
-        
+
         {/* Page numbers */}
         <div className="hidden sm:flex">
           {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -69,7 +68,7 @@ export default function Pagination({
             } else {
               pageNum = currentPage - 2 + i;
             }
-            
+
             return (
               <button
                 key={pageNum}
@@ -85,7 +84,7 @@ export default function Pagination({
             );
           })}
         </div>
-        
+
         <button
           onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
           disabled={currentPage === totalPages || totalPages === 0}
