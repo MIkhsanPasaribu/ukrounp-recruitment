@@ -1,16 +1,17 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextResponse } from "next/server";
-import { pool } from "@/lib/mysql";
+import { supabase } from "@/lib/supabase";
 import { ApplicationData } from "@/types";
+import { ApplicantInsert } from "@/types/supabase";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    // Prepare application data
-    const applicationData = {
+    // Siapkan data aplikasi
+    const applicationData: ApplicantInsert = {
       email: body.email,
-      full_name: body.fullName,
+      fullName: body.fullName,
       nickname: body.nickname,
       gender:
         body.gender === "male"
@@ -18,75 +19,79 @@ export async function POST(request: Request) {
           : body.gender === "female"
           ? "PEREMPUAN"
           : body.gender,
-      birth_date: body.birthDate,
+      birthDate: body.birthDate,
       faculty: body.faculty,
       department: body.department,
-      study_program: body.studyProgram,
+      studyProgram: body.studyProgram,
       nim: body.nim,
       nia: body.nia,
-      previous_school: body.previousSchool,
-      padang_address: body.padangAddress,
-      phone_number: body.phoneNumber,
+      previousSchool: body.previousSchool,
+      padangAddress: body.padangAddress,
+      phoneNumber: body.phoneNumber,
       motivation: body.motivation,
-      future_plans: body.futurePlans,
-      why_you_should_be_accepted: body.whyYouShouldBeAccepted,
+      futurePlans: body.futurePlans,
+      whyYouShouldBeAccepted: body.whyYouShouldBeAccepted,
 
-      // Software proficiency
-      corel_draw: body.software?.corelDraw || false,
+      // Kemahiran perangkat lunak
+      corelDraw: body.software?.corelDraw || false,
       photoshop: body.software?.photoshop || false,
-      adobe_premiere_pro: body.software?.adobePremierePro || false,
-      adobe_after_effect: body.software?.adobeAfterEffect || false,
-      autodesk_eagle: body.software?.autodeskEagle || false,
-      arduino_ide: body.software?.arduinoIde || false,
-      android_studio: body.software?.androidStudio || false,
-      visual_studio: body.software?.visualStudio || false,
-      mission_planer: body.software?.missionPlaner || false,
-      autodesk_inventor: body.software?.autodeskInventor || false,
-      autodesk_autocad: body.software?.autodeskAutocad || false,
+      adobePremierePro: body.software?.adobePremierePro || false,
+      adobeAfterEffect: body.software?.adobeAfterEffect || false,
+      autodeskEagle: body.software?.autodeskEagle || false,
+      arduinoIde: body.software?.arduinoIde || false,
+      androidStudio: body.software?.androidStudio || false,
+      visualStudio: body.software?.visualStudio || false,
+      missionPlaner: body.software?.missionPlaner || false,
+      autodeskInventor: body.software?.autodeskInventor || false,
+      autodeskAutocad: body.software?.autodeskAutocad || false,
       solidworks: body.software?.solidworks || false,
-      other_software: body.software?.others || null,
+      otherSoftware: body.software?.others || null,
 
-      // Document uploads
-      mbti_proof: body.mbtiProof,
+      // Unggahan dokumen
+      mbtiProof: body.mbtiProof,
       photo: body.photo,
-      student_card: body.studentCard,
-      study_plan_card: body.studyPlanCard,
-      ig_follow_proof: body.igFollowProof,
-      tiktok_follow_proof: body.tiktokFollowProof,
+      studentCard: body.studentCard,
+      studyPlanCard: body.studyPlanCard,
+      igFollowProof: body.igFollowProof,
+      tiktokFollowProof: body.tiktokFollowProof,
 
       status: "SEDANG_DITINJAU",
     };
 
-    // Insert data using MySQL
-    const connection = await pool.getConnection();
-    try {
-      const [result] = await connection.query(
-        "INSERT INTO applicants SET ?",
-        applicationData
+    // Masukkan data menggunakan Supabase
+    const { data, error } = await supabase
+      .from("applicants")
+      .insert([applicationData])
+      .select("id")
+      .single();
+
+    if (error) {
+      console.error("Error memasukkan pelamar:", error);
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Gagal mengirimkan aplikasi",
+          error: error.message,
+        },
+        { status: 500 }
       );
-
-      // Get inserted ID
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const insertId = (result as any).insertId;
-
-      // Hapus kode pengiriman email
-
-      return NextResponse.json({
-        success: true,
-        message: "Application submitted successfully",
-        id: insertId,
-      });
-    } finally {
-      connection.release();
     }
+
+    return NextResponse.json({
+      success: true,
+      message: "Aplikasi berhasil dikirimkan",
+      id: data?.id,
+    });
   } catch (error) {
-    console.error("Error inserting applicant:", error);
+    console.error("Error memasukkan pelamar:", error);
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to submit application",
+        message: "Gagal mengirimkan aplikasi",
         error:
-          error instanceof Error ? error.message : "An unknown error occurred",
+          error instanceof Error
+            ? error.message
+            : "Terjadi kesalahan yang tidak diketahui",
       },
       { status: 500 }
     );

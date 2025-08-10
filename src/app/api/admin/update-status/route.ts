@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { pool } from "@/lib/mysql";
-import { ResultSetHeader } from "mysql2";
+import { supabase } from "@/lib/supabase";
 
 export async function POST(request: Request) {
   try {
@@ -8,12 +7,12 @@ export async function POST(request: Request) {
 
     if (!id || !status) {
       return NextResponse.json(
-        { success: false, message: "ID and status are required" },
+        { success: false, message: "ID dan status diperlukan" },
         { status: 400 }
       );
     }
 
-    // Validate status
+    // Validasi status
     const validStatuses = [
       "SEDANG_DITINJAU",
       "DAFTAR_PENDEK",
@@ -23,38 +22,33 @@ export async function POST(request: Request) {
     ];
     if (!validStatuses.includes(status)) {
       return NextResponse.json(
-        { success: false, message: "Invalid status" },
+        { success: false, message: "Status tidak valid" },
         { status: 400 }
       );
     }
 
-    // Update the application status using MySQL
-    const connection = await pool.getConnection();
-    try {
-      const [result] = (await connection.query(
-        "UPDATE applicants SET status = ? WHERE id = ?",
-        [status, id]
-      )) as [ResultSetHeader, unknown];
+    // Update status aplikasi menggunakan Supabase
+    const { error } = await supabase
+      .from("applicants")
+      .update({ status })
+      .eq("id", id);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if ((result as any).affectedRows === 0) {
-        return NextResponse.json(
-          { success: false, message: "Application not found" },
-          { status: 404 }
-        );
-      }
-
-      return NextResponse.json({
-        success: true,
-        message: "Status updated successfully",
-      });
-    } finally {
-      connection.release();
+    if (error) {
+      console.error("Error memperbarui status:", error);
+      return NextResponse.json(
+        { success: false, message: "Gagal memperbarui status" },
+        { status: 500 }
+      );
     }
+
+    return NextResponse.json({
+      success: true,
+      message: "Status berhasil diperbarui",
+    });
   } catch (error) {
-    console.error("Error updating status:", error);
+    console.error("Error memperbarui status:", error);
     return NextResponse.json(
-      { success: false, message: "Failed to update status" },
+      { success: false, message: "Gagal memperbarui status" },
       { status: 500 }
     );
   }

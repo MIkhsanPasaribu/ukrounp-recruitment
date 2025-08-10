@@ -1,101 +1,178 @@
 import { NextResponse } from "next/server";
-import { pool } from "@/lib/mysql";
+import { supabase } from "@/lib/supabase";
 import { generateRegistrationConfirmation } from "@/utils/pdfGeneratorJsPDF";
 import { ApplicationData } from "@/types";
 
 export async function POST(request: Request) {
   try {
-    const { email, birthDate } = await request.json();
-
-    if (!email || !birthDate) {
+    // Validasi request body
+    const body = await request.json().catch(() => null);
+    
+    if (!body) {
       return NextResponse.json(
-        { error: "Email and birth date are required" },
+        { error: "Request body tidak valid" },
         { status: 400 }
       );
     }
 
-    // Ambil data dari database
-    const connection = await pool.getConnection();
-    try {
-      const [rows] = await connection.query(
-        "SELECT * FROM applicants WHERE email = ? AND birth_date = ?",
-        [email, birthDate]
+    const { email, birthDate } = body;
+
+    // Validasi input
+    if (!email || !birthDate) {
+      return NextResponse.json(
+        { error: "Email dan tanggal lahir diperlukan" },
+        { status: 400 }
       );
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (!rows || (rows as any[]).length === 0) {
-        return NextResponse.json(
-          { error: "Application not found or birth date doesn't match" },
-          { status: 404 }
-        );
-      }
-
-      // Format data untuk PDF generator
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const applicantData = (rows as unknown[])[0] as any;
-      const formattedData: ApplicationData = {
-        id: String(applicantData.id),
-        email: applicantData.email || "",
-        fullName: applicantData.full_name || "",
-        nickname: applicantData.nickname,
-        gender: applicantData.gender,
-        birthDate: applicantData.birth_date,
-        faculty: applicantData.faculty,
-        department: applicantData.department,
-        studyProgram: applicantData.study_program,
-        nim: applicantData.nim,
-        nia: applicantData.nia,
-        previousSchool: applicantData.previous_school,
-        padangAddress: applicantData.padang_address,
-        phoneNumber: applicantData.phone_number,
-        motivation: applicantData.motivation,
-        futurePlans: applicantData.future_plans,
-        whyYouShouldBeAccepted: applicantData.why_you_should_be_accepted,
-        software: {
-          corelDraw: Boolean(applicantData.corel_draw),
-          photoshop: Boolean(applicantData.photoshop),
-          adobePremierePro: Boolean(applicantData.adobe_premiere_pro),
-          adobeAfterEffect: Boolean(applicantData.adobe_after_effect),
-          autodeskEagle: Boolean(applicantData.autodesk_eagle),
-          arduinoIde: Boolean(applicantData.arduino_ide),
-          androidStudio: Boolean(applicantData.android_studio),
-          visualStudio: Boolean(applicantData.visual_studio),
-          missionPlaner: Boolean(applicantData.mission_planer),
-          autodeskInventor: Boolean(applicantData.autodesk_inventor),
-          autodeskAutocad: Boolean(applicantData.autodesk_autocad),
-          solidworks: Boolean(applicantData.solidworks),
-          others: applicantData.software_others || "",
-        },
-        studyPlanCard: applicantData.study_plan_card,
-        igFollowProof: applicantData.ig_follow_proof,
-        tiktokFollowProof: applicantData.tiktok_follow_proof,
-        status: applicantData.status,
-        submittedAt: applicantData.submitted_at,
-        mbtiProof: applicantData.mbti_proof || "",
-        photo: applicantData.photo || "",
-      };
-
-      // Generate PDF
-      const pdfBytes = await generateRegistrationConfirmation(formattedData);
-
-      // Return PDF as response
-      return new NextResponse(pdfBytes, {
-        status: 200,
-        headers: {
-          "Content-Type": "application/pdf",
-          "Content-Disposition": `attachment; filename="formulir-pendaftaran-${formattedData.fullName.replace(
-            /\s+/g,
-            "-"
-          )}.pdf"`,
-        },
-      });
-    } finally {
-      connection.release();
     }
+
+    // Validasi format email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { error: "Format email tidak valid" },
+        { status: 400 }
+      );
+    }
+
+    // Validasi format tanggal lahir (YYYY-MM-DD)
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(birthDate)) {
+      return NextResponse.json(
+        { error: "Format tanggal lahir tidak valid (gunakan YYYY-MM-DD)" },
+        { status: 400 }
+      );
+    }
+
+    console.log(`Mencari aplikasi dengan email: ${email} dan tanggal lahir: ${birthDate}`);
+
+    // Ambil data dari Supabase
+    const { data: applicants, error } = await supabase
+      .from("applicants")
+      .select("*")
+      .eq("email", email.toLowerCase().trim())
+      .eq("birthDate", birthDate)
+      .limit(1);
+
+    if (error) {
+      console.error("Error mengambil data pelamar:", error);
+      return NextResponse.json(
+        { error: "Gagal mengambil data pelamar dari database" },
+        { status: 500 }
+      );
+    }
+
+    if (!applicants || applicants.length === 0) {
+      console.log(`Aplikasi tidak ditemukan untuk email: ${email}`);
+      return NextResponse.json(
+        { error: "Aplikasi tidak ditemukan atau tanggal lahir tidak cocok" },
+        { status: 404 }
+      );
+    }
+
+    // Format data untuk PDF generator
+    const applicantData = applicants[0];
+    
+    console.log(`Memproses PDF untuk: ${applicantData.fullName} (${applicantData.email})`);
+
+    const formattedData: ApplicationData = {
+      id: applicantData.id,
+      email: applicantData.email || "",
+      fullName: applicantData.fullName || "",
+      nickname: applicantData.nickname || "",
+      gender: applicantData.gender,
+      birthDate: applicantData.birthDate,
+      faculty: applicantData.faculty || "",
+      department: applicantData.department || "",
+      studyProgram: applicantData.studyProgram || "",
+      nim: applicantData.nim || "",
+      nia: applicantData.nia || "",
+      previousSchool: applicantData.previousSchool || "",
+      padangAddress: applicantData.padangAddress || "",
+      phoneNumber: applicantData.phoneNumber || "",
+      motivation: applicantData.motivation || "",
+      futurePlans: applicantData.futurePlans || "",
+      whyYouShouldBeAccepted: applicantData.whyYouShouldBeAccepted || "",
+      software: {
+        corelDraw: Boolean(applicantData.corelDraw),
+        photoshop: Boolean(applicantData.photoshop),
+        adobePremierePro: Boolean(applicantData.adobePremierePro),
+        adobeAfterEffect: Boolean(applicantData.adobeAfterEffect),
+        autodeskEagle: Boolean(applicantData.autodeskEagle),
+        arduinoIde: Boolean(applicantData.arduinoIde),
+        androidStudio: Boolean(applicantData.androidStudio),
+        visualStudio: Boolean(applicantData.visualStudio),
+        missionPlaner: Boolean(applicantData.missionPlaner),
+        autodeskInventor: Boolean(applicantData.autodeskInventor),
+        autodeskAutocad: Boolean(applicantData.autodeskAutocad),
+        solidworks: Boolean(applicantData.solidworks),
+        others: applicantData.otherSoftware || "",
+      },
+      studyPlanCard: applicantData.studyPlanCard || "",
+      igFollowProof: applicantData.igFollowProof || "",
+      tiktokFollowProof: applicantData.tiktokFollowProof || "",
+      status: applicantData.status || "SEDANG_DITINJAU",
+      submittedAt: applicantData.submittedAt,
+      mbtiProof: applicantData.mbtiProof || "",
+      photo: applicantData.photo || "",
+    };
+
+    // Generate PDF
+    const pdfBytes = await generateRegistrationConfirmation(formattedData);
+    
+    if (!pdfBytes || pdfBytes.length === 0) {
+      console.error("PDF generation menghasilkan data kosong");
+      return NextResponse.json(
+        { error: "Gagal menghasilkan PDF - data kosong" },
+        { status: 500 }
+      );
+    }
+
+    console.log(`PDF berhasil dibuat dengan ukuran: ${pdfBytes.length} bytes`);
+
+    // Sanitize filename untuk keamanan
+    const sanitizedName = formattedData.fullName
+      .replace(/[^a-zA-Z0-9\s]/g, "")
+      .replace(/\s+/g, "-")
+      .toLowerCase();
+
+    // Convert Buffer ke Uint8Array untuk NextResponse
+    const pdfArray = new Uint8Array(pdfBytes);
+
+    // Return PDF sebagai respons
+    return new NextResponse(pdfArray, {
+      status: 200,
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="formulir-pendaftaran-${sanitizedName}.pdf"`,
+        "Content-Length": pdfBytes.length.toString(),
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+      },
+    });
   } catch (error) {
-    console.error("Error generating PDF:", error);
+    console.error("Error dalam download confirmation PDF:", error);
+    
+    // Handle different types of errors
+    if (error instanceof SyntaxError) {
+      return NextResponse.json(
+        { error: "Format request tidak valid" },
+        { status: 400 }
+      );
+    }
+    
+    if (error instanceof TypeError) {
+      return NextResponse.json(
+        { error: "Tipe data tidak valid" },
+        { status: 400 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: "Failed to generate PDF" },
+      { 
+        error: "Gagal menghasilkan PDF konfirmasi pendaftaran", 
+        details: error instanceof Error ? error.message : "Kesalahan tidak diketahui"
+      },
       { status: 500 }
     );
   }

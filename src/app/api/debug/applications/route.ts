@@ -1,25 +1,28 @@
 import { NextResponse } from "next/server";
-import { pool } from "@/lib/mysql";
+import { supabase } from "@/lib/supabase";
 
 export async function GET() {
   try {
-    const connection = await pool.getConnection();
-    try {
-      const [applications] = await connection.query(
-        "SELECT id, full_name, corel_draw, photoshop, adobe_premiere_pro, other_software FROM applicants LIMIT 1"
-      );
+    const { data: applications, error } = await supabase
+      .from("applicants")
+      .select(
+        "id, fullName, corelDraw, photoshop, adobePremierePro, otherSoftware"
+      )
+      .limit(1);
 
-      console.log("Raw database data:", applications);
-
-      return NextResponse.json({
-        debug: "Raw database values",
-        data: applications,
-      });
-    } finally {
-      connection.release();
+    if (error) {
+      console.error("Debug error:", error);
+      return NextResponse.json({ error: "Debug gagal" }, { status: 500 });
     }
+
+    console.log("Data database mentah:", applications);
+
+    return NextResponse.json({
+      debug: "Nilai database mentah",
+      data: applications,
+    });
   } catch (error) {
     console.error("Debug error:", error);
-    return NextResponse.json({ error: "Debug failed" }, { status: 500 });
+    return NextResponse.json({ error: "Debug gagal" }, { status: 500 });
   }
 }

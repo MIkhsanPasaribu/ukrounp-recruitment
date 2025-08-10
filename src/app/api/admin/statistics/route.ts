@@ -1,112 +1,82 @@
 import { NextResponse } from "next/server";
-import { pool } from "@/lib/mysql";
+import { supabase } from "@/lib/supabase";
 
 export async function GET() {
   try {
-    console.log("Fetching statistics from MySQL...");
+    // Ambil statistik dari Supabase
+    const { data: applications, error } = await supabase
+      .from("applicants")
+      .select("status, submittedAt, gender, faculty")
+      .order("submittedAt", { ascending: false });
 
-    const connection = await pool.getConnection();
-    try {
-      // Test connection first
-      await connection.ping();
-
-      // Total applications
-      const [totalResult] = await connection.query(
-        "SELECT COUNT(*) as count FROM applicants"
+    if (error) {
+      console.error("Error mengambil statistik:", error);
+      return NextResponse.json(
+        { error: "Gagal mengambil statistik" },
+        { status: 500 }
       );
-      const totalApplications = (totalResult as { count: number }[])[0].count;
-      console.log("Total applications:", totalApplications);
-
-      // Status counts
-      const [statusResult] = await connection.query(
-        "SELECT status, COUNT(*) as count FROM applicants GROUP BY status"
-      );
-      const statusCounts = (
-        statusResult as { status: string; count: number }[]
-      ).map((row) => ({
-        _id: row.status,
-        count: row.count,
-      }));
-      console.log("Status counts:", statusCounts);
-
-      // Faculty counts
-      const [facultyResult] = await connection.query(
-        "SELECT faculty, COUNT(*) as count FROM applicants WHERE faculty IS NOT NULL GROUP BY faculty"
-      );
-      const facultyCounts = (
-        facultyResult as { faculty: string; count: number }[]
-      ).map((row) => ({
-        _id: row.faculty,
-        count: row.count,
-      }));
-
-      // Gender counts
-      const [genderResult] = await connection.query(
-        "SELECT gender, COUNT(*) as count FROM applicants WHERE gender IS NOT NULL GROUP BY gender"
-      );
-      const genderCounts = (
-        genderResult as { gender: string; count: number }[]
-      ).map((row) => ({
-        _id: row.gender?.toLowerCase(),
-        count: row.count,
-      }));
-
-      // Daily applications (last 30 days)
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-      const [dailyResult] = await connection.query(
-        "SELECT DATE(submitted_at) as date, COUNT(*) as count FROM applicants WHERE submitted_at >= ? GROUP BY DATE(submitted_at) ORDER BY date",
-        [thirtyDaysAgo.toISOString().split("T")[0]]
-      );
-      const dailyApplications = (
-        dailyResult as { date: string; count: number }[]
-      ).map((row) => ({
-        _id: row.date,
-        count: row.count,
-      }));
-
-      const statisticsData = {
-        totalApplications,
-        statusCounts,
-        facultyCounts,
-        genderCounts,
-        dailyApplications,
-      };
-
-      console.log("Statistics successfully fetched:", statisticsData);
-
-      return NextResponse.json({
-        success: true,
-        statistics: statisticsData,
-      });
-    } finally {
-      connection.release();
     }
+
+    // Hitung statistik
+    const total = applications.length;
+
+    // Status statistics
+    const statusStats = applications.reduce(
+      (acc: Record<string, number>, app) => {
+        acc[app.status] = (acc[app.status] || 0) + 1;
+        return acc;
+      },
+      {}
+    );
+
+    // Gender statistics
+    const genderStats = applications.reduce(
+      (acc: Record<string, number>, app) => {
+        acc[app.gender] = (acc[app.gender] || 0) + 1;
+        return acc;
+      },
+      {}
+    );
+
+    // Faculty statistics
+    const facultyStats = applications.reduce(
+      (acc: Record<string, number>, app) => {
+        acc[app.faculty] = (acc[app.faculty] || 0) + 1;
+        return acc;
+      },
+      {}
+    );
+
+    // Monthly statistics (submissions per month)
+    const monthlyStats = applications.reduce(
+      (acc: Record<string, number>, app) => {
+        const month = new Date(app.submittedAt).toLocaleDateString("id-ID", {
+          year: "numeric",
+          month: "long",
+        });
+        acc[month] = (acc[month] || 0) + 1;
+        return acc;
+      },
+      {}
+    );
+
+    const statistics = {
+      total,
+      byStatus: statusStats,
+      byGender: genderStats,
+      byFaculty: facultyStats,
+      byMonth: monthlyStats,
+      lastUpdated: new Date().toISOString(),
+    };
+
+    return NextResponse.json(statistics);
   } catch (error) {
-    console.error("Error fetching statistics:", error);
-
-    // Provide more specific error messages
-    let errorMessage = "Failed to fetch statistics";
-    if (error instanceof Error) {
-      if (error.message.includes("ECONNREFUSED")) {
-        errorMessage =
-          "Database connection refused. Check if MySQL is running.";
-      } else if (error.message.includes("ER_NO_SUCH_TABLE")) {
-        errorMessage =
-          "Database table 'applicants' not found. Please setup database.";
-      } else if (error.message.includes("ER_ACCESS_DENIED")) {
-        errorMessage = "Database access denied. Check your credentials.";
-      } else {
-        errorMessage = `Database error: ${error.message}`;
-      }
-    }
-
+    console.error("Error dalam statistik:", error);
     return NextResponse.json(
       {
-        success: false,
-        error: errorMessage,
-        details: error instanceof Error ? error.message : "Unknown error",
+        error: "Gagal menghasilkan statistik",
+        details:
+          error instanceof Error ? error.message : "Kesalahan tidak diketahui",
       },
       { status: 500 }
     );

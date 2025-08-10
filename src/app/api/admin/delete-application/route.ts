@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { pool } from "@/lib/mysql";
-import { ResultSetHeader } from "mysql2";
+import { supabase } from "@/lib/supabase";
 
 export async function POST(request: Request) {
   try {
@@ -8,38 +7,30 @@ export async function POST(request: Request) {
 
     if (!id) {
       return NextResponse.json(
-        { success: false, message: "ID is required" },
+        { success: false, message: "ID diperlukan" },
         { status: 400 }
       );
     }
 
-    // Delete the application using MySQL
-    const connection = await pool.getConnection();
-    try {
-      const [result] = (await connection.query(
-        "DELETE FROM applicants WHERE id = ?",
-        [id]
-      )) as [ResultSetHeader, unknown];
+    // Hapus aplikasi menggunakan Supabase
+    const { error } = await supabase.from("applicants").delete().eq("id", id);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if ((result as any).affectedRows === 0) {
-        return NextResponse.json(
-          { success: false, message: "Application not found" },
-          { status: 404 }
-        );
-      }
-
-      return NextResponse.json({
-        success: true,
-        message: "Application deleted successfully",
-      });
-    } finally {
-      connection.release();
+    if (error) {
+      console.error("Error menghapus aplikasi:", error);
+      return NextResponse.json(
+        { success: false, message: "Gagal menghapus aplikasi" },
+        { status: 500 }
+      );
     }
+
+    return NextResponse.json({
+      success: true,
+      message: "Aplikasi berhasil dihapus",
+    });
   } catch (error) {
-    console.error("Error deleting application:", error);
+    console.error("Error menghapus aplikasi:", error);
     return NextResponse.json(
-      { success: false, message: "Failed to delete application" },
+      { success: false, message: "Gagal menghapus aplikasi" },
       { status: 500 }
     );
   }

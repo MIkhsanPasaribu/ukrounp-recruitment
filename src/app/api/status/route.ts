@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { pool } from "@/lib/mysql";
+import { supabase } from "@/lib/supabase";
 
 export async function POST(request: Request) {
   try {
@@ -7,55 +7,50 @@ export async function POST(request: Request) {
 
     if (!email) {
       return NextResponse.json(
-        { success: false, message: "Email is required" },
+        { success: false, message: "Email diperlukan" },
         { status: 400 }
       );
     }
 
-    // Fetch application by email using MySQL
-    const connection = await pool.getConnection();
-    try {
-      const [applications] = await connection.query(
-        "SELECT id, email, full_name, status, submitted_at, birth_date FROM applicants WHERE email = ?",
-        [email]
+    // Ambil aplikasi berdasarkan email menggunakan Supabase
+    const { data: applications, error } = await supabase
+      .from("applicants")
+      .select("id, email, fullName, status, submittedAt, birthDate")
+      .eq("email", email)
+      .limit(1);
+
+    if (error) {
+      console.error("Error memeriksa status:", error);
+      return NextResponse.json(
+        { success: false, message: "Gagal memeriksa status aplikasi" },
+        { status: 500 }
       );
-
-      const applicationsArray = applications as unknown[];
-
-      if (!applicationsArray || applicationsArray.length === 0) {
-        return NextResponse.json(
-          { success: false, message: "Application not found" },
-          { status: 404 }
-        );
-      }
-
-      const application = applicationsArray[0] as {
-        id: number;
-        email: string;
-        full_name: string;
-        status: string;
-        submitted_at: string;
-        birth_date: string;
-      };
-
-      return NextResponse.json({
-        success: true,
-        application: {
-          id: application.id.toString(),
-          email: application.email,
-          fullName: application.full_name,
-          status: application.status,
-          submittedAt: application.submitted_at,
-          birthDate: application.birth_date,
-        },
-      });
-    } finally {
-      connection.release();
     }
+
+    if (!applications || applications.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "Aplikasi tidak ditemukan" },
+        { status: 404 }
+      );
+    }
+
+    const application = applications[0];
+
+    return NextResponse.json({
+      success: true,
+      application: {
+        id: application.id,
+        email: application.email,
+        fullName: application.fullName,
+        status: application.status,
+        submittedAt: application.submittedAt,
+        birthDate: application.birthDate,
+      },
+    });
   } catch (error) {
-    console.error("Error checking status:", error);
+    console.error("Error memeriksa status:", error);
     return NextResponse.json(
-      { success: false, message: "Failed to check application status" },
+      { success: false, message: "Gagal memeriksa status aplikasi" },
       { status: 500 }
     );
   }

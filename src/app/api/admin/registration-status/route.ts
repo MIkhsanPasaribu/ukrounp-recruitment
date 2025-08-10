@@ -1,36 +1,41 @@
 import { NextResponse } from "next/server";
-import { pool } from "@/lib/mysql";
+import { supabase } from "@/lib/supabase";
 
 export async function GET() {
   try {
-    // Fetch registration status from MySQL
-    const connection = await pool.getConnection();
-    try {
-      const [rows] = await connection.query(
-        "SELECT value FROM settings WHERE `key` = ?",
-        ["registrationOpen"]
-      );
+    // Ambil status pendaftaran dari Supabase
+    const { data: settings, error } = await supabase
+      .from("settings")
+      .select("value")
+      .eq("key", "registrationOpen")
+      .limit(1);
 
-      // Jika tabel settings tidak ada atau tidak ada data, default ke true
-      if (!rows || (rows as unknown[]).length === 0) {
-        console.log(
-          "Settings table not found or no data, defaulting to open registration"
-        );
-        return NextResponse.json({
-          success: true,
-          isOpen: true, // Default ke true jika tidak ada setting
-        });
-      }
-
+    if (error) {
+      console.error("Error mengambil status pendaftaran:", error);
+      // Fallback ke true jika ada error
       return NextResponse.json({
         success: true,
-        isOpen: (rows as { value: string }[])[0].value === "true",
+        isOpen: true,
       });
-    } finally {
-      connection.release();
     }
+
+    // Jika tabel settings tidak ada atau tidak ada data, default ke true
+    if (!settings || settings.length === 0) {
+      console.log(
+        "Tabel settings tidak ditemukan atau tidak ada data, default ke pendaftaran terbuka"
+      );
+      return NextResponse.json({
+        success: true,
+        isOpen: true, // Default ke true jika tidak ada setting
+      });
+    }
+
+    return NextResponse.json({
+      success: true,
+      isOpen: settings[0].value === "true",
+    });
   } catch (error) {
-    console.error("Error fetching registration status:", error);
+    console.error("Error mengambil status pendaftaran:", error);
     // Fallback ke true jika ada error
     return NextResponse.json({
       success: true,
@@ -45,57 +50,44 @@ export async function POST(request: Request) {
 
     if (typeof isOpen !== "boolean") {
       return NextResponse.json(
-        { success: false, message: "isOpen must be a boolean" },
+        { success: false, message: "isOpen harus berupa boolean" },
         { status: 400 }
       );
     }
 
-    // Upsert registration status using MySQL
-    const connection = await pool.getConnection();
-    try {
-      // Check if the setting already exists
-      const [existingRows] = await connection.query(
-        "SELECT id FROM settings WHERE `key` = ?",
-        ["registrationOpen"]
-      );
-
-      if ((existingRows as unknown[]).length > 0) {
-        // Update existing setting
-        await connection.query(
-          "UPDATE settings SET value = ? WHERE `key` = ?",
-          [isOpen.toString(), "registrationOpen"]
-        );
-      } else {
-        // Insert new setting
-        await connection.query(
-          "INSERT INTO settings (`key`, value) VALUES (?, ?)",
-          ["registrationOpen", isOpen.toString()]
-        );
+    // Upsert status pendaftaran menggunakan Supabase
+    const { error } = await supabase.from("settings").upsert(
+      {
+        key: "registrationOpen",
+        value: isOpen.toString(),
+      },
+      {
+        onConflict: "key",
       }
+    );
 
-      return NextResponse.json({
-        success: true,
-        message: `Registration ${isOpen ? "opened" : "closed"} successfully`,
-      });
-    } catch (error) {
-      console.error("Error updating registration status:", error);
+    if (error) {
+      console.error("Error memperbarui status pendaftaran:", error);
       return NextResponse.json(
         {
           success: false,
-          message: "Failed to update registration status",
-          error: (error as Error).message,
+          message: "Gagal memperbarui status pendaftaran",
+          error: error.message,
         },
         { status: 500 }
       );
-    } finally {
-      connection.release();
     }
+
+    return NextResponse.json({
+      success: true,
+      message: `Pendaftaran berhasil ${isOpen ? "dibuka" : "ditutup"}`,
+    });
   } catch (error) {
-    console.error("Error processing registration status request:", error);
+    console.error("Error memproses permintaan status pendaftaran:", error);
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to process registration status request",
+        message: "Gagal memproses permintaan status pendaftaran",
       },
       { status: 500 }
     );
