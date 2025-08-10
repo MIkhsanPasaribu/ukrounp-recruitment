@@ -7,7 +7,7 @@ export async function POST(request: Request) {
   try {
     // Validasi request body
     const body = await request.json().catch(() => null);
-    
+
     if (!body) {
       return NextResponse.json(
         { error: "Request body tidak valid" },
@@ -43,7 +43,9 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log(`Mencari aplikasi dengan email: ${email} dan tanggal lahir: ${birthDate}`);
+    console.log(
+      `Mencari aplikasi dengan email: ${email} dan tanggal lahir: ${birthDate}`
+    );
 
     // Ambil data dari Supabase
     const { data: applicants, error } = await supabase
@@ -71,8 +73,10 @@ export async function POST(request: Request) {
 
     // Format data untuk PDF generator
     const applicantData = applicants[0];
-    
-    console.log(`Memproses PDF untuk: ${applicantData.fullName} (${applicantData.email})`);
+
+    console.log(
+      `Memproses PDF untuk: ${applicantData.fullName} (${applicantData.email})`
+    );
 
     const formattedData: ApplicationData = {
       id: applicantData.id,
@@ -118,7 +122,7 @@ export async function POST(request: Request) {
 
     // Generate PDF
     const pdfBytes = await generateRegistrationConfirmation(formattedData);
-    
+
     if (!pdfBytes || pdfBytes.length === 0) {
       console.error("PDF generation menghasilkan data kosong");
       return NextResponse.json(
@@ -146,13 +150,13 @@ export async function POST(request: Request) {
         "Content-Disposition": `attachment; filename="formulir-pendaftaran-${sanitizedName}.pdf"`,
         "Content-Length": pdfBytes.length.toString(),
         "Cache-Control": "no-cache, no-store, must-revalidate",
-        "Pragma": "no-cache",
-        "Expires": "0",
+        Pragma: "no-cache",
+        Expires: "0",
       },
     });
   } catch (error) {
     console.error("Error dalam download confirmation PDF:", error);
-    
+
     // Handle different types of errors
     if (error instanceof SyntaxError) {
       return NextResponse.json(
@@ -160,18 +164,19 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    
+
     if (error instanceof TypeError) {
       return NextResponse.json(
         { error: "Tipe data tidak valid" },
         { status: 400 }
       );
     }
-    
+
     return NextResponse.json(
-      { 
-        error: "Gagal menghasilkan PDF konfirmasi pendaftaran", 
-        details: error instanceof Error ? error.message : "Kesalahan tidak diketahui"
+      {
+        error: "Gagal menghasilkan PDF konfirmasi pendaftaran",
+        details:
+          error instanceof Error ? error.message : "Kesalahan tidak diketahui",
       },
       { status: 500 }
     );
