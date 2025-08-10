@@ -1,41 +1,36 @@
-import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
-import { ObjectId } from 'mongodb';
+import { NextResponse } from "next/server";
+import { supabase } from "@/lib/supabase";
 
 export async function POST(request: Request) {
   try {
     const { id } = await request.json();
-    
+
     if (!id) {
       return NextResponse.json(
-        { success: false, message: "Missing application id" },
+        { success: false, message: "ID diperlukan" },
         { status: 400 }
       );
     }
-    
-    const client = await clientPromise;
-    const db = client.db("ititanix");
-    
-    // Delete the application
-    const result = await db.collection("applicants").deleteOne(
-      { _id: new ObjectId(id) }
-    );
-    
-    if (result.deletedCount === 0) {
+
+    // Hapus aplikasi menggunakan Supabase
+    const { error } = await supabase.from("applicants").delete().eq("id", id);
+
+    if (error) {
+      console.error("Error menghapus aplikasi:", error);
       return NextResponse.json(
-        { success: false, message: "Application not found" },
-        { status: 404 }
+        { success: false, message: "Gagal menghapus aplikasi" },
+        { status: 500 }
       );
     }
-    
-    return NextResponse.json({ 
-      success: true, 
-      message: "Application deleted successfully"
+
+    return NextResponse.json({
+      success: true,
+      message: "Aplikasi berhasil dihapus",
     });
   } catch (error) {
-    console.error("Error deleting application:", error);
+    console.error("Error menghapus aplikasi:", error);
     return NextResponse.json(
-      { success: false, message: "Failed to delete application" },
+      { success: false, message: "Gagal menghapus aplikasi" },
       { status: 500 }
     );
   }

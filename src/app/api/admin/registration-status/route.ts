@@ -1,61 +1,94 @@
-import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
+import { NextResponse } from "next/server";
+import { supabase } from "@/lib/supabase";
 
-// Get current registration status
 export async function GET() {
   try {
-    const client = await clientPromise;
-    const db = client.db("ititanix");
-    
-    // Get the registration status from settings collection
-    const settings = await db.collection("settings").findOne({ key: "registrationOpen" });
-    
-    // Default to open if setting doesn't exist
-    const isOpen = settings ? settings.value : true;
-    
-    return NextResponse.json({ 
+    // Ambil status pendaftaran dari Supabase
+    const { data: settings, error } = await supabase
+      .from("settings")
+      .select("value")
+      .eq("key", "registrationOpen")
+      .limit(1);
+
+    if (error) {
+      console.error("Error mengambil status pendaftaran:", error);
+      // Fallback ke true jika ada error
+      return NextResponse.json({
+        success: true,
+        isOpen: true,
+      });
+    }
+
+    // Jika tabel settings tidak ada atau tidak ada data, default ke true
+    if (!settings || settings.length === 0) {
+      console.log(
+        "Tabel settings tidak ditemukan atau tidak ada data, default ke pendaftaran terbuka"
+      );
+      return NextResponse.json({
+        success: true,
+        isOpen: true, // Default ke true jika tidak ada setting
+      });
+    }
+
+    return NextResponse.json({
       success: true,
-      isOpen
+      isOpen: settings[0].value === "true",
     });
   } catch (error) {
-    console.error("Error getting registration status:", error);
-    return NextResponse.json(
-      { success: false, message: "Failed to get registration status" },
-      { status: 500 }
-    );
+    console.error("Error mengambil status pendaftaran:", error);
+    // Fallback ke true jika ada error
+    return NextResponse.json({
+      success: true,
+      isOpen: true,
+    });
   }
 }
 
-// Update registration status
 export async function POST(request: Request) {
   try {
     const { isOpen } = await request.json();
-    
-    if (isOpen === undefined) {
+
+    if (typeof isOpen !== "boolean") {
       return NextResponse.json(
-        { success: false, message: "Missing isOpen parameter" },
+        { success: false, message: "isOpen harus berupa boolean" },
         { status: 400 }
       );
     }
-    
-    const client = await clientPromise;
-    const db = client.db("ititanix");
-    
-    // Update the registration status in settings collection
-    await db.collection("settings").updateOne(
-      { key: "registrationOpen" },
-      { $set: { key: "registrationOpen", value: isOpen } },
-      { upsert: true }
+
+    // Upsert status pendaftaran menggunakan Supabase
+    const { error } = await supabase.from("settings").upsert(
+      {
+        key: "registrationOpen",
+        value: isOpen.toString(),
+      },
+      {
+        onConflict: "key",
+      }
     );
-    
-    return NextResponse.json({ 
-      success: true, 
-      message: isOpen ? "Registration opened successfully" : "Registration closed successfully"
+
+    if (error) {
+      console.error("Error memperbarui status pendaftaran:", error);
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Gagal memperbarui status pendaftaran",
+          error: error.message,
+        },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `Pendaftaran berhasil ${isOpen ? "dibuka" : "ditutup"}`,
     });
   } catch (error) {
-    console.error("Error updating registration status:", error);
+    console.error("Error memproses permintaan status pendaftaran:", error);
     return NextResponse.json(
-      { success: false, message: "Failed to update registration status" },
+      {
+        success: false,
+        message: "Gagal memproses permintaan status pendaftaran",
+      },
       { status: 500 }
     );
   }

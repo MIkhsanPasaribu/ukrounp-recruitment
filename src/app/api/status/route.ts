@@ -1,39 +1,56 @@
-import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
+import { NextResponse } from "next/server";
+import { supabase } from "@/lib/supabase";
 
 export async function POST(request: Request) {
   try {
     const { email } = await request.json();
-    
+
     if (!email) {
       return NextResponse.json(
-        { success: false, message: "Email is required" },
+        { success: false, message: "Email diperlukan" },
         { status: 400 }
       );
     }
-    
-    const client = await clientPromise;
-    const db = client.db("ititanix");
-    
-    // Find the application by email
-    const application = await db.collection("applicants").findOne({ email });
-    
-    if (!application) {
+
+    // Ambil aplikasi berdasarkan email menggunakan Supabase
+    const { data: applications, error } = await supabase
+      .from("applicants")
+      .select("id, email, fullName, status, submittedAt, birthDate")
+      .eq("email", email)
+      .limit(1);
+
+    if (error) {
+      console.error("Error memeriksa status:", error);
       return NextResponse.json(
-        { success: false, message: "No application found with this email" },
+        { success: false, message: "Gagal memeriksa status aplikasi" },
+        { status: 500 }
+      );
+    }
+
+    if (!applications || applications.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "Aplikasi tidak ditemukan" },
         { status: 404 }
       );
     }
-    
-    return NextResponse.json({ 
+
+    const application = applications[0];
+
+    return NextResponse.json({
       success: true,
-      status: application.status || "Under Review",
-      submittedAt: application.submittedAt
+      application: {
+        id: application.id,
+        email: application.email,
+        fullName: application.fullName,
+        status: application.status,
+        submittedAt: application.submittedAt,
+        birthDate: application.birthDate,
+      },
     });
   } catch (error) {
-    console.error("Error checking status:", error);
+    console.error("Error memeriksa status:", error);
     return NextResponse.json(
-      { success: false, message: "Failed to check application status" },
+      { success: false, message: "Gagal memeriksa status aplikasi" },
       { status: 500 }
     );
   }

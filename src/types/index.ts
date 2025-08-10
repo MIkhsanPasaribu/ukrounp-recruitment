@@ -1,16 +1,18 @@
 export interface Section1Data {
   email: string;
-  paymentProof: string; // Base64 encoded image
+  mbtiProof: string; // Base64 encoded image
 }
 
 export interface Section2Data {
   fullName: string;
   nickname: string;
-  gender: 'male' | 'female';
+  gender: "LAKI_LAKI" | "PEREMPUAN";
   birthDate: string;
   faculty: string;
   department: string;
   studyProgram: string;
+  nim: string;
+  nia: string;
   previousSchool: string;
   padangAddress: string;
   phoneNumber: string;
@@ -39,20 +41,27 @@ export interface Section2Data {
   tiktokFollowProof: string; // Base64 encoded image
 }
 
-// Consolidated FormData interface with all necessary fields
+// Updated FormData interface to work with Prisma
 export interface FormData extends Section1Data {
-  _id?: string; // MongoDB document ID
+  id?: string; // Prisma CUID
   fullName: string;
-  status?: string;
+  status?:
+    | "SEDANG_DITINJAU"
+    | "DAFTAR_PENDEK"
+    | "INTERVIEW"
+    | "DITERIMA"
+    | "DITOLAK";
   submittedAt?: Date | string;
-  
+
   // Optional fields from Section2Data
   nickname?: string;
-  gender?: string;
+  gender?: "LAKI_LAKI" | "PEREMPUAN";
   birthDate?: string;
   faculty?: string;
   department?: string;
   studyProgram?: string;
+  nim?: string;
+  nia?: string;
   previousSchool?: string;
   padangAddress?: string;
   phoneNumber?: string;
@@ -81,7 +90,16 @@ export interface FormData extends Section1Data {
   tiktokFollowProof?: string;
 }
 
-// Interface untuk data aplikasi dengan _id yang pasti ada
+// Interface untuk data aplikasi dengan id yang pasti ada
 export interface ApplicationData extends FormData {
-  _id: string;
+  id: string;
 }
+
+// Prisma-compatible types
+export type Gender = "LAKI_LAKI" | "PEREMPUAN";
+export type ApplicationStatus =
+  | "SEDANG_DITINJAU"
+  | "DAFTAR_PENDEK"
+  | "INTERVIEW"
+  | "DITERIMA"
+  | "DITOLAK";

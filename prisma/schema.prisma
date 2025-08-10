@@ -1,0 +1,89 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Applicant {
+  id                      String   @id @default(cuid())
+  email                   String   @unique
+  fullName                String
+  nickname                String?
+  gender                  Gender?
+  birthDate               String?
+  faculty                 String?
+  department              String?
+  studyProgram            String?
+  nim                     String?
+  nia                     String?
+  previousSchool          String?
+  padangAddress           String?
+  phoneNumber             String?
+  motivation              String?
+  futurePlans             String?
+  whyYouShouldBeAccepted  String?
+  
+  // Software proficiency
+  corelDraw               Boolean  @default(false)
+  photoshop               Boolean  @default(false)
+  adobePremierePro        Boolean  @default(false)
+  adobeAfterEffect        Boolean  @default(false)
+  autodeskEagle           Boolean  @default(false)
+  arduinoIde             Boolean  @default(false)
+  androidStudio           Boolean  @default(false)
+  visualStudio            Boolean  @default(false)
+  missionPlaner           Boolean  @default(false)
+  autodeskInventor        Boolean  @default(false)
+  autodeskAutocad         Boolean  @default(false)
+  solidworks              Boolean  @default(false)
+  otherSoftware           String?
+  
+  // Document uploads (stored as base64 or file URLs)
+  mbtiProof               String?
+  photo                   String?
+  studentCard             String?
+  studyPlanCard           String?
+  igFollowProof           String?
+  tiktokFollowProof       String?
+  
+  // Application metadata
+  status                  ApplicationStatus @default(SEDANG_DITINJAU)
+  submittedAt             DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  
+  @@map("applicants")
+}
+
+model Settings {
+  id                String   @id @default(cuid())
+  key               String   @unique
+  value             String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@map("settings")
+}
+
+enum Gender {
+  LAKI_LAKI
+  PEREMPUAN
+  
+  @@map("gender")
+}
+
+enum ApplicationStatus {
+  SEDANG_DITINJAU
+  DAFTAR_PENDEK
+  INTERVIEW
+  DITERIMA
+  DITOLAK
+  
+  @@map("application_status")
+}

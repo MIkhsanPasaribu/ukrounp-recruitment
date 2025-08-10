@@ -1,42 +1,54 @@
-import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
-import { ObjectId } from 'mongodb';
+import { NextResponse } from "next/server";
+import { supabase } from "@/lib/supabase";
 
 export async function POST(request: Request) {
   try {
     const { id, status } = await request.json();
-    
+
     if (!id || !status) {
       return NextResponse.json(
-        { success: false, message: "Missing id or status" },
+        { success: false, message: "ID dan status diperlukan" },
         { status: 400 }
       );
     }
-    
-    const client = await clientPromise;
-    const db = client.db("ititanix");
-    
-    // Update the application status
-    const result = await db.collection("applicants").updateOne(
-      { _id: new ObjectId(id) },
-      { $set: { status } }
-    );
-    
-    if (result.matchedCount === 0) {
+
+    // Validasi status
+    const validStatuses = [
+      "SEDANG_DITINJAU",
+      "DAFTAR_PENDEK",
+      "INTERVIEW",
+      "DITERIMA",
+      "DITOLAK",
+    ];
+    if (!validStatuses.includes(status)) {
       return NextResponse.json(
-        { success: false, message: "Application not found" },
-        { status: 404 }
+        { success: false, message: "Status tidak valid" },
+        { status: 400 }
       );
     }
-    
-    return NextResponse.json({ 
-      success: true, 
-      message: "Status updated successfully"
+
+    // Update status aplikasi menggunakan Supabase
+    const { error } = await supabase
+      .from("applicants")
+      .update({ status })
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error memperbarui status:", error);
+      return NextResponse.json(
+        { success: false, message: "Gagal memperbarui status" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Status berhasil diperbarui",
     });
   } catch (error) {
-    console.error("Error updating status:", error);
+    console.error("Error memperbarui status:", error);
     return NextResponse.json(
-      { success: false, message: "Failed to update status" },
+      { success: false, message: "Gagal memperbarui status" },
       { status: 500 }
     );
   }

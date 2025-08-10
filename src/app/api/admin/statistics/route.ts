@@ -1,66 +1,83 @@
-import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
+import { NextResponse } from "next/server";
+import { supabase } from "@/lib/supabase";
 
 export async function GET() {
   try {
-    const client = await clientPromise;
-    const db = client.db("ititanix");
-    
-    // Get total applications count
-    const totalApplications = await db.collection('applicants').countDocuments();
-    
-    // Get applications by status
-    const statusCounts = await db.collection('applicants').aggregate([
-      { $group: { _id: "$status", count: { $sum: 1 } } }
-    ]).toArray();
-    
-    // Get applications by faculty
-    const facultyCounts = await db.collection('applicants').aggregate([
-      { $match: { faculty: { $exists: true, $ne: "" } } },
-      { $group: { _id: "$faculty", count: { $sum: 1 } } }
-    ]).toArray();
-    
-    // Get applications by gender
-    const genderCounts = await db.collection('applicants').aggregate([
-      { $match: { gender: { $exists: true, $ne: "" } } },
-      { $group: { _id: "$gender", count: { $sum: 1 } } }
-    ]).toArray();
-    
-    // Get applications by day (for the last 30 days)
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
-    const dailyApplications = await db.collection('applicants').aggregate([
-      { 
-        $match: { 
-          submittedAt: { $gte: thirtyDaysAgo } 
-        } 
+    // Ambil statistik dari Supabase
+    const { data: applications, error } = await supabase
+      .from("applicants")
+      .select("status, submittedAt, gender, faculty")
+      .order("submittedAt", { ascending: false });
+
+    if (error) {
+      console.error("Error mengambil statistik:", error);
+      return NextResponse.json(
+        { error: "Gagal mengambil statistik" },
+        { status: 500 }
+      );
+    }
+
+    // Hitung statistik
+    const total = applications.length;
+
+    // Status statistics
+    const statusStats = applications.reduce(
+      (acc: Record<string, number>, app) => {
+        acc[app.status] = (acc[app.status] || 0) + 1;
+        return acc;
       },
-      {
-        $group: {
-          _id: { 
-            $dateToString: { format: "%Y-%m-%d", date: "$submittedAt" } 
-          },
-          count: { $sum: 1 }
-        }
+      {}
+    );
+
+    // Gender statistics
+    const genderStats = applications.reduce(
+      (acc: Record<string, number>, app) => {
+        acc[app.gender] = (acc[app.gender] || 0) + 1;
+        return acc;
       },
-      { $sort: { "_id": 1 } }
-    ]).toArray();
-    
-    return NextResponse.json({ 
-      success: true,
-      statistics: {
-        totalApplications,
-        statusCounts,
-        facultyCounts,
-        genderCounts,
-        dailyApplications
-      }
-    });
+      {}
+    );
+
+    // Faculty statistics
+    const facultyStats = applications.reduce(
+      (acc: Record<string, number>, app) => {
+        acc[app.faculty] = (acc[app.faculty] || 0) + 1;
+        return acc;
+      },
+      {}
+    );
+
+    // Monthly statistics (submissions per month)
+    const monthlyStats = applications.reduce(
+      (acc: Record<string, number>, app) => {
+        const month = new Date(app.submittedAt).toLocaleDateString("id-ID", {
+          year: "numeric",
+          month: "long",
+        });
+        acc[month] = (acc[month] || 0) + 1;
+        return acc;
+      },
+      {}
+    );
+
+    const statistics = {
+      total,
+      byStatus: statusStats,
+      byGender: genderStats,
+      byFaculty: facultyStats,
+      byMonth: monthlyStats,
+      lastUpdated: new Date().toISOString(),
+    };
+
+    return NextResponse.json(statistics);
   } catch (error) {
-    console.error('Error fetching statistics:', error);
+    console.error("Error dalam statistik:", error);
     return NextResponse.json(
-      { success: false, message: 'Failed to fetch statistics' },
+      {
+        error: "Gagal menghasilkan statistik",
+        details:
+          error instanceof Error ? error.message : "Kesalahan tidak diketahui",
+      },
       { status: 500 }
     );
   }
