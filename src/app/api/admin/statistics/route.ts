@@ -12,68 +12,120 @@ export async function GET() {
     if (error) {
       console.error("Error mengambil statistik:", error);
       return NextResponse.json(
-        { error: "Gagal mengambil statistik" },
+        {
+          success: false,
+          error: "Gagal mengambil statistik",
+          details: error.message,
+        },
         { status: 500 }
       );
     }
 
-    // Hitung statistik
-    const total = applications.length;
+    if (!applications || applications.length === 0) {
+      return NextResponse.json({
+        success: true,
+        statistics: {
+          totalApplications: 0,
+          statusCounts: [],
+          facultyCounts: [],
+          genderCounts: [],
+          dailyApplications: [],
+        },
+      });
+    }
 
-    // Status statistics
+    // Hitung total
+    const totalApplications = applications.length;
+
+    // Status statistics - convert to expected format
     const statusStats = applications.reduce(
       (acc: Record<string, number>, app) => {
-        acc[app.status] = (acc[app.status] || 0) + 1;
+        const status = app.status || "SEDANG_DITINJAU";
+        acc[status] = (acc[status] || 0) + 1;
         return acc;
       },
       {}
     );
 
-    // Gender statistics
+    const statusCounts = Object.entries(statusStats).map(([status, count]) => ({
+      _id: status,
+      count,
+    }));
+
+    // Gender statistics - convert to expected format
     const genderStats = applications.reduce(
       (acc: Record<string, number>, app) => {
-        acc[app.gender] = (acc[app.gender] || 0) + 1;
+        const gender = app.gender || "TIDAK_DIKETAHUI";
+        acc[gender] = (acc[gender] || 0) + 1;
         return acc;
       },
       {}
     );
 
-    // Faculty statistics
+    const genderCounts = Object.entries(genderStats).map(([gender, count]) => ({
+      _id: gender,
+      count,
+    }));
+
+    // Faculty statistics - convert to expected format
     const facultyStats = applications.reduce(
       (acc: Record<string, number>, app) => {
-        acc[app.faculty] = (acc[app.faculty] || 0) + 1;
+        const faculty = app.faculty || "TIDAK_DIKETAHUI";
+        acc[faculty] = (acc[faculty] || 0) + 1;
         return acc;
       },
       {}
     );
 
-    // Monthly statistics (submissions per month)
-    const monthlyStats = applications.reduce(
+    const facultyCounts = Object.entries(facultyStats).map(
+      ([faculty, count]) => ({
+        _id: faculty,
+        count,
+      })
+    );
+
+    // Daily statistics (submissions per day) - convert to expected format
+    const dailyStats = applications.reduce(
       (acc: Record<string, number>, app) => {
-        const month = new Date(app.submittedAt).toLocaleDateString("id-ID", {
-          year: "numeric",
-          month: "long",
-        });
-        acc[month] = (acc[month] || 0) + 1;
+        if (app.submittedAt) {
+          const date = new Date(app.submittedAt).toLocaleDateString("id-ID", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+          });
+          acc[date] = (acc[date] || 0) + 1;
+        }
         return acc;
       },
       {}
     );
 
+    const dailyApplications = Object.entries(dailyStats).map(
+      ([date, count]) => ({
+        _id: date,
+        count,
+      })
+    );
+
+    // Return statistics dalam format yang diharapkan AdminDashboard
     const statistics = {
-      total,
-      byStatus: statusStats,
-      byGender: genderStats,
-      byFaculty: facultyStats,
-      byMonth: monthlyStats,
-      lastUpdated: new Date().toISOString(),
+      totalApplications,
+      statusCounts,
+      facultyCounts,
+      genderCounts,
+      dailyApplications,
     };
 
-    return NextResponse.json(statistics);
+    return NextResponse.json({
+      success: true,
+      statistics,
+      lastUpdated: new Date().toISOString(),
+    });
   } catch (error) {
     console.error("Error dalam statistik:", error);
     return NextResponse.json(
       {
+        success: false,
         error: "Gagal menghasilkan statistik",
         details:
           error instanceof Error ? error.message : "Kesalahan tidak diketahui",

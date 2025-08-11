@@ -42,22 +42,39 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchStatistics = async () => {
       try {
+        setLoading(true);
+        setError("");
+
         const response = await fetch("/api/admin/statistics");
+
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errorText = await response.text();
+          console.error("Statistics API error:", {
+            status: response.status,
+            statusText: response.statusText,
+            body: errorText,
+          });
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
+
         const data = await response.json();
+        console.log("Statistics API response:", data);
 
         if (data.success && data.statistics) {
           setStatistics(data.statistics);
+          setError("");
         } else if (data.error) {
-          setError(data.error);
+          console.error("API returned error:", data);
+          setError(data.error + (data.details ? `: ${data.details}` : ""));
         } else {
-          setError("Failed to fetch statistics");
+          console.error("Unexpected API response format:", data);
+          setError("Format respons API tidak valid");
         }
       } catch (err) {
-        setError(`Error fetching statistics: ${(err as Error).message}`);
         console.error("Statistics fetch error:", err);
+        const errorMessage =
+          err instanceof Error ? err.message : "Unknown error";
+        setError(`Gagal mengambil statistik: ${errorMessage}`);
       } finally {
         setLoading(false);
       }
