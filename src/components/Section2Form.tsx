@@ -74,7 +74,7 @@ export default function Section2Form({
     // Convert to integer and then to hexadecimal
     try {
       const hexValue = parseInt(numericNim, 10).toString(16).toUpperCase();
-      return `15.${hexValue}`;
+      return `16.${hexValue}`;
     } catch (error) {
       return "";
     }
