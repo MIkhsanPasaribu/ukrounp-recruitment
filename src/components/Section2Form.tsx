@@ -906,7 +906,7 @@ export default function Section2Form({
                 htmlFor="others"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                Lainnya
+                Software Lainnya
               </label>
               <input
                 type="text"

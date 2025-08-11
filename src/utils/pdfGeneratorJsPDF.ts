@@ -153,12 +153,33 @@ export async function generateRegistrationConfirmation(
   // Form fields with proper alignment and consistent spacing
   const labelWidth = 50; // Fixed width for labels
 
-  // Helper function to add field with proper alignment
+  // Helper function to add field with proper alignment and text wrapping
   const addField = (label: string, value: string, currentY: number) => {
     doc.text(label, leftMargin, currentY);
     doc.text(":", leftMargin + labelWidth, currentY);
-    doc.text(value || "-", leftMargin + labelWidth + 5, currentY);
-    return currentY + lineHeight;
+
+    if (value && value.trim() !== "") {
+      // Calculate available width for the value text
+      const availableWidth = 210 - (leftMargin + labelWidth + 5) - rightMargin;
+
+      // Split text to fit within the available width
+      const textLines = doc.splitTextToSize(value, availableWidth);
+
+      // Add each line of text
+      for (let i = 0; i < textLines.length; i++) {
+        doc.text(
+          textLines[i],
+          leftMargin + labelWidth + 5,
+          currentY + i * lineHeight
+        );
+      }
+
+      // Return position after all lines
+      return currentY + textLines.length * lineHeight;
+    } else {
+      doc.text("-", leftMargin + labelWidth + 5, currentY);
+      return currentY + lineHeight;
+    }
   };
 
   // Form fields in the specified order
@@ -209,7 +230,7 @@ export async function generateRegistrationConfirmation(
   // Add some space before software section
   yPosition += 3;
 
-  // Software section (simple text format)
+  // Software section with text wrapping
   doc.text("Software yang dikuasai", leftMargin, yPosition);
   doc.text(":", leftMargin + labelWidth, yPosition);
 
@@ -235,30 +256,83 @@ export async function generateRegistrationConfirmation(
 
     const softwareText =
       softwareList.length > 0 ? softwareList.join(", ") : "Tidak ada";
-    doc.text(softwareText, leftMargin + labelWidth + 5, yPosition);
+
+    // Calculate available width for text (considering margins and label)
+    const availableWidth = 210 - (leftMargin + labelWidth + 5) - rightMargin;
+
+    // Split text to fit within the available width
+    const textLines = doc.splitTextToSize(softwareText, availableWidth);
+
+    // Add each line of text
+    for (let i = 0; i < textLines.length; i++) {
+      doc.text(
+        textLines[i],
+        leftMargin + labelWidth + 5,
+        yPosition + i * lineHeight
+      );
+    }
+
+    // Update yPosition based on number of lines used
+    yPosition += textLines.length * lineHeight;
   } else {
     doc.text("Tidak ada", leftMargin + labelWidth + 5, yPosition);
+    yPosition += lineHeight;
   }
 
-  yPosition += lineHeight + 3;
+  yPosition += 3;
 
-  // Add text area sections with proper formatting
+  // Add text area sections with proper formatting, text wrapping, and page break handling
   const addTextArea = (label: string, content: string, currentY: number) => {
+    // Check if we need a new page for the label
+    if (currentY > 270) {
+      doc.addPage();
+      currentY = 30;
+    }
+
     doc.text(label, leftMargin, currentY);
     currentY += lineHeight;
 
-    if (content) {
+    if (content && content.trim() !== "") {
       const maxWidth = 210 - leftMargin - rightMargin;
       const lines = doc.splitTextToSize(content, maxWidth);
-      const textHeight = lines.length * 5;
 
-      // Draw border around text
-      doc.rect(leftMargin, currentY - 3, maxWidth, textHeight + 4);
-      doc.text(lines, leftMargin + 2, currentY + 2);
-      currentY += textHeight + 8;
+      // Calculate required height for the text
+      const textHeight = lines.length * 4.5; // Slightly smaller line spacing for better fit
+      const totalBoxHeight = textHeight + 4;
+
+      // Check if the text box will fit on current page
+      if (currentY + totalBoxHeight > 280) {
+        doc.addPage();
+        currentY = 30;
+
+        // Re-add the label on the new page
+        doc.text(label, leftMargin, currentY);
+        currentY += lineHeight;
+      }
+
+      // Draw border around text with proper dimensions
+      doc.rect(leftMargin, currentY - 3, maxWidth, totalBoxHeight);
+
+      // Add text with proper line spacing
+      for (let i = 0; i < lines.length; i++) {
+        doc.text(lines[i], leftMargin + 2, currentY + 2 + i * 4.5);
+      }
+
+      currentY += totalBoxHeight + 8;
     } else {
-      // Empty box
-      doc.rect(leftMargin, currentY - 3, 170, 15);
+      // Check if empty box will fit on current page
+      if (currentY + 15 > 280) {
+        doc.addPage();
+        currentY = 30;
+
+        // Re-add the label on the new page
+        doc.text(label, leftMargin, currentY);
+        currentY += lineHeight;
+      }
+
+      // Empty box with consistent width
+      const boxWidth = 210 - leftMargin - rightMargin;
+      doc.rect(leftMargin, currentY - 3, boxWidth, 15);
       currentY += 20;
     }
 
@@ -282,23 +356,27 @@ export async function generateRegistrationConfirmation(
     yPosition
   );
 
-  // Signature section at bottom right
+  // Signature section at bottom right with proper page handling
   const submittedDate = applicant.submittedAt
     ? new Date(applicant.submittedAt).toLocaleDateString("id-ID")
     : new Date().toLocaleDateString("id-ID");
 
-  // Ensure we're near the bottom or add new page if needed
-  if (yPosition > 250) {
+  // Ensure we have enough space for signature section (need at least 50mm)
+  if (yPosition > 240) {
     doc.addPage();
     yPosition = 30;
-  } else if (yPosition < 230) {
-    yPosition = 230;
+  } else if (yPosition < 200) {
+    // Move to a reasonable position if we have too much space
+    yPosition = 200;
   }
 
-  // Signature area
+  // Add some space before signature
+  yPosition += 10;
+
+  // Signature area with proper alignment
   const signatureX = 140;
   doc.text(`Padang, ${submittedDate}`, signatureX, yPosition);
-  yPosition += lineHeight * 6; // Space for signature
+  yPosition += lineHeight * 6; // Space for actual signature
 
   doc.text(`(${applicant.fullName})`, signatureX, yPosition);
 
