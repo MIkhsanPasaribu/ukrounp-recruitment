@@ -18,6 +18,7 @@ interface ApplicationData {
   faculty: string;
   department: string;
   studyProgram: string;
+  educationLevel?: "S1" | "D4" | "D3";
   nim: string;
   nia: string;
   nickname?: string;

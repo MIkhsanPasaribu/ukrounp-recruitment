@@ -23,6 +23,7 @@ model Applicant {
   studyProgram            String?
   nim                     String?
   nia                     String?
+  educationLevel          EducationLevel?
   previousSchool          String?
   padangAddress           String?
   phoneNumber             String?
@@ -141,4 +142,12 @@ enum ApplicationStatus {
   DITOLAK
   
   @@map("application_status")
+}
+
+enum EducationLevel {
+  S1    // Strata 1
+  D4    // Diploma 4
+  D3    // Diploma 3
+  
+  @@map("education_level")
 }

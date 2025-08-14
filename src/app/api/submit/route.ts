@@ -23,6 +23,7 @@ export async function POST(request: Request) {
       faculty: body.faculty,
       department: body.department,
       studyProgram: body.studyProgram,
+      educationLevel: body.educationLevel,
       nim: body.nim,
       nia: body.nia,
       previousSchool: body.previousSchool,

@@ -11,6 +11,7 @@ export interface Section2Data {
   faculty: string;
   department: string;
   studyProgram: string;
+  educationLevel: "" | "S1" | "D4" | "D3";
   nim: string;
   nia: string;
   previousSchool: string;
@@ -60,6 +61,7 @@ export interface FormData extends Section1Data {
   faculty?: string;
   department?: string;
   studyProgram?: string;
+  educationLevel?: "" | "S1" | "D4" | "D3";
   nim?: string;
   nia?: string;
   previousSchool?: string;
@@ -97,6 +99,7 @@ export interface ApplicationData extends FormData {
 
 // Prisma-compatible types
 export type Gender = "LAKI_LAKI" | "PEREMPUAN";
+export type EducationLevel = "" | "S1" | "D4" | "D3";
 export type ApplicationStatus =
   | "SEDANG_DITINJAU"
   | "DAFTAR_PENDEK"

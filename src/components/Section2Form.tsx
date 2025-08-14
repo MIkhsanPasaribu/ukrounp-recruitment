@@ -33,6 +33,7 @@ export default function Section2Form({
     faculty: "",
     department: "",
     studyProgram: "",
+    educationLevel: "", // Default to empty string for "Pilih Jenjang Pendidikan"
     nim: "",
     nia: "",
     previousSchool: "",
@@ -80,13 +81,59 @@ export default function Section2Form({
     }
   };
 
+  const validateNimByEducationLevel = (
+    nim: string,
+    educationLevel: string
+  ): string => {
+    if (!nim || !educationLevel) return "";
+
+    const nimPrefix = nim.substring(0, 2);
+
+    if (educationLevel === "S1" || educationLevel === "D4") {
+      if (nimPrefix !== "25" && nimPrefix !== "24") {
+        return "Untuk Strata 1 (S1) dan Diploma 4 (D4) hanya mahasiswa tahun masuk 2024 dan 2025";
+      }
+    } else if (educationLevel === "D3") {
+      if (nimPrefix !== "25") {
+        return "Untuk Diploma 3 (D3) hanya mahasiswa tahun masuk 2025";
+      }
+    }
+
+    return "";
+  };
+
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // Update form data
+    const updatedFormData = { ...formData, [name]: value };
+    setFormData(updatedFormData);
+
+    // Validasi real-time untuk NIM ketika jenjang pendidikan atau NIM berubah
+    if (name === "nim" || name === "educationLevel") {
+      const nimValue = name === "nim" ? value : updatedFormData.nim;
+      const educationLevelValue =
+        name === "educationLevel" ? value : updatedFormData.educationLevel;
+
+      // Clear existing NIM error first
+      const newErrors = { ...errors };
+      delete newErrors.nim;
+
+      // Validate NIM based on education level
+      const nimError = validateNimByEducationLevel(
+        nimValue,
+        educationLevelValue
+      );
+      if (nimError) {
+        newErrors.nim = nimError;
+      }
+
+      setErrors(newErrors);
+    }
   };
 
   const handleSoftwareChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -111,6 +158,7 @@ export default function Section2Form({
       "faculty",
       "department",
       "studyProgram",
+      "educationLevel",
       "nim",
       "previousSchool",
       "padangAddress",
@@ -188,12 +236,30 @@ export default function Section2Form({
       newErrors.studyProgram = studyProgramValidation.message;
     }
 
+    // Education Level validation
+    const educationLevelValidation = validateSelect(
+      formData.educationLevel,
+      "Jenjang pendidikan tinggi"
+    );
+    if (!educationLevelValidation.valid && educationLevelValidation.message) {
+      newErrors.educationLevel = educationLevelValidation.message;
+    }
+
     // NIM validation
     const nimValidation = validateRequired(formData.nim, "NIM");
     if (!nimValidation.valid && nimValidation.message) {
       newErrors.nim = nimValidation.message;
     } else if (!/^\d+$/.test(formData.nim)) {
       newErrors.nim = "NIM harus berupa angka";
+    } else {
+      // Validate NIM based on education level
+      const nimEducationError = validateNimByEducationLevel(
+        formData.nim,
+        formData.educationLevel
+      );
+      if (nimEducationError) {
+        newErrors.nim = nimEducationError;
+      }
     }
 
     // Validate other required fields
@@ -527,6 +593,44 @@ export default function Section2Form({
 
             <div>
               <label
+                htmlFor="educationLevel"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Jenjang Pendidikan Tinggi{" "}
+                <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="educationLevel"
+                name="educationLevel"
+                value={formData.educationLevel}
+                onChange={handleInputChange}
+                className={`block w-full rounded-md border ${
+                  errors.educationLevel ? "border-red-500" : "border-gray-300"
+                } shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                aria-invalid={!!errors.educationLevel}
+              >
+                <option value="">Pilih Jenjang Pendidikan</option>
+                <option value="S1">Strata 1 (S1)</option>
+                <option value="D4">Diploma 4 (D4)</option>
+                <option value="D3">Diploma 3 (D3)</option>
+              </select>
+              {errors.educationLevel && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.educationLevel}
+                </p>
+              )}
+              <p className="mt-1 text-xs text-gray-500">
+                {formData.educationLevel === "S1" ||
+                formData.educationLevel === "D4"
+                  ? "S1 dan D4: NIM harus dimulai dengan 25 atau 24"
+                  : formData.educationLevel === "D3"
+                  ? "D3: NIM harus dimulai dengan 25"
+                  : "Pilih jenjang untuk melihat aturan NIM"}
+              </p>
+            </div>
+
+            <div>
+              <label
                 htmlFor="nim"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
@@ -543,22 +647,27 @@ export default function Section2Form({
                   errors.nim ? "border-red-500" : "border-gray-300"
                 } shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
                 aria-invalid={!!errors.nim}
-                placeholder="Masukkan NIM Anda"
+                placeholder="Contoh: 2512345678"
               />
               {errors.nim && (
                 <p className="mt-1 text-sm text-red-600">{errors.nim}</p>
               )}
 
+              {/* Display NIA immediately when NIM is entered */}
               {formData.nim && (
-                <div className="mt-2">
-                  <p className="text-sm text-gray-600">
+                <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <p className="text-sm text-blue-700 font-medium">
                     NIA (Nomor Induk Anggota):
                   </p>
-                  <p className="font-medium text-blue-600">
+                  <p className="font-mono text-lg text-blue-800 font-bold">
                     {getNiaFromNim(formData.nim)}
                   </p>
                 </div>
               )}
+
+              <p className="mt-1 text-xs text-gray-500">
+                NIM akan otomatis dikonversi ke NIA sesuai format institusi
+              </p>
             </div>
           </div>
 

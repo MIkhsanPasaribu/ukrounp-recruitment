@@ -12,6 +12,7 @@ export interface Database {
           faculty: string | null;
           department: string | null;
           studyProgram: string | null;
+          educationLevel: "" | "S1" | "D4" | "D3" | null;
           nim: string | null;
           nia: string | null;
           previousSchool: string | null;
@@ -58,6 +59,7 @@ export interface Database {
           faculty?: string | null;
           department?: string | null;
           studyProgram?: string | null;
+          educationLevel?: "" | "S1" | "D4" | "D3" | null;
           nim?: string | null;
           nia?: string | null;
           previousSchool?: string | null;
@@ -104,6 +106,7 @@ export interface Database {
           faculty?: string | null;
           department?: string | null;
           studyProgram?: string | null;
+          educationLevel?: "" | "S1" | "D4" | "D3" | null;
           nim?: string | null;
           nia?: string | null;
           previousSchool?: string | null;

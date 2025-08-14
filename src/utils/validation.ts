@@ -189,3 +189,48 @@ export const validateForm = (
 
   return errors;
 };
+
+// Validation untuk jenjang pendidikan dan NIM
+export function validateNimByEducationLevel(
+  nim: string,
+  educationLevel: string
+): { valid: boolean; message?: string } {
+  if (!nim || !educationLevel) {
+    return { valid: false, message: "NIM dan jenjang pendidikan harus diisi" };
+  }
+
+  const nimPrefix = nim.substring(0, 2);
+
+  if (educationLevel === "S1" || educationLevel === "D4") {
+    if (nimPrefix !== "25" && nimPrefix !== "24") {
+      return {
+        valid: false,
+        message:
+          "NIM untuk Strata 1 (S1) dan Diploma 4 (D4) harus dimulai dengan 25 atau 24",
+      };
+    }
+  } else if (educationLevel === "D3") {
+    if (nimPrefix !== "25") {
+      return {
+        valid: false,
+        message: "NIM untuk Diploma 3 (D3) harus dimulai dengan 25",
+      };
+    }
+  }
+
+  return { valid: true };
+}
+
+// Function untuk mendapatkan label jenjang pendidikan
+export function getEducationLevelLabel(level: string): string {
+  switch (level) {
+    case "S1":
+      return "Strata 1 (S1)";
+    case "D4":
+      return "Diploma 4 (D4)";
+    case "D3":
+      return "Diploma 3 (D3)";
+    default:
+      return level;
+  }
+}
