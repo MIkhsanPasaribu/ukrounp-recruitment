@@ -7,6 +7,7 @@ import AdminLogin from "@/components/AdminLogin";
 import Pagination from "@/components/Pagination";
 import AdminHeaderButtons from "@/components/AdminHeaderButtons";
 import ApplicationDetailModal from "@/components/ApplicationDetailModal";
+import ModifyDataModal from "@/components/ModifyDataModal";
 import { exportApplicationsToCSV } from "@/utils/csvExport";
 
 export default function AdminPage() {
@@ -35,6 +36,7 @@ export default function AdminPage() {
   const [selectedApplication, setSelectedApplication] =
     useState<ApplicationData | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [applicationsPerPage, setApplicationsPerPage] = useState(10);
 
@@ -252,7 +254,8 @@ export default function AdminPage() {
   const handleDelete = async (id: string) => {
     if (!token) return;
 
-    if (!confirm("Apakah Anda yakin ingin menghapus aplikasi ini?")) return;
+    if (!confirm("Apakah Anda yakin ingin menghapus data pendaftaran ini?"))
+      return;
 
     try {
       const response = await fetch("/api/admin/delete-application", {
@@ -266,13 +269,14 @@ export default function AdminPage() {
 
       if (response.ok) {
         setApplications(applications.filter((app) => app.id !== id));
-        alert("Aplikasi berhasil dihapus");
+        alert("Data pendaftaran berhasil dihapus");
       } else {
-        alert("Gagal menghapus aplikasi");
+        const errorData = await response.json();
+        alert(errorData.message || "Gagal menghapus data pendaftaran");
       }
     } catch (error) {
       console.error("Error deleting application:", error);
-      alert("Gagal menghapus aplikasi");
+      alert("Gagal menghapus data pendaftaran");
     }
   };
 
@@ -370,12 +374,10 @@ export default function AdminPage() {
     }
   };
 
-  // Handler untuk edit aplikasi (placeholder - bisa dikembangkan lebih lanjut)
+  // Handler untuk edit aplikasi
   const handleEditApplication = (application: ApplicationData) => {
-    // Untuk sementara, buka modal detail
     setSelectedApplication(application);
-    setShowDetailModal(true);
-    // TODO: Implement edit functionality in modal or separate page
+    setShowEditModal(true);
   };
 
   // Show login form if not authenticated
@@ -859,7 +861,7 @@ export default function AdminPage() {
                                 } else if (value === "delete") {
                                   if (
                                     confirm(
-                                      `Apakah Anda yakin ingin menghapus pendaftaran ${application.fullName}?`
+                                      `Apakah Anda yakin ingin menghapus data pendaftaran ${application.fullName}?`
                                     )
                                   ) {
                                     handleDelete(application.id);
@@ -912,6 +914,17 @@ export default function AdminPage() {
           onStatusChange={(id: string, status: string) =>
             handleStatusUpdate(id, status as ApplicationStatus)
           }
+        />
+      )}
+
+      {/* Application Edit Modal */}
+      {showEditModal && (
+        <ModifyDataModal
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedApplication(null);
+          }}
         />
       )}
     </div>
