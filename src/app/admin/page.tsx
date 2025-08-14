@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ApplicationData, ApplicationStatus } from "@/types";
-import Link from "next/link";
 import AdminDashboard from "@/components/AdminDashboard";
+import AdminLogin from "@/components/AdminLogin";
 import Pagination from "@/components/Pagination";
 import AdminHeaderButtons from "@/components/AdminHeaderButtons";
 import ApplicationDetailModal from "@/components/ApplicationDetailModal";
@@ -13,11 +13,17 @@ export default function AdminPage() {
   const [applications, setApplications] = useState<ApplicationData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [password, setPassword] = useState("");
+  const [token, setToken] = useState<string | null>(null);
+  const [admin, setAdmin] = useState<{
+    id: string;
+    username: string;
+    email: string;
+    fullName: string;
+    role: string;
+  } | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [adminPassword, setAdminPassword] = useState("");
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(true);
   const [registrationStatusLoading, setRegistrationStatusLoading] =
     useState(false);
@@ -32,30 +38,59 @@ export default function AdminPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [applicationsPerPage, setApplicationsPerPage] = useState(10);
 
-  // Fetch admin password from API
+  // Check for stored token on component mount
   useEffect(() => {
-    const fetchAdminPassword = async () => {
+    const storedToken = localStorage.getItem("adminToken");
+    const storedAdmin = localStorage.getItem("adminInfo");
+
+    if (storedToken && storedAdmin) {
       try {
-        const response = await fetch("/api/admin/get-password");
-        if (response.ok) {
-          const data = await response.json();
-          setAdminPassword(data.password);
-        }
+        const parsedAdmin = JSON.parse(storedAdmin);
+        setToken(storedToken);
+        setAdmin(parsedAdmin);
+        setIsAuthenticated(true);
       } catch (error) {
-        console.error("Error fetching admin password:", error);
+        console.error("Error parsing stored admin info:", error);
+        localStorage.removeItem("adminToken");
+        localStorage.removeItem("adminInfo");
       }
-    };
+    }
+    setLoading(false);
+  }, []);
 
-    fetchAdminPassword();
+  const handleLoginSuccess = (
+    newToken: string,
+    adminInfo: {
+      id: string;
+      username: string;
+      email: string;
+      fullName: string;
+      role: string;
+    }
+  ) => {
+    setToken(newToken);
+    setAdmin(adminInfo);
+    setIsAuthenticated(true);
+  };
 
-    // Also fetch registration status when component mounts
-    fetchRegistrationStatus();
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem("adminToken");
+    localStorage.removeItem("adminInfo");
+    setToken(null);
+    setAdmin(null);
+    setIsAuthenticated(false);
+    setApplications([]);
   }, []);
 
   // Function to fetch registration status
-  const fetchRegistrationStatus = async () => {
+  const fetchRegistrationStatus = useCallback(async () => {
     try {
-      const response = await fetch("/api/admin/registration-status");
+      const response = await fetch("/api/admin/registration-status", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
       if (response.ok) {
         const data = await response.json();
         setIsRegistrationOpen(data.isOpen);
@@ -63,7 +98,42 @@ export default function AdminPage() {
     } catch (error) {
       console.error("Error fetching registration status:", error);
     }
-  };
+  }, [token]);
+
+  // Function to fetch applications
+  const fetchApplications = useCallback(async () => {
+    if (!token) return;
+
+    try {
+      setLoading(true);
+      const response = await fetch("/api/admin/applications", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setApplications(data.applications || []);
+      } else {
+        setError("Error dalam mengambil data aplikasi");
+      }
+    } catch (error) {
+      console.error("Error fetching applications:", error);
+      setError("Error dalam mengambil data aplikasi");
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  // Fetch data when authenticated
+  useEffect(() => {
+    if (isAuthenticated && token) {
+      fetchRegistrationStatus();
+      fetchApplications();
+    }
+  }, [isAuthenticated, token, fetchApplications, fetchRegistrationStatus]);
 
   // Function to toggle registration status
   const toggleRegistrationStatus = async () => {
@@ -78,10 +148,12 @@ export default function AdminPage() {
     }
 
     setRegistrationStatusLoading(true);
+
     try {
       const response = await fetch("/api/admin/registration-status", {
-        method: "POST",
+        method: "PUT",
         headers: {
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ isOpen: !isRegistrationOpen }),
@@ -90,720 +162,757 @@ export default function AdminPage() {
       if (response.ok) {
         setIsRegistrationOpen(!isRegistrationOpen);
         alert(
-          `Registration ${
-            !isRegistrationOpen ? "opened" : "closed"
-          } successfully`
+          `Registration has been ${!isRegistrationOpen ? "opened" : "closed"}.`
         );
+      } else {
+        alert("Failed to update registration status");
       }
     } catch (error) {
-      console.error("Error updating registration status:", error);
+      console.error("Error toggling registration status:", error);
+      alert("Failed to update registration status");
     } finally {
       setRegistrationStatusLoading(false);
     }
   };
 
-  const authenticate = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Simple authentication - in a real app, use proper auth
-    if (password === adminPassword && adminPassword !== "") {
-      setIsAuthenticated(true);
-      fetchApplications();
-    } else {
-      setError("Password salah");
-    }
-  };
-
-  const fetchApplications = async () => {
-    try {
-      const response = await fetch("/api/admin/applications");
-      if (!response.ok) {
-        throw new Error("Gagal mengambil data aplikasi");
-      }
-      const data = await response.json();
-      setApplications(data.applications);
-    } catch (err) {
-      setError("Error dalam mengambil data aplikasi");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateApplicationStatus = async (
+  // Handle status update
+  const handleStatusUpdate = async (
     id: string,
     newStatus: ApplicationStatus
   ) => {
-    // Create display map for confirmation
-    const displayMap: Record<ApplicationStatus, string> = {
-      SEDANG_DITINJAU: "Sedang Ditinjau",
-      DAFTAR_PENDEK: "Masuk Daftar Pendek",
-      INTERVIEW: "Interview",
-      DITERIMA: "Diterima",
-      DITOLAK: "Ditolak",
-    };
-
-    // Add confirmation dialog
-    if (
-      !confirm(
-        `Apakah Anda yakin ingin mengubah status menjadi "${displayMap[newStatus]}"?`
-      )
-    ) {
-      return;
-    }
+    if (!token) return;
 
     try {
       const response = await fetch("/api/admin/update-status", {
-        method: "POST",
+        method: "PUT",
         headers: {
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ id, status: newStatus }),
       });
 
       if (response.ok) {
-        // Update the local state to reflect the change
         setApplications(
-          applications.map((app: ApplicationData) => {
-            return app.id === id ? { ...app, status: newStatus } : app;
-          })
+          applications.map((app) =>
+            app.id === id ? { ...app, status: newStatus } : app
+          )
         );
+      } else {
+        alert("Failed to update status");
       }
     } catch (error) {
       console.error("Error updating status:", error);
+      alert("Failed to update status");
     }
   };
 
-  const deleteApplication = async (id: string) => {
-    // Add confirmation dialog
+  // Handle bulk status update
+  const handleBulkStatusUpdate = async (status: ApplicationStatus) => {
+    if (!token || selectedApplications.length === 0) return;
+
     if (
       !confirm(
-        "Apakah Anda yakin ingin menghapus aplikasi ini? Tindakan ini tidak dapat dibatalkan."
+        `Update status to ${status} for ${selectedApplications.length} selected applications?`
       )
     ) {
       return;
     }
 
     try {
+      const updatePromises = selectedApplications.map((id) =>
+        fetch("/api/admin/update-status", {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ id, status }),
+        })
+      );
+
+      await Promise.all(updatePromises);
+
+      setApplications(
+        applications.map((app) =>
+          selectedApplications.includes(app.id) ? { ...app, status } : app
+        )
+      );
+
+      setSelectedApplications([]);
+      setSelectAll(false);
+      alert("Bulk status update completed");
+    } catch (error) {
+      console.error("Error in bulk update:", error);
+      alert("Failed to update some applications");
+    }
+  };
+
+  // Handle delete application
+  const handleDelete = async (id: string) => {
+    if (!token) return;
+
+    if (!confirm("Apakah Anda yakin ingin menghapus aplikasi ini?")) return;
+
+    try {
       const response = await fetch("/api/admin/delete-application", {
-        method: "POST",
+        method: "DELETE",
         headers: {
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ id }),
       });
 
       if (response.ok) {
-        // Remove the deleted application from the local state
         setApplications(applications.filter((app) => app.id !== id));
+        alert("Aplikasi berhasil dihapus");
       } else {
-        const data = await response.json();
-        alert(`Gagal menghapus: ${data.message || "Error tidak diketahui"}`);
+        alert("Gagal menghapus aplikasi");
       }
     } catch (error) {
       console.error("Error deleting application:", error);
-      alert("Terjadi error saat menghapus aplikasi");
+      alert("Gagal menghapus aplikasi");
     }
   };
 
-  const exportToCSV = () => {
-    if (applications.length === 0) {
-      alert("Tidak ada aplikasi untuk diekspor");
-      return;
-    }
-
-    exportApplicationsToCSV(applications);
-  };
-
-  const handleBulkDownloadPDF = async () => {
-    if (applications.length === 0) {
-      alert("Tidak ada aplikasi untuk didownload");
-      return;
-    }
-
-    try {
-      const response = await fetch("/api/admin/bulk-download-pdf");
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.style.display = "none";
-        a.href = url;
-
-        const currentDate = new Date().toISOString().split("T")[0];
-        a.download = `formulir-pendaftaran-ukro-${currentDate}.zip`;
-
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      } else {
-        alert("Gagal mendownload PDF");
-      }
-    } catch (error) {
-      console.error("Error downloading bulk PDF:", error);
-      alert("Gagal mendownload PDF");
-    }
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setApplications([]);
-    setError("");
-  };
-
-  // Filter applications based on search term and status
+  // Filter applications
   const filteredApplications = applications.filter((app) => {
     const matchesSearch =
-      app.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       app.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.phoneNumber?.includes(searchTerm);
+      app.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      app.nim?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus = statusFilter === "all" || app.status === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
 
-  // Calculate pagination indexes and current page data
+  // Pagination
+  const totalPages = Math.ceil(
+    filteredApplications.length / applicationsPerPage
+  );
   const indexOfLastApplication = currentPage * applicationsPerPage;
   const indexOfFirstApplication = indexOfLastApplication - applicationsPerPage;
   const currentApplications = filteredApplications.slice(
     indexOfFirstApplication,
     indexOfLastApplication
   );
-  // Calculate total pages
-  const totalPages = Math.ceil(
-    filteredApplications.length / applicationsPerPage
-  );
 
-  const handleBulkStatusUpdate = async (newStatus: ApplicationStatus) => {
-    // Create display map for confirmation
-    const displayMap: Record<ApplicationStatus, string> = {
-      SEDANG_DITINJAU: "Sedang Ditinjau",
-      DAFTAR_PENDEK: "Masuk Daftar Pendek",
-      INTERVIEW: "Interview",
-      DITERIMA: "Diterima",
-      DITOLAK: "Ditolak",
-    };
-
-    if (selectedApplications.length === 0) {
-      alert("Tidak ada aplikasi yang dipilih");
-      return;
-    }
-
-    if (
-      !confirm(
-        `Apakah Anda yakin ingin mengubah status menjadi "${displayMap[newStatus]}" untuk ${selectedApplications.length} aplikasi?`
-      )
-    ) {
-      return;
-    }
-
-    try {
-      const promises = selectedApplications.map((id) =>
-        fetch("/api/admin/update-status", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ id, status: newStatus }),
-        })
-      );
-
-      await Promise.all(promises);
-
-      // Update the local state to reflect the changes
-      setApplications(
-        applications.map((app: ApplicationData) =>
-          selectedApplications.includes(app.id)
-            ? { ...app, status: newStatus }
-            : app
-        )
-      );
-
-      // Clear selections after successful update
-      setSelectedApplications([]);
-      setSelectAll(false);
-      alert(
-        `Berhasil mengupdate ${selectedApplications.length} aplikasi menjadi "${displayMap[newStatus]}"`
-      );
-    } catch (error) {
-      console.error("Error updating statuses:", error);
-      alert("Terjadi error saat mengupdate status");
-    }
+  // Handle selection
+  const handleSelectApplication = (id: string) => {
+    setSelectedApplications((prev) =>
+      prev.includes(id) ? prev.filter((appId) => appId !== id) : [...prev, id]
+    );
   };
 
-  // Add function to handle bulk delete
-  const handleBulkDelete = async () => {
-    if (selectedApplications.length === 0) {
-      alert("Tidak ada aplikasi yang dipilih");
-      return;
-    }
-
-    if (
-      !confirm(
-        `Apakah Anda yakin ingin menghapus ${selectedApplications.length} aplikasi? Tindakan ini tidak dapat dibatalkan.`
-      )
-    ) {
-      return;
-    }
-
-    try {
-      const promises = selectedApplications.map((id) =>
-        fetch("/api/admin/delete-application", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ id }),
-        })
-      );
-
-      await Promise.all(promises);
-
-      // Update the local state to reflect the changes
-      setApplications(
-        applications.filter((app) => !selectedApplications.includes(app.id))
-      );
-
-      // Clear selections after successful delete
-      setSelectedApplications([]);
-      setSelectAll(false);
-      alert(`Berhasil menghapus ${selectedApplications.length} aplikasi`);
-    } catch (error) {
-      console.error("Error deleting applications:", error);
-      alert("Terjadi error saat menghapus aplikasi");
-    }
-  };
-
-  // Add function to handle selection of all applications
   const handleSelectAll = () => {
     if (selectAll) {
       setSelectedApplications([]);
     } else {
+      // Pilih semua data yang terfilter, bukan hanya yang ada di halaman saat ini
       setSelectedApplications(filteredApplications.map((app) => app.id));
     }
     setSelectAll(!selectAll);
   };
 
-  // Add function to handle selection of a single application
-  const handleSelectApplication = (id: string) => {
-    if (selectedApplications.includes(id)) {
-      setSelectedApplications(
-        selectedApplications.filter((appId) => appId !== id)
-      );
-    } else {
-      setSelectedApplications([...selectedApplications, id]);
+  // Handler untuk download PDF individual
+  const handleDownloadPDF = async (id: string) => {
+    try {
+      const response = await fetch(`/api/admin/download-pdf/${id}`);
+      if (!response.ok) throw new Error("Gagal download PDF");
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.style.display = "none";
+      a.href = url;
+      a.download = `formulir-${id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      alert("Gagal mendownload PDF");
     }
   };
 
-  // Add function to view application details
-  const viewApplicationDetails = (application: ApplicationData) => {
+  // Handler untuk bulk download PDF
+  const handleBulkDownloadPDF = async () => {
+    if (selectedApplications.length === 0) {
+      alert("Pilih setidaknya satu aplikasi untuk didownload");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/admin/bulk-download-pdf", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ applicationIds: selectedApplications }),
+      });
+
+      if (!response.ok) throw new Error("Gagal bulk download PDF");
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.style.display = "none";
+      a.href = url;
+      a.download = `formulir-pendaftaran-bulk.zip`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error bulk downloading PDF:", error);
+      alert("Gagal bulk download PDF");
+    }
+  };
+
+  // Handler untuk edit aplikasi (placeholder - bisa dikembangkan lebih lanjut)
+  const handleEditApplication = (application: ApplicationData) => {
+    // Untuk sementara, buka modal detail
     setSelectedApplication(application);
     setShowDetailModal(true);
+    // TODO: Implement edit functionality in modal or separate page
   };
 
-  // Add function to close the modal
-  const closeDetailModal = () => {
-    setShowDetailModal(false);
-    setSelectedApplication(null);
-  };
-
-  // If not authenticated, show login form
+  // Show login form if not authenticated
   if (!isAuthenticated) {
-    return (
-      <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
-        {/* Back button to landing page */}
-        <div className="mb-6">
-          <Link
-            href="/"
-            className="inline-flex items-center text-blue-600 hover:text-blue-800"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-1"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L4.414 9H17a1 1 0 110 2H4.414l5.293 5.293a1 1 0 010 1.414z"
-                clipRule="evenodd"
-              />
-            </svg>
-            Kembali ke Beranda
-          </Link>
+    if (loading) {
+      return (
+        <div className="flex justify-center items-center min-h-screen">
+          Memuat...
         </div>
-
-        <h1 className="text-2xl font-bold mb-6">Login Admin</h1>
-        <form onSubmit={authenticate}>
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2" htmlFor="password">
-              Password
-            </label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            />
-          </div>
-          {error && <p className="text-red-500 mb-4">{error}</p>}
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
-          >
-            Login
-          </button>
-        </form>
-      </div>
-    );
+      );
+    }
+    return <AdminLogin onLoginSuccess={handleLoginSuccess} />;
   }
 
-  // If authenticated, show the admin dashboard
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center space-x-4">
-          <Link
-            href="/"
-            className="inline-flex items-center text-blue-600 hover:text-blue-800"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-1"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L4.414 9H17a1 1 0 110 2H4.414l5.293 5.293a1 1 0 010 1.414z"
-                clipRule="evenodd"
-              />
-            </svg>
-            Kembali ke Beranda
-          </Link>
-          <h1 className="text-2xl font-bold">Dashboard Admin</h1>
-        </div>
-        <AdminHeaderButtons
-          isRegistrationOpen={isRegistrationOpen}
-          registrationStatusLoading={registrationStatusLoading}
-          hasApplications={applications.length > 0}
-          onToggleRegistration={toggleRegistrationStatus}
-          onExportCSV={exportToCSV}
-          onBulkDownloadPDF={handleBulkDownloadPDF}
-          onLogout={handleLogout}
-        />
-      </div>
-
-      {/* Registration status indicator */}
-      <div
-        className={`mb-4 p-3 rounded-md ${
-          isRegistrationOpen
-            ? "bg-green-100 text-green-800"
-            : "bg-red-100 text-red-800"
-        }`}
-      >
-        <p className="font-medium">
-          Pendaftaran saat ini {isRegistrationOpen ? "DIBUKA" : "DITUTUP"}
-        </p>
-      </div>
-
-      {/* Tab navigation */}
-      <div className="mb-6 border-b border-gray-200">
-        <nav className="flex -mb-px">
-          <button
-            onClick={() => setActiveTab("applications")}
-            className={`py-2 px-4 text-center border-b-2 font-medium text-sm ${
-              activeTab === "applications"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            }`}
-          >
-            Applications
-          </button>
-          <button
-            onClick={() => setActiveTab("statistics")}
-            className={`py-2 px-4 text-center border-b-2 font-medium text-sm ${
-              activeTab === "statistics"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            }`}
-          >
-            Statistik
-          </button>
-        </nav>
-      </div>
-
-      {activeTab === "statistics" ? (
-        <AdminDashboard />
-      ) : (
-        <>
-          {/* Search and filter controls */}
-          <div className="mb-4 flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <input
-                type="text"
-                placeholder="Cari berdasarkan nama, email atau telepon"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              />
+    <div className="min-h-screen bg-gray-100">
+      <div className="bg-white shadow">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-6 gap-4 sm:gap-0">
+            <div className="flex items-center">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
+                Panel Admin
+              </h1>
+              {/* Registration Status Indicator */}
+              <div className="ml-4 sm:ml-6">
+                <span
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                    isRegistrationOpen
+                      ? "bg-green-100 text-green-800"
+                      : "bg-red-100 text-red-800"
+                  }`}
+                >
+                  <div
+                    className={`w-2 h-2 rounded-full mr-2 ${
+                      isRegistrationOpen ? "bg-green-400" : "bg-red-400"
+                    }`}
+                  ></div>
+                  {isRegistrationOpen
+                    ? "Pendaftaran Dibuka"
+                    : "Pendaftaran Ditutup"}
+                </span>
+              </div>
             </div>
-            <div>
-              <select
-                title="Filter berdasarkan Status"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              >
-                <option value="all">Semua Status</option>
-                <option value="SEDANG_DITINJAU">Sedang Ditinjau</option>
-                <option value="DAFTAR_PENDEK">Masuk Daftar Pendek</option>
-                <option value="INTERVIEW">Interview</option>
-                <option value="DITERIMA">Diterima</option>
-                <option value="DITOLAK">Ditolak</option>
-              </select>
+            <div className="w-full sm:w-auto">
+              <AdminHeaderButtons
+                onLogout={handleLogout}
+                isRegistrationOpen={isRegistrationOpen}
+                onToggleRegistration={toggleRegistrationStatus}
+                registrationStatusLoading={registrationStatusLoading}
+                hasApplications={applications.length > 0}
+                onExportCSV={() => exportApplicationsToCSV(applications)}
+              />
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Bulk actions */}
-          {selectedApplications.length > 0 && (
-            <div className="mb-4 p-3 bg-gray-100 rounded-md">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="font-medium">
-                  {selectedApplications.length} aplikasi dipilih
-                </span>
-                <div className="flex-1"></div>
-                <div className="flex flex-wrap gap-2">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {/* Tabs */}
+        <div className="border-b border-gray-200 mb-6">
+          <nav className="-mb-px flex space-x-4 sm:space-x-8">
+            <button
+              onClick={() => setActiveTab("applications")}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === "applications"
+                  ? "border-indigo-500 text-indigo-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              <span className="hidden sm:inline">
+                Pendaftaran ({applications.length})
+              </span>
+              <span className="sm:hidden">Data ({applications.length})</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("dashboard")}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === "dashboard"
+                  ? "border-indigo-500 text-indigo-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Statistik
+            </button>
+          </nav>
+        </div>
+
+        {activeTab === "dashboard" && (
+          <AdminDashboard
+            token={token!}
+            admin={admin || undefined}
+            onLogout={handleLogout}
+          />
+        )}
+
+        {activeTab === "applications" && (
+          <>
+            {/* Search and Filter Controls */}
+            <div className="bg-white shadow rounded-lg p-4 sm:p-6 mb-6">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    placeholder="Cari berdasarkan nama, email, atau NIM..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <div className="w-full sm:w-auto">
                   <select
-                    className="px-3 py-2 border border-gray-300 rounded-md"
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (value) {
-                        handleBulkStatusUpdate(value as ApplicationStatus);
-                        e.target.value = "";
-                      }
-                    }}
-                    value=""
-                    disabled={selectedApplications.length === 0}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
                   >
-                    <option value="" disabled>
-                      Ubah status...
-                    </option>
+                    <option value="all">Semua Status</option>
                     <option value="SEDANG_DITINJAU">Sedang Ditinjau</option>
+                    <option value="DAFTAR_PENDEK">Daftar Pendek</option>
                     <option value="INTERVIEW">Interview</option>
                     <option value="DITERIMA">Diterima</option>
                     <option value="DITOLAK">Ditolak</option>
                   </select>
-                  <button
-                    onClick={handleBulkDelete}
-                    disabled={selectedApplications.length === 0}
-                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md font-medium"
-                  >
-                    Hapus yang Dipilih
-                  </button>
                 </div>
               </div>
             </div>
-          )}
 
-          {/* Applications table */}
-          {loading ? (
-            <p>Memuat aplikasi...</p>
-          ) : error ? (
-            <p className="text-red-500">{error}</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-white border border-gray-200">
-                <thead>
-                  <tr>
-                    <th className="px-4 py-2 border">
-                      <input
-                        type="checkbox"
-                        checked={selectAll}
-                        onChange={handleSelectAll}
-                        className="h-4 w-4"
-                      />
-                    </th>
-                    <th className="px-4 py-2 border">Email</th>
-                    <th className="px-4 py-2 border">Nama Lengkap</th>
-                    <th className="px-4 py-2 border">Fakultas</th>
-                    <th className="px-4 py-2 border">Jurusan</th>
-                    <th className="px-4 py-2 border">Telepon</th>
-                    <th className="px-4 py-2 border">Status</th>
-                    <th className="px-4 py-2 border">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentApplications.length > 0 ? (
-                    currentApplications.map((app, index) => (
-                      <tr
-                        key={app.id || index}
-                        className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
+            {/* Bulk Actions */}
+            {selectedApplications.length > 0 && (
+              <div className="bg-white shadow rounded-lg p-4 mb-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-700">
+                      {selectedApplications.length} pendaftaran dipilih
+                    </span>
+                    <button
+                      onClick={() => setSelectedApplications([])}
+                      className="text-xs text-gray-500 hover:text-gray-700 underline"
+                    >
+                      Batal Pilih
+                    </button>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                    {/* Bulk Status Update Dropdown */}
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm text-gray-600 whitespace-nowrap">
+                        Ubah Status:
+                      </label>
+                      <select
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            handleBulkStatusUpdate(
+                              e.target.value as ApplicationStatus
+                            );
+                            e.target.value = ""; // Reset dropdown
+                          }
+                        }}
+                        className="px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm min-w-[140px]"
+                        defaultValue=""
                       >
-                        <td className="px-4 py-2 border text-center">
-                          <input
-                            type="checkbox"
-                            checked={selectedApplications?.includes(app.id)}
-                            onChange={() => handleSelectApplication(app.id)}
-                            className="h-4 w-4"
-                          />
-                        </td>
-                        <td className="px-4 py-2 border">{app.email}</td>
-                        <td className="px-4 py-2 border">{app.fullName}</td>
-                        <td className="px-4 py-2 border">{app.faculty}</td>
-                        <td className="px-4 py-2 border">{app.department}</td>
-                        <td className="px-4 py-2 border">{app.phoneNumber}</td>
-                        <td className="px-4 py-2 border">
+                        <option value="">Pilih Status</option>
+                        <option value="SEDANG_DITINJAU">Sedang Ditinjau</option>
+                        <option value="DAFTAR_PENDEK">Daftar Pendek</option>
+                        <option value="INTERVIEW">Interview</option>
+                        <option value="DITERIMA">Diterima</option>
+                        <option value="DITOLAK">Ditolak</option>
+                      </select>
+                    </div>
+
+                    {/* Other Bulk Actions */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() =>
+                          exportApplicationsToCSV(
+                            applications.filter((app) =>
+                              selectedApplications.includes(app.id)
+                            )
+                          )
+                        }
+                        className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm whitespace-nowrap"
+                      >
+                        Ekspor Terpilih
+                      </button>
+                      <button
+                        onClick={() => handleBulkDownloadPDF()}
+                        className="px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm whitespace-nowrap"
+                      >
+                        Download PDF Terpilih
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Applications Table */}
+            <div className="bg-white shadow rounded-lg overflow-hidden">
+              {loading ? (
+                <div className="p-8 text-center">
+                  Memuat data pendaftaran...
+                </div>
+              ) : error ? (
+                <div className="p-8 text-center text-red-600">{error}</div>
+              ) : (
+                <>
+                  {/* Desktop Table View */}
+                  <div className="hidden lg:block overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left">
+                            <input
+                              type="checkbox"
+                              checked={selectAll}
+                              onChange={handleSelectAll}
+                              className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            />
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Pendaftar
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Kontak
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Akademik
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Aksi
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {currentApplications.map((application) => (
+                          <tr key={application.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4">
+                              <input
+                                type="checkbox"
+                                checked={selectedApplications.includes(
+                                  application.id
+                                )}
+                                onChange={() =>
+                                  handleSelectApplication(application.id)
+                                }
+                                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                              />
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <div>
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {application.fullName}
+                                  </div>
+                                  <div className="text-sm text-gray-500">
+                                    {application.nickname}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">
+                                {application.email}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {application.phoneNumber}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">
+                                {application.nim} - {application.nia}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {application.faculty} -{" "}
+                                {application.studyProgram}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <select
+                                value={application.status || "SEDANG_DITINJAU"}
+                                onChange={(e) =>
+                                  handleStatusUpdate(
+                                    application.id,
+                                    e.target.value as ApplicationStatus
+                                  )
+                                }
+                                className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                  application.status === "DITERIMA"
+                                    ? "bg-green-100 text-green-800"
+                                    : application.status === "DITOLAK"
+                                    ? "bg-red-100 text-red-800"
+                                    : application.status === "INTERVIEW"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : application.status === "DAFTAR_PENDEK"
+                                    ? "bg-purple-100 text-purple-800"
+                                    : "bg-yellow-100 text-yellow-800"
+                                }`}
+                              >
+                                <option value="SEDANG_DITINJAU">
+                                  Sedang Ditinjau
+                                </option>
+                                <option value="DAFTAR_PENDEK">
+                                  Daftar Pendek
+                                </option>
+                                <option value="INTERVIEW">Interview</option>
+                                <option value="DITERIMA">Diterima</option>
+                                <option value="DITOLAK">Ditolak</option>
+                              </select>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              <div className="flex flex-col space-y-1">
+                                <div className="flex space-x-1">
+                                  <button
+                                    onClick={() => {
+                                      setSelectedApplication(application);
+                                      setShowDetailModal(true);
+                                    }}
+                                    className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                                    title="Lihat Detail"
+                                  >
+                                    Lihat
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      handleDownloadPDF(application.id)
+                                    }
+                                    className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200"
+                                    title="Download PDF"
+                                  >
+                                    PDF
+                                  </button>
+                                </div>
+                                <div className="flex space-x-1">
+                                  <button
+                                    onClick={() =>
+                                      handleEditApplication(application)
+                                    }
+                                    className="px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200"
+                                    title="Edit Data"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={() => handleDelete(application.id)}
+                                    className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200"
+                                    title="Hapus Data"
+                                  >
+                                    Hapus
+                                  </button>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile Card View */}
+                  <div className="lg:hidden space-y-4 p-4">
+                    {/* Mobile Select All Controls */}
+                    <div className="bg-gray-100 rounded-lg p-3 flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <input
+                          type="checkbox"
+                          checked={selectAll}
+                          onChange={handleSelectAll}
+                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        />
+                        <span className="text-sm text-gray-700">
+                          {selectAll
+                            ? `Semua ${filteredApplications.length} data dipilih`
+                            : `Pilih semua (${filteredApplications.length} data)`}
+                        </span>
+                      </div>
+                      {selectedApplications.length > 0 && (
+                        <span className="text-xs text-indigo-600 font-medium">
+                          {selectedApplications.length} terpilih
+                        </span>
+                      )}
+                    </div>
+                    {currentApplications.map((application) => (
+                      <div
+                        key={application.id}
+                        className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center space-x-3 flex-1 min-w-0">
+                            <input
+                              type="checkbox"
+                              checked={selectedApplications.includes(
+                                application.id
+                              )}
+                              onChange={() =>
+                                handleSelectApplication(application.id)
+                              }
+                              className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 flex-shrink-0"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <h3 className="text-sm font-medium text-gray-900 truncate">
+                                {application.fullName}
+                              </h3>
+                              <p className="text-xs text-gray-500 truncate">
+                                {application.email}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+                          <div>
+                            <span className="font-medium text-gray-500">
+                              NIM/NIA:
+                            </span>
+                            <p className="text-gray-900 truncate">
+                              {application.nim} - {application.nia}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="font-medium text-gray-500">
+                              Telepon:
+                            </span>
+                            <p className="text-gray-900 truncate">
+                              {application.phoneNumber}
+                            </p>
+                          </div>
+                          <div className="col-span-2">
+                            <span className="font-medium text-gray-500">
+                              Program:
+                            </span>
+                            <p className="text-gray-900 truncate">
+                              {application.studyProgram}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Status dan Actions dalam satu baris */}
+                        <div className="flex items-center justify-between gap-2">
                           <select
-                            value={app.status || "SEDANG_DITINJAU"}
+                            value={application.status || "SEDANG_DITINJAU"}
                             onChange={(e) =>
-                              updateApplicationStatus(
-                                app.id,
+                              handleStatusUpdate(
+                                application.id,
                                 e.target.value as ApplicationStatus
                               )
                             }
-                            className="w-full p-1 border border-gray-300 rounded"
+                            className={`px-2 py-1 rounded text-xs font-semibold border-0 focus:ring-1 focus:ring-indigo-500 ${
+                              application.status === "DITERIMA"
+                                ? "bg-green-100 text-green-800"
+                                : application.status === "DITOLAK"
+                                ? "bg-red-100 text-red-800"
+                                : application.status === "INTERVIEW"
+                                ? "bg-blue-100 text-blue-800"
+                                : application.status === "DAFTAR_PENDEK"
+                                ? "bg-purple-100 text-purple-800"
+                                : "bg-yellow-100 text-yellow-800"
+                            }`}
                           >
                             <option value="SEDANG_DITINJAU">
                               Sedang Ditinjau
                             </option>
-                            <option value="DAFTAR_PENDEK">
-                              Masuk Daftar Pendek
-                            </option>
+                            <option value="DAFTAR_PENDEK">Daftar Pendek</option>
                             <option value="INTERVIEW">Interview</option>
                             <option value="DITERIMA">Diterima</option>
                             <option value="DITOLAK">Ditolak</option>
                           </select>
-                        </td>
-                        <td className="px-4 py-2 border">
-                          <div className="flex items-center space-x-1">
-                            <button
-                              onClick={() => viewApplicationDetails(app)}
-                              className="text-blue-600 hover:text-blue-800"
-                              title="Lihat Detail"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-5 w-5"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                />
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                                />
-                              </svg>
-                            </button>
-                            <button
-                              onClick={() => {
-                                window.open(
-                                  `/api/admin/download-pdf/${app.id}`,
-                                  "_blank"
-                                );
+
+                          {/* Mobile Actions Dropdown */}
+                          <div className="relative">
+                            <select
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === "detail") {
+                                  setSelectedApplication(application);
+                                  setShowDetailModal(true);
+                                } else if (value === "pdf") {
+                                  handleDownloadPDF(application.id);
+                                } else if (value === "edit") {
+                                  handleEditApplication(application);
+                                } else if (value === "delete") {
+                                  if (
+                                    confirm(
+                                      `Apakah Anda yakin ingin menghapus pendaftaran ${application.fullName}?`
+                                    )
+                                  ) {
+                                    handleDelete(application.id);
+                                  }
+                                }
+                                e.target.value = "";
                               }}
-                              className="text-green-600 hover:text-green-800"
-                              title="Download PDF"
+                              className="px-2 py-1 text-xs bg-gray-100 border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                              defaultValue=""
                             >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-5 w-5"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                                />
-                              </svg>
-                            </button>
-                            <button
-                              onClick={() => deleteApplication(app.id)}
-                              className="text-red-600 hover:text-red-800"
-                              title="Hapus Aplikasi"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-5 w-5"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                />
-                              </svg>
-                            </button>
+                              <option value="">Aksi</option>
+                              <option value="detail">📋 Lihat Detail</option>
+                              <option value="pdf">📄 Download PDF</option>
+                              <option value="edit">✏️ Edit Data</option>
+                              <option value="delete">🗑️ Hapus</option>
+                            </select>
                           </div>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan={8}
-                        className="px-4 py-8 text-center text-gray-500"
-                      >
-                        Tidak ada aplikasi ditemukan.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Pagination */}
+                  <div className="mt-6 px-4 sm:px-0">
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      itemsPerPage={applicationsPerPage}
+                      totalItems={filteredApplications.length}
+                      onPageChange={setCurrentPage}
+                      onItemsPerPageChange={setApplicationsPerPage}
+                    />
+                  </div>
+                </>
+              )}
             </div>
-          )}
+          </>
+        )}
+      </div>
 
-          {/* Move the modal outside of the table structure */}
-          {showDetailModal && selectedApplication && (
-            <ApplicationDetailModal
-              application={selectedApplication}
-              onClose={closeDetailModal}
-              onDelete={deleteApplication}
-              onStatusChange={(id, status) => {
-                updateApplicationStatus(id, status as ApplicationStatus);
-                setSelectedApplication({
-                  ...selectedApplication,
-                  status: status as ApplicationStatus,
-                });
-              }}
-            />
-          )}
-
-          {/* Pagination Controls */}
-          {filteredApplications.length > 0 && (
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              itemsPerPage={applicationsPerPage}
-              totalItems={filteredApplications.length}
-              onPageChange={(pageNumber) => {
-                setCurrentPage(pageNumber);
-                // Optionally scroll to top of table when changing pages
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-              onItemsPerPageChange={(newItemsPerPage) => {
-                setApplicationsPerPage(newItemsPerPage);
-                setCurrentPage(1); // Reset to first page when changing items per page
-              }}
-            />
-          )}
-        </>
+      {/* Application Detail Modal */}
+      {showDetailModal && selectedApplication && (
+        <ApplicationDetailModal
+          application={selectedApplication}
+          onClose={() => {
+            setShowDetailModal(false);
+            setSelectedApplication(null);
+          }}
+          onDelete={handleDelete}
+          onStatusChange={(id: string, status: string) =>
+            handleStatusUpdate(id, status as ApplicationStatus)
+          }
+        />
       )}
     </div>
   );

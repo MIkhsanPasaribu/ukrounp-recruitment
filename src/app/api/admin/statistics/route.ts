@@ -1,7 +1,9 @@
-import { NextResponse } from "next/server";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { withAuth } from "@/lib/auth-middleware";
 
-export async function GET() {
+async function getStatistics(request: NextRequest) {
   try {
     // Ambil statistik dari Supabase
     const { data: applications, error } = await supabase
@@ -134,3 +136,6 @@ export async function GET() {
     );
   }
 }
+
+// Export protected GET handler
+export const GET = withAuth(getStatistics);

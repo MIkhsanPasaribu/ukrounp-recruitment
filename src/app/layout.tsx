@@ -10,25 +10,25 @@ const inter = Inter({ subsets: ["latin"] });
 // Create a separate client component for the actual content
 function ClientLayout({ children }: { children: React.ReactNode }) {
   const [scrollPosition, setScrollPosition] = useState(0);
-  
+
   useEffect(() => {
     const handleScroll = () => {
       const position = window.scrollY;
       setScrollPosition(position);
     };
-    
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
     // Start the text animation
     const textAnimationInterval = setInterval(() => {
-      const textElement = document.getElementById('running-text');
+      const textElement = document.getElementById("running-text");
       if (textElement) {
         textElement.style.transform = `translateX(${-scrollPosition % 100}px)`;
       }
     }, 50);
-    
+
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener("scroll", handleScroll);
       clearInterval(textAnimationInterval);
     };
   }, [scrollPosition]);
@@ -39,43 +39,46 @@ function ClientLayout({ children }: { children: React.ReactNode }) {
         <div className="absolute inset-0 opacity-20">
           <div className="absolute inset-0 bg-pattern"></div>
         </div>
-        
+
         {/* Logo and Title Container */}
         <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="flex items-center">
-            {/* UKRO Logo */}
-            <div className="mr-4 flex-shrink-0">
-              <Image 
-                src="/GAZA - UKRO.gif" 
-                alt="UKRO Logo" 
-                width={50} 
-                height={50}
-                className="rounded-full"
-              />
+          <div className="flex items-center flex-col sm:flex-row space-y-2 sm:space-y-0">
+            {/* UKRO Logo and Title */}
+            <div className="flex items-center">
+              <div className="mr-3 flex-shrink-0">
+                <Image
+                  src="/GAZA - UKRO.gif"
+                  alt="UKRO Logo"
+                  width={45}
+                  height={45}
+                  className="sm:w-[50px] sm:h-[50px] rounded-full"
+                />
+              </div>
+
+              {/* Title and Subtitle */}
+              <div>
+                <h1 className="text-2xl sm:text-4xl font-bold text-white">
+                  UKRO KM UNP
+                </h1>
+                <p className="text-xs sm:text-sm text-gray-200">
+                  Recruitment Platform
+                </p>
+              </div>
             </div>
 
-            {/* Title and Subtitle */}
-            <div className="flex-grow">
-              <h1 className="text-4xl font-bold text-white">
-                UKRO KM UNP
-              </h1>
-              <p className="text-sm text-gray-200">
-                Recruitment Platform
-              </p>
-            </div>
-            
-            {/* Marquee Text */}
-            <div className="overflow-hidden">
-              <h1 
+            {/* Marquee Text - Hidden on small mobile */}
+            <div className="hidden sm:block overflow-hidden flex-1 ml-0 sm:ml-4">
+              <h1
                 id="running-text"
-                className="text-3xl font-bold text-white whitespace-nowrap animate-marquee"
+                className="text-sm sm:text-xl lg:text-3xl font-bold text-white whitespace-nowrap animate-marquee"
               >
-                Unit Kegiatan Robotika Universitas Negeri Padang • Unit Kegiatan Robotika Universitas Negeri Padang •
+                Unit Kegiatan Robotika Universitas Negeri Padang • Unit Kegiatan
+                Robotika Universitas Negeri Padang •
               </h1>
             </div>
           </div>
         </div>
-        
+
         {/* Animated bottom border */}
         <div className="h-1 bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500 animate-gradient"></div>
       </header>

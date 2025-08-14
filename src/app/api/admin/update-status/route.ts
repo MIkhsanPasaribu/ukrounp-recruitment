@@ -1,8 +1,21 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { getAuthData } from "@/lib/auth";
 
-export async function POST(request: Request) {
+async function updateStatus(request: NextRequest) {
   try {
+    // Check authentication
+    const authData = await getAuthData(request);
+    if (!authData.isAuthenticated) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Unauthorized - Token tidak valid atau tidak ada",
+        },
+        { status: 401 }
+      );
+    }
+
     const { id, status } = await request.json();
 
     if (!id || !status) {
@@ -52,4 +65,12 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+}
+
+export async function POST(request: NextRequest) {
+  return updateStatus(request);
+}
+
+export async function PUT(request: NextRequest) {
+  return updateStatus(request);
 }

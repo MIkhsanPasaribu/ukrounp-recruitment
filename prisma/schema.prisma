@@ -71,6 +71,61 @@ model Settings {
   @@map("settings")
 }
 
+model Admin {
+  id                String   @id @default(cuid())
+  username          String   @unique
+  email             String   @unique
+  passwordHash      String
+  fullName          String
+  role              AdminRole @default(SUPER_ADMIN)
+  isActive          Boolean  @default(true)
+  lastLoginAt       DateTime?
+  loginAttempts     Int      @default(0)
+  lockedUntil       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // Audit log
+  auditLogs         AuditLog[]
+  
+  @@map("admins")
+}
+
+model AuditLog {
+  id                String   @id @default(cuid())
+  adminId           String
+  action            String   // LOGIN, LOGOUT, VIEW_APPLICATIONS, UPDATE_STATUS, etc.
+  resource          String?  // applicant_id, setting_key, etc.
+  details           String?  // JSON string with additional details
+  ipAddress         String?
+  userAgent         String?
+  createdAt         DateTime @default(now())
+  
+  admin             Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  
+  @@map("audit_logs")
+}
+
+model SessionToken {
+  id                String   @id @default(cuid())
+  adminId           String
+  token             String   @unique
+  expiresAt         DateTime
+  isRevoked         Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  revokedAt         DateTime?
+  
+  @@map("session_tokens")
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  ADMIN
+  MODERATOR
+  
+  @@map("admin_role")
+}
+
 enum Gender {
   LAKI_LAKI
   PEREMPUAN

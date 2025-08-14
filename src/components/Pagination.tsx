@@ -23,14 +23,15 @@ export default function Pagination({
   const indexOfLastItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   return (
-    <div className="mt-4 flex flex-col sm:flex-row items-center justify-between">
-      <div className="flex items-center mb-4 sm:mb-0">
-        <span className="text-sm text-gray-700">
-          Showing {totalItems > 0 ? indexOfFirstItem : 0} to {indexOfLastItem}{" "}
-          of {totalItems} items
+    <div className="mt-4 flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
+      {/* Info dan Items per page */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+        <span className="text-sm text-gray-700 text-center sm:text-left">
+          Menampilkan {totalItems > 0 ? indexOfFirstItem : 0} sampai{" "}
+          {indexOfLastItem} dari {totalItems} data
         </span>
         <select
-          className="ml-4 border rounded px-2 py-1 text-sm"
+          className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 w-full sm:w-auto"
           value={itemsPerPage}
           onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
         >
@@ -41,23 +42,29 @@ export default function Pagination({
         </select>
       </div>
 
-      <div className="flex">
+      {/* Navigation buttons */}
+      <div className="flex justify-center items-center gap-1">
         <button
           onClick={() => onPageChange(Math.max(1, currentPage - 1))}
           disabled={currentPage === 1}
-          className={`px-3 py-1 mx-1 rounded ${
+          className={`px-3 py-2 text-sm rounded-md ${
             currentPage === 1
               ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-              : "bg-blue-500 text-white hover:bg-blue-600"
+              : "bg-indigo-500 text-white hover:bg-indigo-600"
           }`}
         >
-          Previous
+          <span className="sm:hidden">‹</span>
+          <span className="hidden sm:inline">Sebelumnya</span>
         </button>
 
-        {/* Page numbers */}
+        {/* Mobile page indicator */}
+        <div className="sm:hidden flex items-center px-3 py-2 text-sm text-gray-700 bg-gray-100 rounded-md">
+          {currentPage} / {totalPages}
+        </div>
+
+        {/* Desktop page numbers */}
         <div className="hidden sm:flex">
           {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-            // Show pages around current page
             let pageNum;
             if (totalPages <= 5) {
               pageNum = i + 1;
@@ -73,10 +80,10 @@ export default function Pagination({
               <button
                 key={pageNum}
                 onClick={() => onPageChange(pageNum)}
-                className={`px-3 py-1 mx-1 rounded ${
+                className={`px-3 py-2 text-sm rounded-md ${
                   currentPage === pageNum
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 hover:bg-gray-300"
+                    ? "bg-indigo-600 text-white"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                 }`}
               >
                 {pageNum}
@@ -88,13 +95,14 @@ export default function Pagination({
         <button
           onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
           disabled={currentPage === totalPages || totalPages === 0}
-          className={`px-3 py-1 mx-1 rounded ${
+          className={`px-3 py-2 text-sm rounded-md ${
             currentPage === totalPages || totalPages === 0
               ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-              : "bg-blue-500 text-white hover:bg-blue-600"
+              : "bg-indigo-500 text-white hover:bg-indigo-600"
           }`}
         >
-          Next
+          <span className="sm:hidden">›</span>
+          <span className="hidden sm:inline">Selanjutnya</span>
         </button>
       </div>
     </div>
