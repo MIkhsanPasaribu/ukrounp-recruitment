@@ -3,65 +3,31 @@
 
 import { useState } from "react";
 import FileUpload from "./FileUpload";
+import { ApplicationData as AppData } from "@/types";
 
 interface ModifyDataModalProps {
   isOpen: boolean;
   onClose: () => void;
-}
-
-interface ApplicationData {
-  id: string;
-  fullName: string;
-  email: string;
-  phoneNumber: string;
-  birthDate: string;
-  faculty: string;
-  department: string;
-  studyProgram: string;
-  educationLevel?: "S1" | "D4" | "D3";
-  nim: string;
-  nia: string;
-  nickname?: string;
-  gender?: "LAKI_LAKI" | "PEREMPUAN";
-  previousSchool?: string;
-  padangAddress?: string;
-  motivation?: string;
-  futurePlans?: string;
-  whyYouShouldBeAccepted?: string;
-  software?: {
-    corelDraw: boolean;
-    photoshop: boolean;
-    adobePremierePro: boolean;
-    adobeAfterEffect: boolean;
-    autodeskEagle: boolean;
-    arduinoIde: boolean;
-    androidStudio: boolean;
-    visualStudio: boolean;
-    missionPlaner: boolean;
-    autodeskInventor: boolean;
-    autodeskAutocad: boolean;
-    solidworks: boolean;
-    others: string;
-  };
-  // File uploads
-  mbtiProof?: string;
-  photo?: string;
-  studentCard?: string;
-  studyPlanCard?: string;
-  igFollowProof?: string;
-  tiktokFollowProof?: string;
+  isAdminMode?: boolean;
+  applicationData?: AppData | null;
 }
 
 export default function ModifyDataModal({
   isOpen,
   onClose,
+  isAdminMode = false,
+  applicationData = null,
 }: ModifyDataModalProps) {
-  const [step, setStep] = useState<"verify" | "edit">("verify");
+  const [step, setStep] = useState<"verify" | "edit">(
+    isAdminMode ? "edit" : "verify"
+  );
   const [email, setEmail] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [editedData, setEditedData] = useState<ApplicationData | null>(null);
+  const [editedData, setEditedData] = useState<AppData | null>(
+    isAdminMode ? applicationData : null
+  );
   const [fileUploads, setFileUploads] = useState({
     mbtiProof: "",
     photo: "",
@@ -72,6 +38,19 @@ export default function ModifyDataModal({
   });
   const [fileErrors, setFileErrors] = useState<Record<string, string>>({});
 
+  // Initialize data for admin mode
+  if (isAdminMode && applicationData && !editedData) {
+    setEditedData(applicationData);
+    setFileUploads({
+      mbtiProof: applicationData.mbtiProof || "",
+      photo: applicationData.photo || "",
+      studentCard: applicationData.studentCard || "",
+      studyPlanCard: applicationData.studyPlanCard || "",
+      igFollowProof: applicationData.igFollowProof || "",
+      tiktokFollowProof: applicationData.tiktokFollowProof || "",
+    });
+  }
+
   // Daftar fakultas dan jurusan
   const facultyOptions = [
     "Fakultas Teknik",
@@ -80,8 +59,10 @@ export default function ModifyDataModal({
     "Fakultas Ilmu Sosial",
     "Fakultas Bahasa dan Seni",
     "Fakultas Ilmu Keolahragaan",
-    "Fakultas Ekonomi",
+    "Fakultas Ekonomi dan Bisnis",
     "Fakultas Pariwisata dan Perhotelan",
+    "Fakultas Psikologi dan Kesehatan",
+    "Sekolah Vokasi",
   ];
 
   const getNiaFromNim = (nim: string): string => {
@@ -179,10 +160,12 @@ export default function ModifyDataModal({
   };
 
   const handleClose = () => {
-    setStep("verify");
-    setEmail("");
-    setBirthDate("");
-    setEditedData(null);
+    if (!isAdminMode) {
+      setStep("verify");
+      setEmail("");
+      setBirthDate("");
+    }
+    setEditedData(isAdminMode ? applicationData : null);
     setFileUploads({
       mbtiProof: "",
       photo: "",
@@ -197,7 +180,7 @@ export default function ModifyDataModal({
     onClose();
   };
 
-  const handleInputChange = (field: keyof ApplicationData, value: string) => {
+  const handleInputChange = (field: keyof AppData, value: string) => {
     if (editedData) {
       const updatedData = {
         ...editedData,
@@ -249,7 +232,9 @@ export default function ModifyDataModal({
         {/* Header - Mobile Responsive */}
         <div className="flex justify-between items-center p-4 sm:p-6 border-b bg-gradient-to-r from-blue-500 to-purple-600 text-white">
           <h3 className="text-lg sm:text-xl font-semibold">
-            {step === "verify"
+            {isAdminMode
+              ? "Edit Data Pendaftaran (Admin)"
+              : step === "verify"
               ? "Verifikasi Data"
               : "Modifikasi Data Pendaftaran"}
           </h3>
@@ -274,7 +259,7 @@ export default function ModifyDataModal({
         </div>
 
         <div className="p-4 sm:p-6">
-          {step === "verify" ? (
+          {step === "verify" && !isAdminMode ? (
             <>
               <p className="text-gray-600 mb-6 text-sm sm:text-base">
                 Untuk memodifikasi data pendaftaran Anda, silakan verifikasi
@@ -349,13 +334,30 @@ export default function ModifyDataModal({
             editedData && (
               <>
                 <div className="mb-6">
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
-                    <p className="text-green-700 font-medium text-sm sm:text-base">
-                      ✓ Verifikasi berhasil untuk: {editedData.fullName}
+                  <div
+                    className={`border rounded-lg p-3 sm:p-4 ${
+                      isAdminMode
+                        ? "bg-blue-50 border-blue-200"
+                        : "bg-green-50 border-green-200"
+                    }`}
+                  >
+                    <p
+                      className={`font-medium text-sm sm:text-base ${
+                        isAdminMode ? "text-blue-700" : "text-green-700"
+                      }`}
+                    >
+                      {isAdminMode
+                        ? `🔧 Mode Admin - Edit data untuk: ${editedData.fullName}`
+                        : `✓ Verifikasi berhasil untuk: ${editedData.fullName}`}
                     </p>
-                    <p className="text-green-600 text-xs sm:text-sm mt-1">
-                      Silakan edit data yang ingin Anda ubah. Pastikan semua
-                      informasi sudah benar sebelum menyimpan.
+                    <p
+                      className={`text-xs sm:text-sm mt-1 ${
+                        isAdminMode ? "text-blue-600" : "text-green-600"
+                      }`}
+                    >
+                      {isAdminMode
+                        ? "Sebagai admin, Anda dapat langsung mengedit semua data pendaftar."
+                        : "Silakan edit data yang ingin Anda ubah. Pastikan semua informasi sudah benar sebelum menyimpan."}
                     </p>
                   </div>
                 </div>
@@ -480,25 +482,60 @@ export default function ModifyDataModal({
                       🎓 Data Akademik
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Jenjang Pendidikan */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Jenjang Pendidikan *
+                        </label>
+                        <select
+                          value={editedData.educationLevel || ""}
+                          onChange={(e) =>
+                            handleInputChange("educationLevel", e.target.value)
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+                          required
+                        >
+                          <option value="">Pilih Jenjang Pendidikan</option>
+                          <option value="D3">D3 (Diploma 3)</option>
+                          <option value="D4">D4 (Diploma 4)</option>
+                          <option value="S1">S1 (Sarjana)</option>
+                        </select>
+                        {editedData.educationLevel && (
+                          <div className="mt-1 text-xs text-blue-600">
+                            {editedData.educationLevel === "D3" &&
+                              "✓ Program Diploma 3 - Format NIM 3 digit"}
+                            {editedData.educationLevel === "D4" &&
+                              "✓ Program Diploma 4 - Format NIM 4 digit"}
+                            {editedData.educationLevel === "S1" &&
+                              "✓ Program Sarjana - Format NIM 10 digit"}
+                          </div>
+                        )}
+                      </div>
+
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Fakultas *
                         </label>
-                        <select
+                        <input
+                          type="text"
                           value={editedData.faculty || ""}
                           onChange={(e) =>
                             handleInputChange("faculty", e.target.value)
                           }
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+                          placeholder="Ketik nama fakultas Anda"
                           required
-                        >
-                          <option value="">Pilih Fakultas</option>
+                          list="faculty-suggestions"
+                        />
+                        <datalist id="faculty-suggestions">
                           {facultyOptions.map((faculty) => (
-                            <option key={faculty} value={faculty}>
-                              {faculty}
-                            </option>
+                            <option key={faculty} value={faculty} />
                           ))}
-                        </select>
+                        </datalist>
+                        <div className="mt-1 text-xs text-gray-500">
+                          💡 Ketik untuk mencari atau pilih dari saran yang
+                          muncul
+                        </div>
                       </div>
 
                       <div>

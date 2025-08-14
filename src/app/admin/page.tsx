@@ -918,13 +918,15 @@ export default function AdminPage() {
       )}
 
       {/* Application Edit Modal */}
-      {showEditModal && (
+      {showEditModal && selectedApplication && (
         <ModifyDataModal
           isOpen={showEditModal}
           onClose={() => {
             setShowEditModal(false);
             setSelectedApplication(null);
           }}
+          isAdminMode={true}
+          applicationData={selectedApplication}
         />
       )}
     </div>
