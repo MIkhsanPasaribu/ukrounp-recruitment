@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface LoginProps {
   onLoginSuccess: (
@@ -14,6 +15,7 @@ interface LoginProps {
 }
 
 export default function AdminLogin({ onLoginSuccess }: LoginProps) {
+  const router = useRouter();
   const [identifier, setIdentifier] = useState(""); // username or email
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -125,13 +127,35 @@ export default function AdminLogin({ onLoginSuccess }: LoginProps) {
             />
           </div>
 
-          <div className="pt-2">
+          <div className="pt-2 space-y-3">
             <button
               type="submit"
               disabled={loading}
               className="group relative w-full flex justify-center py-3 sm:py-2 px-4 border border-transparent text-base sm:text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
               {loading ? "Memproses..." : "Login"}
+            </button>
+            
+            <button
+              type="button"
+              onClick={() => router.push('/')}
+              className="group relative w-full flex justify-center py-3 sm:py-2 px-4 border border-gray-300 text-base sm:text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
+            >
+              <svg
+                className="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
+              </svg>
+              Kembali ke Halaman Utama
             </button>
           </div>
         </form>
