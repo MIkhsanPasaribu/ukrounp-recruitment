@@ -380,6 +380,17 @@ export default function AdminPage() {
     setShowEditModal(true);
   };
 
+  // Handler untuk update setelah edit berhasil
+  const handleUpdateSuccess = (updatedData: ApplicationData) => {
+    // Update data di state applications
+    setApplications((prev) =>
+      prev.map((app) => (app.id === updatedData.id ? updatedData : app))
+    );
+
+    // Update selectedApplication juga
+    setSelectedApplication(updatedData);
+  };
+
   // Show login form if not authenticated
   if (!isAuthenticated) {
     if (loading) {
@@ -927,6 +938,7 @@ export default function AdminPage() {
           }}
           isAdminMode={true}
           applicationData={selectedApplication}
+          onUpdateSuccess={handleUpdateSuccess}
         />
       )}
     </div>

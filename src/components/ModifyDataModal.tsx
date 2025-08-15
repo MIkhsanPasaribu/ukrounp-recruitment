@@ -10,6 +10,7 @@ interface ModifyDataModalProps {
   onClose: () => void;
   isAdminMode?: boolean;
   applicationData?: AppData | null;
+  onUpdateSuccess?: (updatedData: AppData) => void; // Callback untuk update berhasil
 }
 
 export default function ModifyDataModal({
@@ -17,6 +18,7 @@ export default function ModifyDataModal({
   onClose,
   isAdminMode = false,
   applicationData = null,
+  onUpdateSuccess,
 }: ModifyDataModalProps) {
   const [step, setStep] = useState<"verify" | "edit">(
     isAdminMode ? "edit" : "verify"
@@ -37,6 +39,33 @@ export default function ModifyDataModal({
     tiktokFollowProof: "",
   });
   const [fileErrors, setFileErrors] = useState<Record<string, string>>({});
+  const [nimError, setNimError] = useState<string>("");
+
+  // Fungsi validasi NIM berdasarkan jenjang pendidikan (sama seperti di Section2Form)
+  const validateNimByEducationLevel = (
+    nim: string,
+    educationLevel: string
+  ): string | null => {
+    if (!nim || !educationLevel) return null;
+
+    const nimPrefix = nim.substring(0, 2);
+
+    if (educationLevel === "S1" || educationLevel === "D4") {
+      if (nimPrefix !== "25" && nimPrefix !== "24") {
+        return "Untuk Strata 1 (S1) dan Diploma 4 (D4) hanya mahasiswa tahun masuk 2024 dan 2025";
+      }
+    } else if (educationLevel === "D3") {
+      if (nimPrefix !== "25") {
+        return "Untuk Diploma 3 (D3) hanya mahasiswa tahun masuk 2025";
+      }
+    }
+
+    if (nim.length < 8) {
+      return "NIM harus minimal 8 digit";
+    }
+
+    return null;
+  };
 
   // Initialize data for admin mode
   if (isAdminMode && applicationData && !editedData) {
@@ -124,13 +153,42 @@ export default function ModifyDataModal({
   const handleSaveChanges = async () => {
     if (!editedData) return;
 
+    // Validasi jenjang pendidikan dan NIM sebelum submit
+    if (editedData.nim && editedData.educationLevel) {
+      const nimValidation = validateNimByEducationLevel(
+        editedData.nim,
+        editedData.educationLevel
+      );
+      if (nimValidation) {
+        setErrorMessage(nimValidation);
+        return;
+      }
+    }
+
     setLoading(true);
     setErrorMessage("");
 
     try {
-      // Combine editedData with file uploads
+      // Prepare data dengan struktur software yang benar
       const dataToUpdate = {
         ...editedData,
+        // Convert software object properly - use existing software data
+        software: editedData.software || {
+          corelDraw: false,
+          photoshop: false,
+          adobePremierePro: false,
+          adobeAfterEffect: false,
+          autodeskEagle: false,
+          arduinoIde: false,
+          androidStudio: false,
+          visualStudio: false,
+          missionPlaner: false,
+          autodeskInventor: false,
+          autodeskAutocad: false,
+          solidworks: false,
+          others: "",
+        },
+        // Include file uploads
         ...fileUploads,
       };
 
@@ -146,7 +204,33 @@ export default function ModifyDataModal({
 
       if (result.success) {
         alert("Data berhasil diperbarui!");
+
+        // Fetch data terbaru dari database untuk memastikan sinkronisasi
+        if (isAdminMode && onUpdateSuccess && editedData?.id) {
+          try {
+            const fetchResponse = await fetch(
+              `/api/admin/applications?id=${editedData.id}`
+            );
+            if (fetchResponse.ok) {
+              const fetchResult = await fetchResponse.json();
+              if (
+                fetchResult.applications &&
+                fetchResult.applications.length > 0
+              ) {
+                onUpdateSuccess(fetchResult.applications[0]);
+              }
+            }
+          } catch (error) {
+            console.error("Error fetching updated data:", error);
+          }
+        }
+
         handleClose();
+
+        // Refresh halaman admin jika dalam mode admin (sebagai fallback)
+        if (isAdminMode && window.location.pathname.includes("/admin")) {
+          window.location.reload();
+        }
       } else {
         setErrorMessage(
           result.message || "Gagal memperbarui data. Silakan coba lagi."
@@ -176,6 +260,7 @@ export default function ModifyDataModal({
     });
     setFileErrors({});
     setErrorMessage("");
+    setNimError(""); // Clear NIM error
     setLoading(false);
     onClose();
   };
@@ -186,6 +271,25 @@ export default function ModifyDataModal({
         ...editedData,
         [field]: value,
       };
+
+      // Validasi real-time untuk NIM ketika jenjang pendidikan atau NIM berubah
+      if (field === "nim" || field === "educationLevel") {
+        const nimValue = field === "nim" ? value : updatedData.nim;
+        const educationLevelValue =
+          field === "educationLevel" ? value : updatedData.educationLevel;
+
+        // Clear existing NIM error first
+        setNimError("");
+
+        // Validate NIM based on education level
+        const nimErrorResult = validateNimByEducationLevel(
+          nimValue || "",
+          educationLevelValue || ""
+        );
+        if (nimErrorResult) {
+          setNimError(nimErrorResult);
+        }
+      }
 
       // Auto-update NIA ketika NIM berubah
       if (field === "nim") {
@@ -578,9 +682,16 @@ export default function ModifyDataModal({
                           onChange={(e) =>
                             handleInputChange("nim", e.target.value)
                           }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+                          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base ${
+                            nimError ? "border-red-500" : "border-gray-300"
+                          }`}
                           required
                         />
+                        {nimError && (
+                          <div className="mt-1 text-xs text-red-500">
+                            ⚠️ {nimError}
+                          </div>
+                        )}
                       </div>
 
                       <div>

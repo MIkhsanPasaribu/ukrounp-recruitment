@@ -5,11 +5,23 @@ import { withAuth } from "@/lib/auth-middleware";
 
 async function getApplications(request: NextRequest) {
   try {
-    // Ambil semua aplikasi menggunakan Supabase
-    const { data: applications, error } = await supabase
-      .from("applicants")
-      .select("*")
-      .order("submittedAt", { ascending: false });
+    // Cek apakah ada query parameter untuk ID spesifik
+    const url = new URL(request.url);
+    const applicationId = url.searchParams.get("id");
+
+    let query = supabase.from("applicants").select("*");
+
+    // Filter by ID jika disediakan
+    if (applicationId) {
+      query = query.eq("id", applicationId);
+    }
+
+    // Order by submittedAt untuk list semua aplikasi
+    if (!applicationId) {
+      query = query.order("submittedAt", { ascending: false });
+    }
+
+    const { data: applications, error } = await query;
 
     if (error) {
       console.error("Error mengambil aplikasi:", error);
@@ -33,6 +45,7 @@ async function getApplications(request: NextRequest) {
       faculty: app.faculty,
       department: app.department,
       studyProgram: app.studyProgram,
+      educationLevel: app.educationLevel, // Tambahkan educationLevel yang hilang
       nim: app.nim,
       nia: app.nia,
       previousSchool: app.previousSchool,
