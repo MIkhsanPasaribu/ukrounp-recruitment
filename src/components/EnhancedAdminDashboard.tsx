@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Application } from "@/types";
 import { useStreamingData, StreamingProgress } from "./StreamingDataLoader";
-import ApplicationDetailModal from "./ApplicationDetailModal";
+import ApplicationDetailModal from "./admin/detail/ApplicationDetailModal";
 import ModifyDataModal from "./ModifyDataModal";
 import Pagination from "./Pagination";
 
