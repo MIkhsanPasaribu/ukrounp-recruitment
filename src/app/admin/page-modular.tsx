@@ -24,10 +24,22 @@ import { useBulkOperations } from "@/hooks/useBulkOperations";
 
 export default function AdminPage() {
   // Authentication
-  const { token, admin, isAuthenticated, loading, handleLoginSuccess, handleLogout } = useAdminAuth();
+  const {
+    token,
+    admin,
+    isAuthenticated,
+    loading,
+    handleLoginSuccess,
+    handleLogout,
+  } = useAdminAuth();
 
   // Registration Status
-  const { isRegistrationOpen, registrationStatusLoading, fetchRegistrationStatus, toggleRegistrationStatus } = useRegistrationStatus(token);
+  const {
+    isRegistrationOpen,
+    registrationStatusLoading,
+    fetchRegistrationStatus,
+    toggleRegistrationStatus,
+  } = useRegistrationStatus(token);
 
   // Applications Management
   const {
@@ -63,10 +75,13 @@ export default function AdminPage() {
   } = useBulkOperations(applications, setApplications, token);
 
   // Tab Management
-  const [activeTab, setActiveTab] = useState<"overview" | "applications" | "enhanced">("overview");
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "applications" | "enhanced"
+  >("overview");
 
   // Modal Management
-  const [selectedApplication, setSelectedApplication] = useState<ApplicationData | null>(null);
+  const [selectedApplication, setSelectedApplication] =
+    useState<ApplicationData | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
 
@@ -264,10 +279,13 @@ export default function AdminPage() {
                           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                           disabled={applicationsLoading}
                         >
-                          {applicationsLoading ? "Mencoba ulang..." : "Coba Lagi"}
+                          {applicationsLoading
+                            ? "Mencoba ulang..."
+                            : "Coba Lagi"}
                         </button>
                         <p className="text-sm text-gray-600">
-                          Tips: Coba gunakan filter untuk mengurangi jumlah data yang dimuat
+                          Tips: Coba gunakan filter untuk mengurangi jumlah data
+                          yang dimuat
                         </p>
                       </div>
                     </div>
