@@ -6,7 +6,7 @@ export function withAuth(
   handler: (
     request: NextRequest,
     auth: { isAuthenticated: boolean; admin?: unknown; token?: string }
-  ) => Promise<NextResponse>
+  ) => Promise<NextResponse | Response>
 ) {
   return async (request: NextRequest) => {
     const authData = await getAuthData(request);

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { ApplicationData, ApplicationStatus } from "@/types";
 import AdminDashboard from "@/components/AdminDashboard";
+import EnhancedAdminDashboard from "@/components/EnhancedAdminDashboard";
 import AdminLogin from "@/components/AdminLogin";
 import Pagination from "@/components/Pagination";
 import AdminHeaderButtons from "@/components/AdminHeaderButtons";
@@ -28,7 +29,9 @@ export default function AdminPage() {
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(true);
   const [registrationStatusLoading, setRegistrationStatusLoading] =
     useState(false);
-  const [activeTab, setActiveTab] = useState("applications");
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "applications" | "enhanced"
+  >("overview");
   const [selectedApplications, setSelectedApplications] = useState<string[]>(
     []
   );
@@ -507,6 +510,23 @@ export default function AdminPage() {
         {/* Tabs */}
         <div className="border-b border-gray-200 mb-6">
           <nav className="-mb-px flex space-x-4 sm:space-x-8">
+            {/* Overview Tab */}
+            <button
+              onClick={() => setActiveTab("overview")}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === "overview"
+                  ? "border-indigo-500 text-indigo-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              <span className="flex items-center gap-1">
+                <span>📊</span>
+                <span className="hidden sm:inline">Overview & Statistics</span>
+                <span className="sm:hidden">Stats</span>
+              </span>
+            </button>
+
+            {/* Applications Management Tab */}
             <button
               onClick={() => setActiveTab("applications")}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
@@ -515,214 +535,414 @@ export default function AdminPage() {
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              <span className="hidden sm:inline">
-                Pendaftaran ({applications.length})
+              <span className="flex items-center gap-1">
+                <span>📋</span>
+                <span className="hidden sm:inline">
+                  Manage Applications ({applications.length})
+                </span>
+                <span className="sm:hidden">Data ({applications.length})</span>
               </span>
-              <span className="sm:hidden">Data ({applications.length})</span>
             </button>
+
+            {/* Enhanced Dashboard Tab */}
             <button
-              onClick={() => setActiveTab("dashboard")}
+              onClick={() => setActiveTab("enhanced")}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === "dashboard"
+                activeTab === "enhanced"
                   ? "border-indigo-500 text-indigo-600"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
-              Statistik
+              <span className="flex items-center gap-1">
+                <span>🚀</span>
+                <span className="hidden sm:inline">Enterprise Dashboard</span>
+                <span className="sm:hidden">Enhanced</span>
+              </span>
             </button>
           </nav>
         </div>
 
-        {activeTab === "dashboard" && (
-          <AdminDashboard
-            token={token!}
-            admin={admin || undefined}
-            onLogout={handleLogout}
-          />
-        )}
+        {/* Tab Content */}
+        <div className="mt-6">
+          {/* Overview Tab - Statistics Dashboard */}
+          {activeTab === "overview" && (
+            <AdminDashboard
+              token={token!}
+              admin={admin || undefined}
+              onLogout={handleLogout}
+            />
+          )}
 
-        {activeTab === "applications" && (
-          <>
-            {/* Search and Filter Controls */}
-            <div className="bg-white shadow rounded-lg p-4 sm:p-6 mb-6">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1">
-                  <input
-                    type="text"
-                    placeholder="Cari berdasarkan nama, email, atau NIM..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+          {/* Enhanced Dashboard Tab - Enterprise Features */}
+          {activeTab === "enhanced" && (
+            <div className="space-y-6">
+              <div className="bg-white shadow rounded-lg p-6">
+                <div className="border-b border-gray-200 pb-4 mb-6">
+                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <span>🚀</span>
+                    Enterprise Dashboard
+                    <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                      Streaming & Caching
+                    </span>
+                  </h2>
+                  <p className="text-sm text-gray-600 mt-2">
+                    Advanced data management dengan real-time streaming,
+                    intelligent caching, dan enterprise-grade performance
+                    optimization.
+                  </p>
                 </div>
-                <div className="w-full sm:w-auto">
-                  <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                  >
-                    <option value="all">Semua Status</option>
-                    <option value="SEDANG_DITINJAU">Sedang Ditinjau</option>
-                    <option value="DAFTAR_PENDEK">Daftar Pendek</option>
-                    <option value="INTERVIEW">Interview</option>
-                    <option value="DITERIMA">Diterima</option>
-                    <option value="DITOLAK">Ditolak</option>
-                  </select>
-                </div>
+
+                <EnhancedAdminDashboard
+                  initialApplications={applications}
+                  initialPagination={pagination || undefined}
+                />
               </div>
             </div>
+          )}
 
-            {/* Bulk Actions */}
-            {selectedApplications.length > 0 && (
-              <div className="bg-white shadow rounded-lg p-4 mb-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-700">
-                      {selectedApplications.length} pendaftaran dipilih
-                    </span>
-                    <button
-                      onClick={() => setSelectedApplications([])}
-                      className="text-xs text-gray-500 hover:text-gray-700 underline"
-                    >
-                      Batal Pilih
-                    </button>
+          {/* Applications Tab - Traditional Management */}
+          {activeTab === "applications" && (
+            <>
+              {/* Search and Filter Controls */}
+              <div className="bg-white shadow rounded-lg p-4 sm:p-6 mb-6">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      placeholder="Cari berdasarkan nama, email, atau NIM..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                    {/* Bulk Status Update Dropdown */}
-                    <div className="flex items-center gap-2">
-                      <label className="text-sm text-gray-600 whitespace-nowrap">
-                        Ubah Status:
-                      </label>
-                      <select
-                        onChange={(e) => {
-                          if (e.target.value) {
-                            handleBulkStatusUpdate(
-                              e.target.value as ApplicationStatus
-                            );
-                            e.target.value = ""; // Reset dropdown
-                          }
-                        }}
-                        className="px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm min-w-[140px]"
-                        defaultValue=""
-                      >
-                        <option value="">Pilih Status</option>
-                        <option value="SEDANG_DITINJAU">Sedang Ditinjau</option>
-                        <option value="DAFTAR_PENDEK">Daftar Pendek</option>
-                        <option value="INTERVIEW">Interview</option>
-                        <option value="DITERIMA">Diterima</option>
-                        <option value="DITOLAK">Ditolak</option>
-                      </select>
-                    </div>
-
-                    {/* Other Bulk Actions */}
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() =>
-                          exportApplicationsToCSV(
-                            applications.filter((app) =>
-                              selectedApplications.includes(app.id)
-                            )
-                          )
-                        }
-                        className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm whitespace-nowrap"
-                      >
-                        Ekspor Terpilih
-                      </button>
-                      <button
-                        onClick={() => handleBulkDownloadPDF()}
-                        className="px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm whitespace-nowrap"
-                      >
-                        Download PDF Terpilih
-                      </button>
-                    </div>
+                  <div className="w-full sm:w-auto">
+                    <select
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                    >
+                      <option value="all">Semua Status</option>
+                      <option value="SEDANG_DITINJAU">Sedang Ditinjau</option>
+                      <option value="DAFTAR_PENDEK">Daftar Pendek</option>
+                      <option value="INTERVIEW">Interview</option>
+                      <option value="DITERIMA">Diterima</option>
+                      <option value="DITOLAK">Ditolak</option>
+                    </select>
                   </div>
                 </div>
               </div>
-            )}
 
-            {/* Applications Table */}
-            <div className="bg-white shadow rounded-lg overflow-hidden">
-              {loading ? (
-                <div className="p-8 text-center">
-                  Memuat data pendaftaran...
-                </div>
-              ) : error ? (
-                <div className="p-8 text-center">
-                  <div className="max-w-md mx-auto">
-                    <div className="text-red-600 mb-4">
-                      <svg
-                        className="w-12 h-12 mx-auto mb-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z"
-                        />
-                      </svg>
-                      <p className="text-lg font-semibold">{error}</p>
-                    </div>
-                    <div className="space-y-3">
+              {/* Bulk Actions */}
+              {selectedApplications.length > 0 && (
+                <div className="bg-white shadow rounded-lg p-4 mb-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-700">
+                        {selectedApplications.length} pendaftaran dipilih
+                      </span>
                       <button
-                        onClick={() =>
-                          fetchApplications(
-                            currentPage,
-                            applicationsPerPage,
-                            searchTerm,
-                            statusFilter
-                          )
-                        }
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                        disabled={loading}
+                        onClick={() => setSelectedApplications([])}
+                        className="text-xs text-gray-500 hover:text-gray-700 underline"
                       >
-                        {loading ? "Mencoba ulang..." : "Coba Lagi"}
+                        Batal Pilih
                       </button>
-                      <p className="text-sm text-gray-600">
-                        Tips: Coba gunakan filter untuk mengurangi jumlah data
-                        yang dimuat
-                      </p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                      {/* Bulk Status Update Dropdown */}
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm text-gray-600 whitespace-nowrap">
+                          Ubah Status:
+                        </label>
+                        <select
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              handleBulkStatusUpdate(
+                                e.target.value as ApplicationStatus
+                              );
+                              e.target.value = ""; // Reset dropdown
+                            }
+                          }}
+                          className="px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm min-w-[140px]"
+                          defaultValue=""
+                        >
+                          <option value="">Pilih Status</option>
+                          <option value="SEDANG_DITINJAU">
+                            Sedang Ditinjau
+                          </option>
+                          <option value="DAFTAR_PENDEK">Daftar Pendek</option>
+                          <option value="INTERVIEW">Interview</option>
+                          <option value="DITERIMA">Diterima</option>
+                          <option value="DITOLAK">Ditolak</option>
+                        </select>
+                      </div>
+
+                      {/* Other Bulk Actions */}
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() =>
+                            exportApplicationsToCSV(
+                              applications.filter((app) =>
+                                selectedApplications.includes(app.id)
+                              )
+                            )
+                          }
+                          className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm whitespace-nowrap"
+                        >
+                          Ekspor Terpilih
+                        </button>
+                        <button
+                          onClick={() => handleBulkDownloadPDF()}
+                          className="px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm whitespace-nowrap"
+                        >
+                          Download PDF Terpilih
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              ) : (
-                <>
-                  {/* Desktop Table View */}
-                  <div className="hidden lg:block overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left">
-                            <input
-                              type="checkbox"
-                              checked={selectAll}
-                              onChange={handleSelectAll}
-                              className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                            />
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Pendaftar
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Kontak
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Akademik
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Aksi
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {currentApplications.map((application) => (
-                          <tr key={application.id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4">
+              )}
+
+              {/* Applications Table */}
+              <div className="bg-white shadow rounded-lg overflow-hidden">
+                {loading ? (
+                  <div className="p-8 text-center">
+                    Memuat data pendaftaran...
+                  </div>
+                ) : error ? (
+                  <div className="p-8 text-center">
+                    <div className="max-w-md mx-auto">
+                      <div className="text-red-600 mb-4">
+                        <svg
+                          className="w-12 h-12 mx-auto mb-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z"
+                          />
+                        </svg>
+                        <p className="text-lg font-semibold">{error}</p>
+                      </div>
+                      <div className="space-y-3">
+                        <button
+                          onClick={() =>
+                            fetchApplications(
+                              currentPage,
+                              applicationsPerPage,
+                              searchTerm,
+                              statusFilter
+                            )
+                          }
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                          disabled={loading}
+                        >
+                          {loading ? "Mencoba ulang..." : "Coba Lagi"}
+                        </button>
+                        <p className="text-sm text-gray-600">
+                          Tips: Coba gunakan filter untuk mengurangi jumlah data
+                          yang dimuat
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* Desktop Table View */}
+                    <div className="hidden lg:block overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-left">
+                              <input
+                                type="checkbox"
+                                checked={selectAll}
+                                onChange={handleSelectAll}
+                                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                              />
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Pendaftar
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Kontak
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Akademik
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Status
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Aksi
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {currentApplications.map((application) => (
+                            <tr
+                              key={application.id}
+                              className="hover:bg-gray-50"
+                            >
+                              <td className="px-6 py-4">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedApplications.includes(
+                                    application.id
+                                  )}
+                                  onChange={() =>
+                                    handleSelectApplication(application.id)
+                                  }
+                                  className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                />
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center">
+                                  <div>
+                                    <div className="text-sm font-medium text-gray-900">
+                                      {application.fullName}
+                                    </div>
+                                    <div className="text-sm text-gray-500">
+                                      {application.nickname}
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-900">
+                                  {application.email}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  {application.phoneNumber}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-900">
+                                  {application.nim} - {application.nia}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  {application.faculty} -{" "}
+                                  {application.studyProgram}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <select
+                                  value={
+                                    application.status || "SEDANG_DITINJAU"
+                                  }
+                                  onChange={(e) =>
+                                    handleStatusUpdate(
+                                      application.id,
+                                      e.target.value as ApplicationStatus
+                                    )
+                                  }
+                                  className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                    application.status === "DITERIMA"
+                                      ? "bg-green-100 text-green-800"
+                                      : application.status === "DITOLAK"
+                                      ? "bg-red-100 text-red-800"
+                                      : application.status === "INTERVIEW"
+                                      ? "bg-blue-100 text-blue-800"
+                                      : application.status === "DAFTAR_PENDEK"
+                                      ? "bg-purple-100 text-purple-800"
+                                      : "bg-yellow-100 text-yellow-800"
+                                  }`}
+                                >
+                                  <option value="SEDANG_DITINJAU">
+                                    Sedang Ditinjau
+                                  </option>
+                                  <option value="DAFTAR_PENDEK">
+                                    Daftar Pendek
+                                  </option>
+                                  <option value="INTERVIEW">Interview</option>
+                                  <option value="DITERIMA">Diterima</option>
+                                  <option value="DITOLAK">Ditolak</option>
+                                </select>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div className="flex flex-col space-y-1">
+                                  <div className="flex space-x-1">
+                                    <button
+                                      onClick={() => {
+                                        setSelectedApplication(application);
+                                        setShowDetailModal(true);
+                                      }}
+                                      className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                                      title="Lihat Detail"
+                                    >
+                                      Lihat
+                                    </button>
+                                    <button
+                                      onClick={() =>
+                                        handleDownloadPDF(application.id)
+                                      }
+                                      className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200"
+                                      title="Download PDF"
+                                    >
+                                      PDF
+                                    </button>
+                                  </div>
+                                  <div className="flex space-x-1">
+                                    <button
+                                      onClick={() =>
+                                        handleEditApplication(application)
+                                      }
+                                      className="px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200"
+                                      title="Edit Data"
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      onClick={() =>
+                                        handleDelete(application.id)
+                                      }
+                                      className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200"
+                                      title="Hapus Data"
+                                    >
+                                      Hapus
+                                    </button>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="lg:hidden space-y-4 p-4">
+                      {/* Mobile Select All Controls */}
+                      <div className="bg-gray-100 rounded-lg p-3 flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-3">
+                          <input
+                            type="checkbox"
+                            checked={selectAll}
+                            onChange={handleSelectAll}
+                            className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                          />
+                          <span className="text-sm text-gray-700">
+                            {selectAll
+                              ? `Semua ${applications.length} data dipilih`
+                              : `Pilih semua (${applications.length} data)`}
+                          </span>
+                        </div>
+                        {selectedApplications.length > 0 && (
+                          <span className="text-xs text-indigo-600 font-medium">
+                            {selectedApplications.length} terpilih
+                          </span>
+                        )}
+                      </div>
+                      {currentApplications.map((application) => (
+                        <div
+                          key={application.id}
+                          className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center space-x-3 flex-1 min-w-0">
                               <input
                                 type="checkbox"
                                 checked={selectedApplications.includes(
@@ -731,285 +951,137 @@ export default function AdminPage() {
                                 onChange={() =>
                                   handleSelectApplication(application.id)
                                 }
-                                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 flex-shrink-0"
                               />
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center">
-                                <div>
-                                  <div className="text-sm font-medium text-gray-900">
-                                    {application.fullName}
-                                  </div>
-                                  <div className="text-sm text-gray-500">
-                                    {application.nickname}
-                                  </div>
-                                </div>
+                              <div className="min-w-0 flex-1">
+                                <h3 className="text-sm font-medium text-gray-900 truncate">
+                                  {application.fullName}
+                                </h3>
+                                <p className="text-xs text-gray-500 truncate">
+                                  {application.email}
+                                </p>
                               </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">
-                                {application.email}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                {application.phoneNumber}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">
-                                {application.nim} - {application.nia}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                {application.faculty} -{" "}
-                                {application.studyProgram}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <select
-                                value={application.status || "SEDANG_DITINJAU"}
-                                onChange={(e) =>
-                                  handleStatusUpdate(
-                                    application.id,
-                                    e.target.value as ApplicationStatus
-                                  )
-                                }
-                                className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                                  application.status === "DITERIMA"
-                                    ? "bg-green-100 text-green-800"
-                                    : application.status === "DITOLAK"
-                                    ? "bg-red-100 text-red-800"
-                                    : application.status === "INTERVIEW"
-                                    ? "bg-blue-100 text-blue-800"
-                                    : application.status === "DAFTAR_PENDEK"
-                                    ? "bg-purple-100 text-purple-800"
-                                    : "bg-yellow-100 text-yellow-800"
-                                }`}
-                              >
-                                <option value="SEDANG_DITINJAU">
-                                  Sedang Ditinjau
-                                </option>
-                                <option value="DAFTAR_PENDEK">
-                                  Daftar Pendek
-                                </option>
-                                <option value="INTERVIEW">Interview</option>
-                                <option value="DITERIMA">Diterima</option>
-                                <option value="DITOLAK">Ditolak</option>
-                              </select>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                              <div className="flex flex-col space-y-1">
-                                <div className="flex space-x-1">
-                                  <button
-                                    onClick={() => {
-                                      setSelectedApplication(application);
-                                      setShowDetailModal(true);
-                                    }}
-                                    className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
-                                    title="Lihat Detail"
-                                  >
-                                    Lihat
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      handleDownloadPDF(application.id)
-                                    }
-                                    className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200"
-                                    title="Download PDF"
-                                  >
-                                    PDF
-                                  </button>
-                                </div>
-                                <div className="flex space-x-1">
-                                  <button
-                                    onClick={() =>
-                                      handleEditApplication(application)
-                                    }
-                                    className="px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200"
-                                    title="Edit Data"
-                                  >
-                                    Edit
-                                  </button>
-                                  <button
-                                    onClick={() => handleDelete(application.id)}
-                                    className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200"
-                                    title="Hapus Data"
-                                  >
-                                    Hapus
-                                  </button>
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                            </div>
+                          </div>
 
-                  {/* Mobile Card View */}
-                  <div className="lg:hidden space-y-4 p-4">
-                    {/* Mobile Select All Controls */}
-                    <div className="bg-gray-100 rounded-lg p-3 flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-3">
-                        <input
-                          type="checkbox"
-                          checked={selectAll}
-                          onChange={handleSelectAll}
-                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                        />
-                        <span className="text-sm text-gray-700">
-                          {selectAll
-                            ? `Semua ${applications.length} data dipilih`
-                            : `Pilih semua (${applications.length} data)`}
-                        </span>
-                      </div>
-                      {selectedApplications.length > 0 && (
-                        <span className="text-xs text-indigo-600 font-medium">
-                          {selectedApplications.length} terpilih
-                        </span>
-                      )}
-                    </div>
-                    {currentApplications.map((application) => (
-                      <div
-                        key={application.id}
-                        className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"
-                      >
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center space-x-3 flex-1 min-w-0">
-                            <input
-                              type="checkbox"
-                              checked={selectedApplications.includes(
-                                application.id
-                              )}
-                              onChange={() =>
-                                handleSelectApplication(application.id)
-                              }
-                              className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 flex-shrink-0"
-                            />
-                            <div className="min-w-0 flex-1">
-                              <h3 className="text-sm font-medium text-gray-900 truncate">
-                                {application.fullName}
-                              </h3>
-                              <p className="text-xs text-gray-500 truncate">
-                                {application.email}
+                          <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+                            <div>
+                              <span className="font-medium text-gray-500">
+                                NIM/NIA:
+                              </span>
+                              <p className="text-gray-900 truncate">
+                                {application.nim} - {application.nia}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="font-medium text-gray-500">
+                                Telepon:
+                              </span>
+                              <p className="text-gray-900 truncate">
+                                {application.phoneNumber}
+                              </p>
+                            </div>
+                            <div className="col-span-2">
+                              <span className="font-medium text-gray-500">
+                                Program:
+                              </span>
+                              <p className="text-gray-900 truncate">
+                                {application.studyProgram}
                               </p>
                             </div>
                           </div>
-                        </div>
 
-                        <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-                          <div>
-                            <span className="font-medium text-gray-500">
-                              NIM/NIA:
-                            </span>
-                            <p className="text-gray-900 truncate">
-                              {application.nim} - {application.nia}
-                            </p>
-                          </div>
-                          <div>
-                            <span className="font-medium text-gray-500">
-                              Telepon:
-                            </span>
-                            <p className="text-gray-900 truncate">
-                              {application.phoneNumber}
-                            </p>
-                          </div>
-                          <div className="col-span-2">
-                            <span className="font-medium text-gray-500">
-                              Program:
-                            </span>
-                            <p className="text-gray-900 truncate">
-                              {application.studyProgram}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Status dan Actions dalam satu baris */}
-                        <div className="flex items-center justify-between gap-2">
-                          <select
-                            value={application.status || "SEDANG_DITINJAU"}
-                            onChange={(e) =>
-                              handleStatusUpdate(
-                                application.id,
-                                e.target.value as ApplicationStatus
-                              )
-                            }
-                            className={`px-2 py-1 rounded text-xs font-semibold border-0 focus:ring-1 focus:ring-indigo-500 ${
-                              application.status === "DITERIMA"
-                                ? "bg-green-100 text-green-800"
-                                : application.status === "DITOLAK"
-                                ? "bg-red-100 text-red-800"
-                                : application.status === "INTERVIEW"
-                                ? "bg-blue-100 text-blue-800"
-                                : application.status === "DAFTAR_PENDEK"
-                                ? "bg-purple-100 text-purple-800"
-                                : "bg-yellow-100 text-yellow-800"
-                            }`}
-                          >
-                            <option value="SEDANG_DITINJAU">
-                              Sedang Ditinjau
-                            </option>
-                            <option value="DAFTAR_PENDEK">Daftar Pendek</option>
-                            <option value="INTERVIEW">Interview</option>
-                            <option value="DITERIMA">Diterima</option>
-                            <option value="DITOLAK">Ditolak</option>
-                          </select>
-
-                          {/* Mobile Actions Dropdown */}
-                          <div className="relative">
+                          {/* Status dan Actions dalam satu baris */}
+                          <div className="flex items-center justify-between gap-2">
                             <select
-                              onChange={(e) => {
-                                const value = e.target.value;
-                                if (value === "detail") {
-                                  setSelectedApplication(application);
-                                  setShowDetailModal(true);
-                                } else if (value === "pdf") {
-                                  handleDownloadPDF(application.id);
-                                } else if (value === "edit") {
-                                  handleEditApplication(application);
-                                } else if (value === "delete") {
-                                  if (
-                                    confirm(
-                                      `Apakah Anda yakin ingin menghapus data pendaftaran ${application.fullName}?`
-                                    )
-                                  ) {
-                                    handleDelete(application.id);
-                                  }
-                                }
-                                e.target.value = "";
-                              }}
-                              className="px-2 py-1 text-xs bg-gray-100 border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                              defaultValue=""
+                              value={application.status || "SEDANG_DITINJAU"}
+                              onChange={(e) =>
+                                handleStatusUpdate(
+                                  application.id,
+                                  e.target.value as ApplicationStatus
+                                )
+                              }
+                              className={`px-2 py-1 rounded text-xs font-semibold border-0 focus:ring-1 focus:ring-indigo-500 ${
+                                application.status === "DITERIMA"
+                                  ? "bg-green-100 text-green-800"
+                                  : application.status === "DITOLAK"
+                                  ? "bg-red-100 text-red-800"
+                                  : application.status === "INTERVIEW"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : application.status === "DAFTAR_PENDEK"
+                                  ? "bg-purple-100 text-purple-800"
+                                  : "bg-yellow-100 text-yellow-800"
+                              }`}
                             >
-                              <option value="">Aksi</option>
-                              <option value="detail">📋 Lihat Detail</option>
-                              <option value="pdf">📄 Download PDF</option>
-                              <option value="edit">✏️ Edit Data</option>
-                              <option value="delete">🗑️ Hapus</option>
+                              <option value="SEDANG_DITINJAU">
+                                Sedang Ditinjau
+                              </option>
+                              <option value="DAFTAR_PENDEK">
+                                Daftar Pendek
+                              </option>
+                              <option value="INTERVIEW">Interview</option>
+                              <option value="DITERIMA">Diterima</option>
+                              <option value="DITOLAK">Ditolak</option>
                             </select>
+
+                            {/* Mobile Actions Dropdown */}
+                            <div className="relative">
+                              <select
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  if (value === "detail") {
+                                    setSelectedApplication(application);
+                                    setShowDetailModal(true);
+                                  } else if (value === "pdf") {
+                                    handleDownloadPDF(application.id);
+                                  } else if (value === "edit") {
+                                    handleEditApplication(application);
+                                  } else if (value === "delete") {
+                                    if (
+                                      confirm(
+                                        `Apakah Anda yakin ingin menghapus data pendaftaran ${application.fullName}?`
+                                      )
+                                    ) {
+                                      handleDelete(application.id);
+                                    }
+                                  }
+                                  e.target.value = "";
+                                }}
+                                className="px-2 py-1 text-xs bg-gray-100 border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                                defaultValue=""
+                              >
+                                <option value="">Aksi</option>
+                                <option value="detail">📋 Lihat Detail</option>
+                                <option value="pdf">📄 Download PDF</option>
+                                <option value="edit">✏️ Edit Data</option>
+                                <option value="delete">🗑️ Hapus</option>
+                              </select>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
 
-                  {/* Pagination */}
-                  <div className="mt-6 px-4 sm:px-0">
-                    <Pagination
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      itemsPerPage={applicationsPerPage}
-                      totalItems={pagination?.total || 0}
-                      onPageChange={setCurrentPage}
-                      onItemsPerPageChange={(newLimit) => {
-                        setApplicationsPerPage(newLimit);
-                        setCurrentPage(1);
-                      }}
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-          </>
-        )}
+                    {/* Pagination */}
+                    <div className="mt-6 px-4 sm:px-0">
+                      <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        itemsPerPage={applicationsPerPage}
+                        totalItems={pagination?.total || 0}
+                        onPageChange={setCurrentPage}
+                        onItemsPerPageChange={(newLimit) => {
+                          setApplicationsPerPage(newLimit);
+                          setCurrentPage(1);
+                        }}
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Application Detail Modal */}

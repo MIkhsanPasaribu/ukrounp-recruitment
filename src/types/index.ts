@@ -97,6 +97,9 @@ export interface ApplicationData extends FormData {
   id: string;
 }
 
+// Alias untuk kompatibilitas
+export type Application = ApplicationData;
+
 // Prisma-compatible types
 export type Gender = "LAKI_LAKI" | "PEREMPUAN";
 export type EducationLevel = "" | "S1" | "D4" | "D3";
