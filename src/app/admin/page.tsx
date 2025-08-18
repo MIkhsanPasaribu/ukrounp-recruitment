@@ -38,7 +38,15 @@ export default function AdminPage() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [applicationsPerPage, setApplicationsPerPage] = useState(10);
+  const [applicationsPerPage, setApplicationsPerPage] = useState(20); // Increase default
+  const [pagination, setPagination] = useState<{
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  } | null>(null);
 
   // Check for stored token on component mount
   useEffect(() => {
@@ -102,40 +110,102 @@ export default function AdminPage() {
     }
   }, [token]);
 
-  // Function to fetch applications
-  const fetchApplications = useCallback(async () => {
-    if (!token) return;
+  // Function to fetch applications with pagination dan timeout
+  const fetchApplications = useCallback(
+    async (page = 1, limit = 20, search = "", status = "all") => {
+      if (!token) return;
 
-    try {
-      setLoading(true);
-      const response = await fetch("/api/admin/applications", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      try {
+        setLoading(true);
+        setError("");
 
-      if (response.ok) {
-        const data = await response.json();
-        setApplications(data.applications || []);
-      } else {
-        setError("Error dalam mengambil data aplikasi");
+        // Create AbortController untuk timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+        const params = new URLSearchParams({
+          page: page.toString(),
+          limit: limit.toString(),
+          lightweight: "false", // Use full data for admin view
+        });
+
+        if (search) params.append("search", search);
+        if (status !== "all") params.append("status", status);
+
+        const response = await fetch(`/api/admin/applications?${params}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          const data = await response.json();
+          setApplications(data.applications || []);
+          setPagination(data.pagination || null);
+        } else {
+          const errorData = await response.json();
+          setError(errorData.error || "Error dalam mengambil data aplikasi");
+        }
+      } catch (error: unknown) {
+        console.error("Error fetching applications:", error);
+        if (error instanceof Error && error.name === "AbortError") {
+          setError(
+            "Request timeout - Silakan coba lagi atau gunakan filter untuk mengurangi data"
+          );
+        } else {
+          setError("Error dalam mengambil data aplikasi - Silakan coba lagi");
+        }
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error fetching applications:", error);
-      setError("Error dalam mengambil data aplikasi");
-    } finally {
-      setLoading(false);
-    }
-  }, [token]);
+    },
+    [token]
+  );
 
-  // Fetch data when authenticated
+  // Fetch data when authenticated - initial load
   useEffect(() => {
     if (isAuthenticated && token) {
       fetchRegistrationStatus();
-      fetchApplications();
+      fetchApplications(
+        currentPage,
+        applicationsPerPage,
+        searchTerm,
+        statusFilter
+      );
     }
-  }, [isAuthenticated, token, fetchApplications, fetchRegistrationStatus]);
+  }, [
+    isAuthenticated,
+    token,
+    fetchRegistrationStatus,
+    currentPage,
+    applicationsPerPage,
+    searchTerm,
+    statusFilter,
+    fetchApplications,
+  ]);
+
+  // Debounced search effect
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      if (isAuthenticated && token) {
+        setCurrentPage(1); // Reset to first page on search
+        fetchApplications(1, applicationsPerPage, searchTerm, statusFilter);
+      }
+    }, 500);
+
+    return () => clearTimeout(debounceTimer);
+  }, [
+    searchTerm,
+    statusFilter,
+    isAuthenticated,
+    token,
+    fetchApplications,
+    applicationsPerPage,
+  ]);
 
   // Function to toggle registration status
   const toggleRegistrationStatus = async () => {
@@ -280,28 +350,15 @@ export default function AdminPage() {
     }
   };
 
-  // Filter applications
-  const filteredApplications = applications.filter((app) => {
-    const matchesSearch =
-      app.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.nim?.toLowerCase().includes(searchTerm.toLowerCase());
+  // Server-side filtering - tidak perlu filter di client
+  // applications sudah di-filter di server berdasarkan searchTerm dan statusFilter
+  const filteredApplications = applications;
 
-    const matchesStatus = statusFilter === "all" || app.status === statusFilter;
+  // Server-side pagination - tidak perlu slice di client
+  const currentApplications = applications; // Data sudah di-paginate di server
 
-    return matchesSearch && matchesStatus;
-  });
-
-  // Pagination
-  const totalPages = Math.ceil(
-    filteredApplications.length / applicationsPerPage
-  );
-  const indexOfLastApplication = currentPage * applicationsPerPage;
-  const indexOfFirstApplication = indexOfLastApplication - applicationsPerPage;
-  const currentApplications = filteredApplications.slice(
-    indexOfFirstApplication,
-    indexOfLastApplication
-  );
+  // Get total pages dari API response
+  const totalPages = pagination?.totalPages || 1;
 
   // Handle selection
   const handleSelectApplication = (id: string) => {
@@ -590,7 +647,46 @@ export default function AdminPage() {
                   Memuat data pendaftaran...
                 </div>
               ) : error ? (
-                <div className="p-8 text-center text-red-600">{error}</div>
+                <div className="p-8 text-center">
+                  <div className="max-w-md mx-auto">
+                    <div className="text-red-600 mb-4">
+                      <svg
+                        className="w-12 h-12 mx-auto mb-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z"
+                        />
+                      </svg>
+                      <p className="text-lg font-semibold">{error}</p>
+                    </div>
+                    <div className="space-y-3">
+                      <button
+                        onClick={() =>
+                          fetchApplications(
+                            currentPage,
+                            applicationsPerPage,
+                            searchTerm,
+                            statusFilter
+                          )
+                        }
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        disabled={loading}
+                      >
+                        {loading ? "Mencoba ulang..." : "Coba Lagi"}
+                      </button>
+                      <p className="text-sm text-gray-600">
+                        Tips: Coba gunakan filter untuk mengurangi jumlah data
+                        yang dimuat
+                      </p>
+                    </div>
+                  </div>
+                </div>
               ) : (
                 <>
                   {/* Desktop Table View */}
@@ -761,8 +857,8 @@ export default function AdminPage() {
                         />
                         <span className="text-sm text-gray-700">
                           {selectAll
-                            ? `Semua ${filteredApplications.length} data dipilih`
-                            : `Pilih semua (${filteredApplications.length} data)`}
+                            ? `Semua ${applications.length} data dipilih`
+                            : `Pilih semua (${applications.length} data)`}
                         </span>
                       </div>
                       {selectedApplications.length > 0 && (
@@ -901,9 +997,12 @@ export default function AdminPage() {
                       currentPage={currentPage}
                       totalPages={totalPages}
                       itemsPerPage={applicationsPerPage}
-                      totalItems={filteredApplications.length}
+                      totalItems={pagination?.total || 0}
                       onPageChange={setCurrentPage}
-                      onItemsPerPageChange={setApplicationsPerPage}
+                      onItemsPerPageChange={(newLimit) => {
+                        setApplicationsPerPage(newLimit);
+                        setCurrentPage(1);
+                      }}
                     />
                   </div>
                 </>
