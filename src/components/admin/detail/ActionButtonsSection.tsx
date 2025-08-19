@@ -149,9 +149,7 @@ export default function ActionButtonsSection({
             <p className="text-red-800 font-medium mb-2">
               Anda akan menghapus data pendaftar:
             </p>
-            <p className="text-red-900 font-bold text-lg">
-              {data.fullName}
-            </p>
+            <p className="text-red-900 font-bold text-lg">{data.fullName}</p>
             <p className="text-red-700 text-sm mt-2">
               NIA: {data.nia || "Belum dibuat"} •{" "}
               {data.faculty || "Tidak tersedia"}

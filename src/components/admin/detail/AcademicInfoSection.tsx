@@ -130,16 +130,14 @@ export default function AcademicInfoSection({
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <p className="text-green-800 leading-relaxed">
             <span className="font-semibold">{data.fullName}</span> adalah
-            mahasiswa {data.educationLevel || "jenjang tidak diketahui"}{" "}
-            di{" "}
+            mahasiswa {data.educationLevel || "jenjang tidak diketahui"} di{" "}
             <span className="font-medium">
               {data.studyProgram || "Program Studi tidak diketahui"}
             </span>
             ,{" "}
             {data.department && (
               <>
-                Jurusan{" "}
-                <span className="font-medium">{data.department}</span>,{" "}
+                Jurusan <span className="font-medium">{data.department}</span>,{" "}
               </>
             )}
             <span className="font-medium">
@@ -150,10 +148,7 @@ export default function AcademicInfoSection({
               <>
                 {" "}
                 Sebelumnya bersekolah di{" "}
-                <span className="font-medium">
-                  {data.previousSchool}
-                </span>
-                .
+                <span className="font-medium">{data.previousSchool}</span>.
               </>
             )}
           </p>

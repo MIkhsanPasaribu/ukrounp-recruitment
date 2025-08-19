@@ -29,8 +29,7 @@ export default function OverviewSection({
   ] as const;
 
   const currentStatus =
-    statusOptions.find((s) => s.value === data.status) ||
-    statusOptions[0];
+    statusOptions.find((s) => s.value === data.status) || statusOptions[0];
 
   return (
     <div className="space-y-6">
@@ -146,9 +145,7 @@ export default function OverviewSection({
           </div>
           <div className="space-y-2 text-sm">
             <div>
-              <span className="font-medium text-gray-900">
-                {data.fullName}
-              </span>
+              <span className="font-medium text-gray-900">{data.fullName}</span>
               <br />
               <span className="text-gray-600">
                 {data.nickname && `(${data.nickname})`}
@@ -182,16 +179,12 @@ export default function OverviewSection({
           </div>
           <div className="space-y-2 text-sm">
             <div>
-              <span className="font-medium text-gray-900">
-                {data.faculty}
-              </span>
+              <span className="font-medium text-gray-900">{data.faculty}</span>
             </div>
             <div className="text-gray-600">{data.department}</div>
             <div className="text-gray-600">{data.studyProgram}</div>
             {data.nim && (
-              <div className="text-gray-600 font-mono">
-                NIM: {data.nim}
-              </div>
+              <div className="text-gray-600 font-mono">NIM: {data.nim}</div>
             )}
           </div>
         </div>

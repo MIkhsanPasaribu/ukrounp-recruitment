@@ -377,10 +377,7 @@ export default function PersonalInfoSection({
 
           {data.phoneNumber && (
             <a
-              href={`https://wa.me/${data.phoneNumber.replace(
-                /[^0-9]/g,
-                ""
-              )}`}
+              href={`https://wa.me/${data.phoneNumber.replace(/[^0-9]/g, "")}`}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"

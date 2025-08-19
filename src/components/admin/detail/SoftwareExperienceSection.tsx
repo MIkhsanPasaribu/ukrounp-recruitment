@@ -151,8 +151,7 @@ export default function SoftwareExperienceSection({
     (total, category) =>
       total +
       category.software.filter(
-        (sw) =>
-          data.software?.[sw.key as keyof typeof data.software]
+        (sw) => data.software?.[sw.key as keyof typeof data.software]
       ).length,
     0
   );
@@ -222,10 +221,7 @@ export default function SoftwareExperienceSection({
       <div className="space-y-6">
         {softwareCategories.map((category, categoryIndex) => {
           const categoryExperience = category.software.filter(
-            (sw) =>
-              data.software?.[
-                sw.key as keyof typeof data.software
-              ]
+            (sw) => data.software?.[sw.key as keyof typeof data.software]
           ).length;
 
           return (
@@ -427,8 +423,8 @@ export default function SoftwareExperienceSection({
 
         <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4">
           <p className="text-purple-800 leading-relaxed">
-            <span className="font-semibold">{data.fullName}</span>{" "}
-            memiliki pengalaman dengan{" "}
+            <span className="font-semibold">{data.fullName}</span> memiliki
+            pengalaman dengan{" "}
             <span className="font-bold">{experiencedSoftware}</span> dari{" "}
             <span className="font-bold">{totalSoftware}</span> software yang
             tercantum ({Math.round((experiencedSoftware / totalSoftware) * 100)}
