@@ -3,14 +3,21 @@
 import { ApplicationData } from "@/types";
 
 interface EssaySectionProps {
-  application: ApplicationData;
+  data: ApplicationData;
 }
 
-export default function EssaySection({ application }: EssaySectionProps) {
+export default function EssaySection({ data }: EssaySectionProps) {
+  // Debug logging untuk melihat data essay
+  console.log("EssaySection data:", {
+    motivation: data.motivation,
+    futurePlans: data.futurePlans,
+    whyYouShouldBeAccepted: data.whyYouShouldBeAccepted,
+  });
+
   const essays = [
     {
       title: "Motivasi Bergabung dengan Robotik",
-      content: application.motivation,
+      content: data.motivation,
       icon: "🎯",
       color: "blue",
       description:
@@ -18,7 +25,7 @@ export default function EssaySection({ application }: EssaySectionProps) {
     },
     {
       title: "Rencana Setelah Bergabung",
-      content: application.futurePlans,
+      content: data.futurePlans,
       icon: "🚀",
       color: "green",
       description:
@@ -26,7 +33,7 @@ export default function EssaySection({ application }: EssaySectionProps) {
     },
     {
       title: "Alasan Anda Layak Diterima",
-      content: application.whyYouShouldBeAccepted,
+      content: data.whyYouShouldBeAccepted,
       icon: "⭐",
       color: "purple",
       description:

@@ -3,40 +3,40 @@
 import { ApplicationData } from "@/types";
 
 interface AcademicInfoSectionProps {
-  application: ApplicationData;
+  data: ApplicationData;
 }
 
 export default function AcademicInfoSection({
-  application,
+  data,
 }: AcademicInfoSectionProps) {
   const academicFields = [
     {
       label: "Fakultas",
-      value: application.faculty,
+      value: data.faculty,
       icon: "🏛️",
       description: "Fakultas tempat program studi berada",
     },
     {
       label: "Jurusan",
-      value: application.department,
+      value: data.department,
       icon: "📘",
       description: "Jurusan atau departemen akademik",
     },
     {
       label: "Program Studi",
-      value: application.studyProgram,
+      value: data.studyProgram,
       icon: "🎯",
       description: "Program studi yang sedang diambil",
     },
     {
       label: "Jenjang Pendidikan",
-      value: application.educationLevel,
+      value: data.educationLevel,
       icon: "🎓",
       description: "Tingkat pendidikan saat ini",
     },
     {
       label: "Sekolah Asal",
-      value: application.previousSchool,
+      value: data.previousSchool,
       icon: "🏫",
       description: "Institusi pendidikan sebelumnya",
     },
@@ -129,29 +129,29 @@ export default function AcademicInfoSection({
 
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <p className="text-green-800 leading-relaxed">
-            <span className="font-semibold">{application.fullName}</span> adalah
-            mahasiswa {application.educationLevel || "jenjang tidak diketahui"}{" "}
+            <span className="font-semibold">{data.fullName}</span> adalah
+            mahasiswa {data.educationLevel || "jenjang tidak diketahui"}{" "}
             di{" "}
             <span className="font-medium">
-              {application.studyProgram || "Program Studi tidak diketahui"}
+              {data.studyProgram || "Program Studi tidak diketahui"}
             </span>
             ,{" "}
-            {application.department && (
+            {data.department && (
               <>
                 Jurusan{" "}
-                <span className="font-medium">{application.department}</span>,{" "}
+                <span className="font-medium">{data.department}</span>,{" "}
               </>
             )}
             <span className="font-medium">
-              {application.faculty || "Fakultas tidak diketahui"}
+              {data.faculty || "Fakultas tidak diketahui"}
             </span>
             .
-            {application.previousSchool && (
+            {data.previousSchool && (
               <>
                 {" "}
                 Sebelumnya bersekolah di{" "}
                 <span className="font-medium">
-                  {application.previousSchool}
+                  {data.previousSchool}
                 </span>
                 .
               </>

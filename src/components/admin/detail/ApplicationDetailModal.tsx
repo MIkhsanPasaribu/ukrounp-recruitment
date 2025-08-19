@@ -140,25 +140,25 @@ export default function ApplicationDetailModal({
       case "overview":
         return (
           <OverviewSection
-            application={currentData}
+            data={currentData}
             onStatusChange={handleStatusChange}
             isUpdating={loading || isRefreshing}
           />
         );
       case "personal":
-        return <PersonalInfoSection application={currentData} />;
+        return <PersonalInfoSection data={currentData} />;
       case "academic":
-        return <AcademicInfoSection application={currentData} />;
+        return <AcademicInfoSection data={currentData} />;
       case "software":
-        return <SoftwareExperienceSection application={currentData} />;
+        return <SoftwareExperienceSection data={currentData} />;
       case "essays":
-        return <EssaySection application={currentData} />;
+        return <EssaySection data={currentData} />;
       case "files":
-        return <FilesSection application={currentData} />;
+        return <FilesSection data={currentData} />;
       case "actions":
         return (
           <ActionButtonsSection
-            application={currentData}
+            data={currentData}
             onStatusUpdate={handleStatusChange}
             onDownloadPDF={handleDownloadPDF}
             onDelete={handleDelete}
@@ -168,7 +168,7 @@ export default function ApplicationDetailModal({
       default:
         return (
           <OverviewSection
-            application={currentData}
+            data={currentData}
             onStatusChange={handleStatusChange}
           />
         );
@@ -193,7 +193,7 @@ export default function ApplicationDetailModal({
       >
         {/* Modal Header */}
         <DetailModalHeader
-          application={currentData}
+          data={currentData}
           onClose={handleClose}
           isLoading={loading || isRefreshing}
         />

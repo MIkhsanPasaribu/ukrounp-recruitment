@@ -3,11 +3,11 @@
 import { ApplicationData } from "@/types";
 
 interface SoftwareExperienceSectionProps {
-  application: ApplicationData;
+  data: ApplicationData;
 }
 
 export default function SoftwareExperienceSection({
-  application,
+  data,
 }: SoftwareExperienceSectionProps) {
   const softwareCategories = [
     {
@@ -152,7 +152,7 @@ export default function SoftwareExperienceSection({
       total +
       category.software.filter(
         (sw) =>
-          application.software?.[sw.key as keyof typeof application.software]
+          data.software?.[sw.key as keyof typeof data.software]
       ).length,
     0
   );
@@ -223,8 +223,8 @@ export default function SoftwareExperienceSection({
         {softwareCategories.map((category, categoryIndex) => {
           const categoryExperience = category.software.filter(
             (sw) =>
-              application.software?.[
-                sw.key as keyof typeof application.software
+              data.software?.[
+                sw.key as keyof typeof data.software
               ]
           ).length;
 
@@ -304,8 +304,8 @@ export default function SoftwareExperienceSection({
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {category.software.map((software, softwareIndex) => {
                     const hasExperience =
-                      application.software?.[
-                        software.key as keyof typeof application.software
+                      data.software?.[
+                        software.key as keyof typeof data.software
                       ];
 
                     return (
@@ -405,7 +405,7 @@ export default function SoftwareExperienceSection({
       </div>
 
       {/* Additional Software */}
-      {application.software?.others && (
+      {data.software?.others && (
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           <h4 className="font-semibold text-gray-900 text-lg mb-4 flex items-center gap-2">
             <span className="text-xl">🔧</span>
@@ -413,7 +413,7 @@ export default function SoftwareExperienceSection({
           </h4>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-blue-800 leading-relaxed">
-              {application.software.others}
+              {data.software.others}
             </p>
           </div>
         </div>
@@ -427,7 +427,7 @@ export default function SoftwareExperienceSection({
 
         <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4">
           <p className="text-purple-800 leading-relaxed">
-            <span className="font-semibold">{application.fullName}</span>{" "}
+            <span className="font-semibold">{data.fullName}</span>{" "}
             memiliki pengalaman dengan{" "}
             <span className="font-bold">{experiencedSoftware}</span> dari{" "}
             <span className="font-bold">{totalSoftware}</span> software yang

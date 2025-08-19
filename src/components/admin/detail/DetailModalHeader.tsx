@@ -3,13 +3,13 @@
 import { ApplicationData } from "@/types";
 
 interface DetailModalHeaderProps {
-  application: ApplicationData;
+  data: ApplicationData;
   onClose: () => void;
   isLoading?: boolean;
 }
 
 export default function DetailModalHeader({
-  application,
+  data,
   onClose,
   isLoading = false,
 }: DetailModalHeaderProps) {
@@ -58,8 +58,8 @@ export default function DetailModalHeader({
                   />
                 </svg>
                 Dikirim:{" "}
-                {application.submittedAt
-                  ? new Date(application.submittedAt).toLocaleString("id-ID", {
+                {data.submittedAt
+                  ? new Date(data.submittedAt).toLocaleString("id-ID", {
                       year: "numeric",
                       month: "short",
                       day: "numeric",
@@ -84,7 +84,7 @@ export default function DetailModalHeader({
                     d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
                   />
                 </svg>
-                ID: <span className="font-mono">{application.id}</span>
+                ID: <span className="font-mono">{data.id}</span>
               </span>
             </div>
           </div>
@@ -96,29 +96,29 @@ export default function DetailModalHeader({
         <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm">
           <div
             className={`w-2 h-2 rounded-full ${
-              application.status === "DITERIMA"
+              data.status === "DITERIMA"
                 ? "bg-green-500"
-                : application.status === "DITOLAK"
+                : data.status === "DITOLAK"
                 ? "bg-red-500"
-                : application.status === "INTERVIEW"
+                : data.status === "INTERVIEW"
                 ? "bg-purple-500"
-                : application.status === "DAFTAR_PENDEK"
+                : data.status === "DAFTAR_PENDEK"
                 ? "bg-blue-500"
                 : "bg-yellow-500"
             }`}
           ></div>
           <span className="text-sm font-medium text-gray-700">
-            {application.status === "SEDANG_DITINJAU"
+            {data.status === "SEDANG_DITINJAU"
               ? "Sedang Ditinjau"
-              : application.status === "DAFTAR_PENDEK"
+              : data.status === "DAFTAR_PENDEK"
               ? "Daftar Pendek"
-              : application.status === "INTERVIEW"
+              : data.status === "INTERVIEW"
               ? "Interview"
-              : application.status === "DITERIMA"
+              : data.status === "DITERIMA"
               ? "Diterima"
-              : application.status === "DITOLAK"
+              : data.status === "DITOLAK"
               ? "Ditolak"
-              : application.status || "Tidak Diketahui"}
+              : data.status || "Tidak Diketahui"}
           </span>
         </div>
 

@@ -3,11 +3,11 @@
 import { ApplicationData } from "@/types";
 
 interface PersonalInfoSectionProps {
-  application: ApplicationData;
+  data: ApplicationData;
 }
 
 export default function PersonalInfoSection({
-  application,
+  data,
 }: PersonalInfoSectionProps) {
   const formatGender = (gender?: string) => {
     switch (gender) {
@@ -42,26 +42,26 @@ export default function PersonalInfoSection({
   const personalFields = [
     {
       label: "Nama Lengkap",
-      value: application.fullName,
+      value: data.fullName,
       icon: "👤",
       type: "text" as const,
     },
     {
       label: "Nama Panggilan",
-      value: application.nickname,
+      value: data.nickname,
       icon: "😊",
       type: "text" as const,
     },
     {
       label: "Jenis Kelamin",
-      value: formatGender(application.gender),
+      value: formatGender(data.gender),
       icon: "⚧️",
       type: "text" as const,
     },
     {
       label: "Tanggal Lahir",
-      value: application.birthDate
-        ? new Date(application.birthDate).toLocaleDateString("id-ID", {
+      value: data.birthDate
+        ? new Date(data.birthDate).toLocaleDateString("id-ID", {
             year: "numeric",
             month: "long",
             day: "numeric",
@@ -69,25 +69,25 @@ export default function PersonalInfoSection({
         : null,
       icon: "🎂",
       type: "date" as const,
-      additional: application.birthDate
-        ? `(${calculateAge(application.birthDate)} tahun)`
+      additional: data.birthDate
+        ? `(${calculateAge(data.birthDate)} tahun)`
         : null,
     },
     {
       label: "Email",
-      value: application.email,
+      value: data.email,
       icon: "📧",
       type: "email" as const,
     },
     {
       label: "Nomor Telepon",
-      value: application.phoneNumber,
+      value: data.phoneNumber,
       icon: "📱",
       type: "phone" as const,
     },
     {
       label: "Alamat di Padang",
-      value: application.padangAddress,
+      value: data.padangAddress,
       icon: "📍",
       type: "address" as const,
     },
@@ -96,13 +96,13 @@ export default function PersonalInfoSection({
   const identityFields = [
     {
       label: "NIM",
-      value: application.nim,
+      value: data.nim,
       icon: "🎓",
       type: "text" as const,
     },
     {
       label: "NIA",
-      value: application.nia,
+      value: data.nia,
       icon: "🆔",
       type: "text" as const,
       highlight: true,
@@ -265,10 +265,10 @@ export default function PersonalInfoSection({
                     Waktu Pendaftaran
                   </label>
                   <div>
-                    {application.submittedAt ? (
+                    {data.submittedAt ? (
                       <div className="space-y-1">
                         <span className="text-green-800 font-medium">
-                          {new Date(application.submittedAt).toLocaleDateString(
+                          {new Date(data.submittedAt).toLocaleDateString(
                             "id-ID",
                             {
                               year: "numeric",
@@ -279,7 +279,7 @@ export default function PersonalInfoSection({
                         </span>
                         <p className="text-sm text-green-600">
                           Pukul{" "}
-                          {new Date(application.submittedAt).toLocaleTimeString(
+                          {new Date(data.submittedAt).toLocaleTimeString(
                             "id-ID",
                             {
                               hour: "2-digit",
@@ -312,7 +312,7 @@ export default function PersonalInfoSection({
                   </label>
                   <div>
                     <span className="text-gray-700 font-mono text-sm break-all">
-                      {application.id}
+                      {data.id}
                     </span>
                   </div>
                 </div>
@@ -329,9 +329,9 @@ export default function PersonalInfoSection({
         </h4>
 
         <div className="flex flex-wrap gap-3">
-          {application.email && (
+          {data.email && (
             <a
-              href={`mailto:${application.email}`}
+              href={`mailto:${data.email}`}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
             >
               <svg
@@ -352,9 +352,9 @@ export default function PersonalInfoSection({
             </a>
           )}
 
-          {application.phoneNumber && (
+          {data.phoneNumber && (
             <a
-              href={`tel:${application.phoneNumber}`}
+              href={`tel:${data.phoneNumber}`}
               className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
             >
               <svg
@@ -375,9 +375,9 @@ export default function PersonalInfoSection({
             </a>
           )}
 
-          {application.phoneNumber && (
+          {data.phoneNumber && (
             <a
-              href={`https://wa.me/${application.phoneNumber.replace(
+              href={`https://wa.me/${data.phoneNumber.replace(
                 /[^0-9]/g,
                 ""
               )}`}

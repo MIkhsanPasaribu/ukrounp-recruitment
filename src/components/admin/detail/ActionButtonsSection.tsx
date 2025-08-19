@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ApplicationData } from "@/types";
 
 interface ActionButtonsSectionProps {
-  application: ApplicationData;
+  data: ApplicationData;
   onStatusUpdate: (
     newStatus:
       | "SEDANG_DITINJAU"
@@ -19,7 +19,7 @@ interface ActionButtonsSectionProps {
 }
 
 export default function ActionButtonsSection({
-  application,
+  data,
   onStatusUpdate,
   onDelete,
   onDownloadPDF,
@@ -105,7 +105,7 @@ export default function ActionButtonsSection({
 
   const getCurrentStatus = () => {
     return (
-      statusOptions.find((status) => status.value === application.status) ||
+      statusOptions.find((status) => status.value === data.status) ||
       statusOptions[0]
     );
   };
@@ -150,11 +150,11 @@ export default function ActionButtonsSection({
               Anda akan menghapus data pendaftar:
             </p>
             <p className="text-red-900 font-bold text-lg">
-              {application.fullName}
+              {data.fullName}
             </p>
             <p className="text-red-700 text-sm mt-2">
-              NIA: {application.nia || "Belum dibuat"} •{" "}
-              {application.faculty || "Tidak tersedia"}
+              NIA: {data.nia || "Belum dibuat"} •{" "}
+              {data.faculty || "Tidak tersedia"}
             </p>
           </div>
 
@@ -290,9 +290,9 @@ export default function ActionButtonsSection({
             <button
               key={status.value}
               onClick={() => handleStatusUpdate(status.value)}
-              disabled={statusLoading || status.value === application.status}
+              disabled={statusLoading || status.value === data.status}
               className={`p-4 border rounded-lg text-left transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
-                status.value === application.status
+                status.value === data.status
                   ? `${getStatusColorClasses(status.color)} border-2`
                   : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
               }`}
@@ -302,7 +302,7 @@ export default function ActionButtonsSection({
                 <div className="flex-1">
                   <div className="font-semibold">
                     {status.label}
-                    {status.value === application.status && (
+                    {status.value === data.status && (
                       <span className="ml-2 text-sm font-normal opacity-75">
                         (Saat ini)
                       </span>

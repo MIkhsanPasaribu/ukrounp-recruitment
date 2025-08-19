@@ -7,7 +7,7 @@ import EnhancedAdminDashboard from "@/components/EnhancedAdminDashboard";
 import AdminLogin from "@/components/AdminLogin";
 import Pagination from "@/components/Pagination";
 import AdminHeaderButtons from "@/components/AdminHeaderButtons";
-import ApplicationDetailModal from "@/components/ApplicationDetailModal";
+import ApplicationDetailModal from "@/components/admin/detail/ApplicationDetailModal";
 import ModifyDataModal from "@/components/ModifyDataModal";
 import { exportApplicationsToCSV } from "@/utils/csvExport";
 

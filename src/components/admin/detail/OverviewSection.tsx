@@ -3,7 +3,7 @@
 import { ApplicationData } from "@/types";
 
 interface OverviewSectionProps {
-  application: ApplicationData;
+  data: ApplicationData;
   onStatusChange?: (
     status:
       | "SEDANG_DITINJAU"
@@ -16,7 +16,7 @@ interface OverviewSectionProps {
 }
 
 export default function OverviewSection({
-  application,
+  data,
   onStatusChange,
   isUpdating = false,
 }: OverviewSectionProps) {
@@ -29,7 +29,7 @@ export default function OverviewSection({
   ] as const;
 
   const currentStatus =
-    statusOptions.find((s) => s.value === application.status) ||
+    statusOptions.find((s) => s.value === data.status) ||
     statusOptions[0];
 
   return (
@@ -98,7 +98,7 @@ export default function OverviewSection({
               Ubah Status
             </label>
             <select
-              value={application.status || "SEDANG_DITINJAU"}
+              value={data.status || "SEDANG_DITINJAU"}
               onChange={(e) => {
                 const newStatus = e.target.value as
                   | "SEDANG_DITINJAU"
@@ -147,15 +147,15 @@ export default function OverviewSection({
           <div className="space-y-2 text-sm">
             <div>
               <span className="font-medium text-gray-900">
-                {application.fullName}
+                {data.fullName}
               </span>
               <br />
               <span className="text-gray-600">
-                {application.nickname && `(${application.nickname})`}
+                {data.nickname && `(${data.nickname})`}
               </span>
             </div>
-            <div className="text-gray-600">📧 {application.email}</div>
-            <div className="text-gray-600">📱 {application.phoneNumber}</div>
+            <div className="text-gray-600">📧 {data.email}</div>
+            <div className="text-gray-600">📱 {data.phoneNumber}</div>
           </div>
         </div>
 
@@ -183,14 +183,14 @@ export default function OverviewSection({
           <div className="space-y-2 text-sm">
             <div>
               <span className="font-medium text-gray-900">
-                {application.faculty}
+                {data.faculty}
               </span>
             </div>
-            <div className="text-gray-600">{application.department}</div>
-            <div className="text-gray-600">{application.studyProgram}</div>
-            {application.nim && (
+            <div className="text-gray-600">{data.department}</div>
+            <div className="text-gray-600">{data.studyProgram}</div>
+            {data.nim && (
               <div className="text-gray-600 font-mono">
-                NIM: {application.nim}
+                NIM: {data.nim}
               </div>
             )}
           </div>
@@ -218,30 +218,30 @@ export default function OverviewSection({
             <h4 className="font-medium text-gray-900">Info Tambahan</h4>
           </div>
           <div className="space-y-2 text-sm">
-            {application.nia && (
+            {data.nia && (
               <div>
                 <span className="text-gray-600">NIA: </span>
                 <span className="font-mono font-medium text-blue-600">
-                  {application.nia}
+                  {data.nia}
                 </span>
               </div>
             )}
-            {application.birthDate && (
+            {data.birthDate && (
               <div className="text-gray-600">
-                🎂 {new Date(application.birthDate).toLocaleDateString("id-ID")}
+                🎂 {new Date(data.birthDate).toLocaleDateString("id-ID")}
               </div>
             )}
-            {application.gender && (
+            {data.gender && (
               <div className="text-gray-600">
                 👤{" "}
-                {application.gender === "LAKI_LAKI"
+                {data.gender === "LAKI_LAKI"
                   ? "Laki-laki"
-                  : application.gender === "PEREMPUAN"
+                  : data.gender === "PEREMPUAN"
                   ? "Perempuan"
                   : "Tidak diketahui"}
               </div>
             )}
-            <div className="text-gray-600">📍 {application.padangAddress}</div>
+            <div className="text-gray-600">📍 {data.padangAddress}</div>
           </div>
         </div>
       </div>
@@ -273,14 +273,14 @@ export default function OverviewSection({
                 Pendaftaran Diterima
               </p>
               <p className="text-xs text-green-600">
-                {application.submittedAt
-                  ? new Date(application.submittedAt).toLocaleString("id-ID")
+                {data.submittedAt
+                  ? new Date(data.submittedAt).toLocaleString("id-ID")
                   : "Waktu tidak tersedia"}
               </p>
             </div>
           </div>
 
-          {application.status !== "SEDANG_DITINJAU" && (
+          {data.status !== "SEDANG_DITINJAU" && (
             <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
               <div className="flex-1">

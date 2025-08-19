@@ -7,7 +7,7 @@ import { useFileViewer } from "@/hooks/admin/useFileViewer";
 import { fileService } from "@/services/fileService";
 
 interface FilesSectionProps {
-  application: ApplicationData;
+  data: ApplicationData;
 }
 
 interface FileViewerModalProps {
@@ -137,11 +137,6 @@ function FileCard({
 
   const [showLoadButton, setShowLoadButton] = useState(true);
 
-  const handleLoadFile = useCallback(async () => {
-    setShowLoadButton(false);
-    await loadFile();
-  }, [loadFile]);
-
   const handleDownload = useCallback(async () => {
     await downloadFile(`${fieldName}-${application.fullName}`);
   }, [downloadFile, fieldName, application.fullName]);
@@ -154,7 +149,17 @@ function FileCard({
 
   // Check if file exists in application data
   const hasFile = application[fieldName as keyof ApplicationData];
-  const isImage = fileType?.startsWith("image/");
+  const isImage =
+    fileType?.startsWith("image/") ||
+    (hasFile &&
+      typeof hasFile === "string" &&
+      hasFile.startsWith("data:image/"));
+
+  // Load file when needed
+  const handleLoadFile = useCallback(async () => {
+    setShowLoadButton(false);
+    await loadFile();
+  }, [loadFile]);
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
@@ -197,6 +202,74 @@ function FileCard({
               />
             </svg>
             <p className="text-sm">File tidak diupload</p>
+          </div>
+        ) : hasFile &&
+          typeof hasFile === "string" &&
+          hasFile.startsWith("data:") ? (
+          <div>
+            {/* Direct base64 preview */}
+            {hasFile.startsWith("data:image/") && (
+              <div className="mb-3">
+                <Image
+                  src={hasFile}
+                  alt={label}
+                  width={200}
+                  height={128}
+                  className="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => onPreview(fieldName, label)}
+                />
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => onPreview(fieldName, label)}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm transition-colors flex items-center justify-center gap-2"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                  />
+                </svg>
+                Lihat
+              </button>
+              <button
+                onClick={handleDownload}
+                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded text-sm transition-colors flex items-center justify-center gap-2"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                Download
+              </button>
+            </div>
           </div>
         ) : showLoadButton && !fileUrl ? (
           <div className="text-center py-6">
@@ -347,7 +420,7 @@ function FileCard({
   );
 }
 
-export default function FilesSection({ application }: FilesSectionProps) {
+export default function FilesSection({ data }: FilesSectionProps) {
   const [previewModal, setPreviewModal] = useState<{
     isOpen: boolean;
     fieldName: string;
@@ -365,7 +438,7 @@ export default function FilesSection({ application }: FilesSectionProps) {
   const handlePreview = useCallback(
     async (fieldName: string, label: string) => {
       try {
-        const result = await fileService.getFile(application.id, fieldName);
+        const result = await fileService.getFile(data.id, fieldName);
         if (result.success && result.file) {
           setPreviewModal({
             isOpen: true,
@@ -379,7 +452,7 @@ export default function FilesSection({ application }: FilesSectionProps) {
         console.error("Error loading file for preview:", error);
       }
     },
-    [application.id]
+    [data.id]
   );
 
   const closePreview = useCallback(() => {
@@ -397,7 +470,7 @@ export default function FilesSection({ application }: FilesSectionProps) {
 
   // Count uploaded files
   const uploadedCount = fileFields.filter(
-    ({ field }) => application[field as keyof ApplicationData]
+    ({ field }) => data[field as keyof ApplicationData]
   ).length;
 
   return (
@@ -444,7 +517,7 @@ export default function FilesSection({ application }: FilesSectionProps) {
             fieldName={field}
             label={label}
             icon={icon}
-            application={application}
+            application={data}
             onPreview={handlePreview}
           />
         ))}

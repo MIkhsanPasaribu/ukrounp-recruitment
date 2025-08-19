@@ -90,8 +90,16 @@ export function useApplicationDetail({
 
         const detailedData = await response.json();
 
+        console.log("useApplicationDetail fetched data:", {
+          success: detailedData.success,
+          hasData: !!detailedData.data,
+          motivation: detailedData.data?.motivation,
+          futurePlans: detailedData.data?.futurePlans,
+          whyYouShouldBeAccepted: detailedData.data?.whyYouShouldBeAccepted,
+        });
+
         setState({
-          data: detailedData,
+          data: detailedData.data || detailedData, // Handle both formats
           loading: false,
           error: null,
           isRefreshing: false,
