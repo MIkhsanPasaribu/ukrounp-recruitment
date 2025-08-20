@@ -39,11 +39,8 @@ export function useApplicationDetail({
 
     heartbeatRef.current = setInterval(async () => {
       try {
-        await fetch("/api/admin/heartbeat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ timestamp: Date.now() }),
-        });
+        // Use adminApi for proper token handling
+        await adminApi.heartbeat();
       } catch (error) {
         console.warn("Heartbeat gagal:", error);
       }
@@ -71,6 +68,37 @@ export function useApplicationDetail({
         const detailedData = (await adminApi.getApplicationDetail(
           applicationId
         )) as any;
+
+        console.log("🔍 useApplicationDetail Raw API Response:", {
+          apiCallUrl: `/api/admin/applications/${applicationId}/detailed`,
+          responseStructure: {
+            hasSuccess: "success" in detailedData,
+            hasData: "data" in detailedData,
+            isDirectObject:
+              !("success" in detailedData) && !("data" in detailedData),
+          },
+          essayFieldsInResponse: {
+            motivation: {
+              inRoot: "motivation" in detailedData,
+              inData: detailedData?.data?.motivation !== undefined,
+              rootValue: detailedData?.motivation,
+              dataValue: detailedData?.data?.motivation,
+            },
+            futurePlans: {
+              inRoot: "futurePlans" in detailedData,
+              inData: detailedData?.data?.futurePlans !== undefined,
+              rootValue: detailedData?.futurePlans,
+              dataValue: detailedData?.data?.futurePlans,
+            },
+            whyYouShouldBeAccepted: {
+              inRoot: "whyYouShouldBeAccepted" in detailedData,
+              inData: detailedData?.data?.whyYouShouldBeAccepted !== undefined,
+              rootValue: detailedData?.whyYouShouldBeAccepted,
+              dataValue: detailedData?.data?.whyYouShouldBeAccepted,
+            },
+          },
+          fullResponse: detailedData,
+        });
 
         console.log("useApplicationDetail fetched data:", {
           success: detailedData?.success || true,

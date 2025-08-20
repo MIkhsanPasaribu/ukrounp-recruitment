@@ -8,34 +8,49 @@ interface EssaySectionProps {
 
 export default function EssaySection({ data }: EssaySectionProps) {
   // Debug logging untuk melihat data essay
-  console.log("🔍 EssaySection Complete Data:", {
+  console.log("🔍 EssaySection Data Analysis:", {
+    // Basic info
     id: data.id,
     fullName: data.fullName,
+
+    // Essay field analysis
     motivation: {
       exists: !!data.motivation,
       type: typeof data.motivation,
       length: data.motivation?.length || 0,
-      content: data.motivation,
+      isEmptyString: data.motivation === "",
+      isNull: data.motivation === null,
+      isUndefined: data.motivation === undefined,
+      value: data.motivation,
     },
     futurePlans: {
       exists: !!data.futurePlans,
       type: typeof data.futurePlans,
       length: data.futurePlans?.length || 0,
-      content: data.futurePlans,
+      isEmptyString: data.futurePlans === "",
+      isNull: data.futurePlans === null,
+      isUndefined: data.futurePlans === undefined,
+      value: data.futurePlans,
     },
     whyYouShouldBeAccepted: {
       exists: !!data.whyYouShouldBeAccepted,
       type: typeof data.whyYouShouldBeAccepted,
       length: data.whyYouShouldBeAccepted?.length || 0,
-      content: data.whyYouShouldBeAccepted,
+      isEmptyString: data.whyYouShouldBeAccepted === "",
+      isNull: data.whyYouShouldBeAccepted === null,
+      isUndefined: data.whyYouShouldBeAccepted === undefined,
+      value: data.whyYouShouldBeAccepted,
     },
+
+    // Complete object structure
     allDataKeys: Object.keys(data),
+    dataSource: "EssaySection received data",
   });
 
   const essays = [
     {
       title: "Motivasi Bergabung dengan Robotik",
-      content: data.motivation,
+      content: data.motivation || "", // Fallback untuk empty string
       icon: "🎯",
       color: "blue",
       description:
@@ -43,7 +58,7 @@ export default function EssaySection({ data }: EssaySectionProps) {
     },
     {
       title: "Rencana Setelah Bergabung",
-      content: data.futurePlans,
+      content: data.futurePlans || "", // Fallback untuk empty string
       icon: "🚀",
       color: "green",
       description:
@@ -51,13 +66,28 @@ export default function EssaySection({ data }: EssaySectionProps) {
     },
     {
       title: "Alasan Anda Layak Diterima",
-      content: data.whyYouShouldBeAccepted,
+      content: data.whyYouShouldBeAccepted || "", // Fallback untuk empty string
       icon: "⭐",
       color: "purple",
       description:
         "Argumen dan kelebihan yang membuat pendaftar layak diterima",
     },
   ];
+
+  // Additional debug untuk essay content
+  console.log(
+    "🔍 EssaySection Essay Array Analysis:",
+    essays.map((essay, index) => ({
+      index,
+      title: essay.title,
+      hasContent: !!essay.content,
+      contentLength: essay.content?.length || 0,
+      contentType: typeof essay.content,
+      contentPreview: essay.content
+        ? essay.content.substring(0, 100) + "..."
+        : "NO CONTENT",
+    }))
+  );
 
   const getColorClasses = (color: string) => {
     const colors = {
@@ -81,32 +111,6 @@ export default function EssaySection({ data }: EssaySectionProps) {
       },
     };
     return colors[color as keyof typeof colors] || colors.blue;
-  };
-
-  const analyzeText = (text?: string) => {
-    if (!text) return { words: 0, characters: 0, sentences: 0 };
-
-    const words = text.trim().split(/\s+/).length;
-    const characters = text.length;
-    const sentences = text
-      .split(/[.!?]+/)
-      .filter((s) => s.trim().length > 0).length;
-
-    return { words, characters, sentences };
-  };
-
-  const getQualityScore = (text?: string) => {
-    if (!text) return 0;
-    const analysis = analyzeText(text);
-
-    // Basic scoring based on length and content
-    let score = 0;
-    if (analysis.words >= 50) score += 25;
-    if (analysis.words >= 100) score += 25;
-    if (analysis.sentences >= 3) score += 25;
-    if (text.length >= 200) score += 25;
-
-    return Math.min(score, 100);
   };
 
   return (
@@ -145,8 +149,6 @@ export default function EssaySection({ data }: EssaySectionProps) {
       <div className="space-y-6">
         {essays.map((essay, index) => {
           const colors = getColorClasses(essay.color);
-          const analysis = analyzeText(essay.content);
-          const qualityScore = getQualityScore(essay.content);
 
           return (
             <div
@@ -155,146 +157,31 @@ export default function EssaySection({ data }: EssaySectionProps) {
             >
               {/* Essay Header */}
               <div className={`${colors.bg} ${colors.border} border-b p-4`}>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={`w-10 h-10 ${colors.header} rounded-lg flex items-center justify-center flex-shrink-0`}
-                    >
-                      <span className="text-lg">{essay.icon}</span>
-                    </div>
-                    <div>
-                      <h4 className={`font-semibold text-lg ${colors.text}`}>
-                        {essay.title}
-                      </h4>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {essay.description}
-                      </p>
-                    </div>
+                <div className="flex items-start gap-3">
+                  <div
+                    className={`w-10 h-10 ${colors.header} rounded-lg flex items-center justify-center flex-shrink-0`}
+                  >
+                    <span className="text-lg">{essay.icon}</span>
                   </div>
-
-                  {/* Quality Score */}
-                  <div className="text-right">
-                    <div className={`text-xl font-bold ${colors.text}`}>
-                      {qualityScore}%
-                    </div>
-                    <div className="text-xs text-gray-500">Kualitas</div>
+                  <div>
+                    <h4 className={`font-semibold text-lg ${colors.text}`}>
+                      {essay.title}
+                    </h4>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {essay.description}
+                    </p>
                   </div>
                 </div>
               </div>
 
               {/* Essay Content */}
               <div className="p-6">
-                {essay.content ? (
-                  <div className="space-y-4">
-                    {/* Content */}
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                      <div className="prose prose-sm max-w-none">
-                        <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">
-                          {essay.content}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Analysis */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
-                        <div className="text-lg font-bold text-blue-700">
-                          {analysis.words}
-                        </div>
-                        <div className="text-xs text-blue-600">Kata</div>
-                      </div>
-
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
-                        <div className="text-lg font-bold text-green-700">
-                          {analysis.characters}
-                        </div>
-                        <div className="text-xs text-green-600">Karakter</div>
-                      </div>
-
-                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 text-center">
-                        <div className="text-lg font-bold text-purple-700">
-                          {analysis.sentences}
-                        </div>
-                        <div className="text-xs text-purple-600">Kalimat</div>
-                      </div>
-
-                      <div
-                        className={`${colors.bg} ${colors.border} rounded-lg p-3 text-center`}
-                      >
-                        <div className={`text-lg font-bold ${colors.text}`}>
-                          {qualityScore}%
-                        </div>
-                        <div className="text-xs text-gray-600">Skor</div>
-                      </div>
-                    </div>
-
-                    {/* Quality Assessment */}
-                    <div
-                      className={`${colors.bg} ${colors.border} rounded-lg p-4`}
-                    >
-                      <h5 className={`font-medium ${colors.text} mb-2`}>
-                        Penilaian Kualitas
-                      </h5>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex items-center justify-between">
-                          <span className="text-gray-600">Panjang jawaban</span>
-                          <span
-                            className={`${
-                              analysis.words >= 100
-                                ? "text-green-600"
-                                : analysis.words >= 50
-                                ? "text-yellow-600"
-                                : "text-red-600"
-                            } font-medium`}
-                          >
-                            {analysis.words >= 100
-                              ? "Sangat Baik"
-                              : analysis.words >= 50
-                              ? "Cukup"
-                              : "Kurang"}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                          <span className="text-gray-600">
-                            Struktur kalimat
-                          </span>
-                          <span
-                            className={`${
-                              analysis.sentences >= 5
-                                ? "text-green-600"
-                                : analysis.sentences >= 3
-                                ? "text-yellow-600"
-                                : "text-red-600"
-                            } font-medium`}
-                          >
-                            {analysis.sentences >= 5
-                              ? "Terstruktur"
-                              : analysis.sentences >= 3
-                              ? "Cukup"
-                              : "Sederhana"}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                          <span className="text-gray-600">Detail konten</span>
-                          <span
-                            className={`${
-                              essay.content.length >= 300
-                                ? "text-green-600"
-                                : essay.content.length >= 150
-                                ? "text-yellow-600"
-                                : "text-red-600"
-                            } font-medium`}
-                          >
-                            {essay.content.length >= 300
-                              ? "Sangat Detail"
-                              : essay.content.length >= 150
-                              ? "Cukup Detail"
-                              : "Kurang Detail"}
-                          </span>
-                        </div>
-                      </div>
+                {essay.content && essay.content.trim().length > 0 ? (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <div className="prose prose-sm max-w-none">
+                      <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">
+                        {essay.content}
+                      </p>
                     </div>
                   </div>
                 ) : (
@@ -325,122 +212,6 @@ export default function EssaySection({ data }: EssaySectionProps) {
             </div>
           );
         })}
-      </div>
-
-      {/* Overall Essay Assessment */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h4 className="font-semibold text-gray-900 text-lg mb-4 flex items-center gap-2">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 text-orange-600"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-            />
-          </svg>
-          Penilaian Keseluruhan Esai
-        </h4>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          {essays.map((essay, index) => {
-            const score = getQualityScore(essay.content);
-            const colors = getColorClasses(essay.color);
-
-            return (
-              <div
-                key={index}
-                className={`${colors.bg} ${colors.border} rounded-lg p-4`}
-              >
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="text-lg">{essay.icon}</span>
-                  <span className={`font-medium ${colors.text}`}>
-                    {essay.title.split(" ").slice(0, 2).join(" ")}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Skor Kualitas</span>
-                  <span className={`font-bold ${colors.text}`}>{score}%</span>
-                </div>
-                <div className="mt-2 w-full bg-white bg-opacity-50 rounded-full h-1.5">
-                  <div
-                    className={`h-1.5 rounded-full transition-all duration-500 ${
-                      essay.color === "blue"
-                        ? "bg-blue-600"
-                        : essay.color === "green"
-                        ? "bg-green-600"
-                        : "bg-purple-600"
-                    }`}
-                    style={{ width: `${score}%` }}
-                  ></div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-lg p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="font-medium text-orange-800">
-              Rata-rata Kualitas Esai
-            </span>
-            <span className="text-xl font-bold text-orange-800">
-              {Math.round(
-                essays.reduce(
-                  (acc, essay) => acc + getQualityScore(essay.content),
-                  0
-                ) / essays.length
-              )}
-              %
-            </span>
-          </div>
-          <div className="w-full bg-orange-200 rounded-full h-2">
-            <div
-              className="bg-orange-600 h-2 rounded-full transition-all duration-500"
-              style={{
-                width: `${
-                  essays.reduce(
-                    (acc, essay) => acc + getQualityScore(essay.content),
-                    0
-                  ) / essays.length
-                }%`,
-              }}
-            ></div>
-          </div>
-
-          <p className="text-sm text-orange-700 mt-3">
-            {(() => {
-              const avgScore =
-                essays.reduce(
-                  (acc, essay) => acc + getQualityScore(essay.content),
-                  0
-                ) / essays.length;
-              const completedEssays = essays.filter(
-                (essay) => essay.content
-              ).length;
-
-              return (
-                <>
-                  Pendaftar telah mengisi <strong>{completedEssays}</strong>{" "}
-                  dari <strong>{essays.length}</strong> esai dengan rata-rata
-                  kualitas <strong>{Math.round(avgScore)}%</strong>.
-                  {avgScore >= 80
-                    ? " Kualitas esai sangat baik dan menunjukkan komitmen tinggi."
-                    : avgScore >= 60
-                    ? " Kualitas esai cukup baik dengan beberapa poin yang dapat diperkuat."
-                    : avgScore >= 40
-                    ? " Kualitas esai perlu ditingkatkan untuk menunjukkan motivasi yang lebih kuat."
-                    : " Esai perlu diperbaiki secara signifikan untuk memenuhi standar penerimaan."}
-                </>
-              );
-            })()}
-          </p>
-        </div>
       </div>
     </div>
   );

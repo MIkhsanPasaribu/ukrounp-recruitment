@@ -28,11 +28,45 @@ export async function GET(
       .single();
 
     if (error || !data) {
+      console.error("🔍 Detailed API - Supabase Error:", { id, error });
       return NextResponse.json(
         { error: "Pendaftaran tidak ditemukan" },
         { status: 404 }
       );
     }
+
+    // Debug logging untuk melihat data esai yang diambil dari database
+    console.log("🔍 Detailed API - Raw Supabase Data:", {
+      id,
+      fullName: data.fullName,
+      essayFields: {
+        motivation: {
+          exists: !!data.motivation,
+          type: typeof data.motivation,
+          length: data.motivation?.length || 0,
+          preview: data.motivation
+            ? data.motivation.substring(0, 100) + "..."
+            : "NO DATA",
+        },
+        futurePlans: {
+          exists: !!data.futurePlans,
+          type: typeof data.futurePlans,
+          length: data.futurePlans?.length || 0,
+          preview: data.futurePlans
+            ? data.futurePlans.substring(0, 100) + "..."
+            : "NO DATA",
+        },
+        whyYouShouldBeAccepted: {
+          exists: !!data.whyYouShouldBeAccepted,
+          type: typeof data.whyYouShouldBeAccepted,
+          length: data.whyYouShouldBeAccepted?.length || 0,
+          preview: data.whyYouShouldBeAccepted
+            ? data.whyYouShouldBeAccepted.substring(0, 100) + "..."
+            : "NO DATA",
+        },
+      },
+      allFieldsFromDB: Object.keys(data),
+    });
 
     // Analyze file uploads and add metadata
     const fileFields = [
