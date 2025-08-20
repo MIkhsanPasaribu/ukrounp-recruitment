@@ -201,4 +201,7 @@ export const adminApi = {
 
   getFile: (applicationId: string, fieldName: string) =>
     apiClient.get(`/api/admin/files/${applicationId}/${fieldName}`),
+
+  heartbeat: () =>
+    apiClient.post("/api/admin/heartbeat", { timestamp: Date.now() }),
 };

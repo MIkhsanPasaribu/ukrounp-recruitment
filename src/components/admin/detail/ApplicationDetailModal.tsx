@@ -63,20 +63,45 @@ export default function ApplicationDetailModal({
   const currentData = detailedData || application;
 
   // Debug logging untuk melihat data yang diterima
-  console.log("🔍 ApplicationDetailModal Data:", {
+  console.log("🔍 ApplicationDetailModal Data Analysis:", {
     hasDetailedData: !!detailedData,
     hasInitialData: !!application,
     currentDataKeys: currentData ? Object.keys(currentData) : [],
+
+    // Essay fields analysis
     essayFields: {
-      motivation: currentData?.motivation,
-      futurePlans: currentData?.futurePlans,
-      whyYouShouldBeAccepted: currentData?.whyYouShouldBeAccepted,
+      motivation: {
+        value: currentData?.motivation,
+        type: typeof currentData?.motivation,
+        exists: !!currentData?.motivation,
+        length: currentData?.motivation?.length || 0,
+      },
+      futurePlans: {
+        value: currentData?.futurePlans,
+        type: typeof currentData?.futurePlans,
+        exists: !!currentData?.futurePlans,
+        length: currentData?.futurePlans?.length || 0,
+      },
+      whyYouShouldBeAccepted: {
+        value: currentData?.whyYouShouldBeAccepted,
+        type: typeof currentData?.whyYouShouldBeAccepted,
+        exists: !!currentData?.whyYouShouldBeAccepted,
+        length: currentData?.whyYouShouldBeAccepted?.length || 0,
+      },
     },
+
+    // File fields
     fileFields: {
       photo: !!currentData?.photo,
       studentCard: !!currentData?.studentCard,
       studyPlanCard: !!currentData?.studyPlanCard,
     },
+
+    // Data source info
+    dataSource: detailedData
+      ? "detailedData from useApplicationDetail"
+      : "initial application prop",
+    fullDataObject: currentData,
   });
 
   // Handle status change with optimistic updates

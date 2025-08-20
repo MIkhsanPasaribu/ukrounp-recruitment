@@ -6,6 +6,8 @@ import { useStreamingData, StreamingProgress } from "./StreamingDataLoader";
 import ApplicationDetailModal from "./admin/detail/ApplicationDetailModal";
 import ModifyDataModal from "./ModifyDataModal";
 import Pagination from "./Pagination";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { adminApi } from "@/services/adminApi";
 
 interface EnhancedAdminDashboardProps {
   initialApplications?: Application[];
@@ -23,6 +25,9 @@ export default function EnhancedAdminDashboard({
   initialApplications = [],
   initialPagination,
 }: EnhancedAdminDashboardProps) {
+  // Admin auth hook
+  const { token } = useAdminAuth();
+
   // State management
   const [applications, setApplications] =
     useState<Application[]>(initialApplications);
@@ -128,13 +133,23 @@ export default function EnhancedAdminDashboard({
       setError(null);
 
       try {
-        const response = await fetch(apiEndpoint);
+        console.log("🔄 Fetching applications with token:", !!token);
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        if (!token) {
+          throw new Error("No authentication token found. Please login again.");
         }
 
-        const data = await response.json();
+        const data = await adminApi.fetchApplications(token, {
+          page: currentPage,
+          limit: 50,
+          search: debouncedSearch,
+          status: statusFilter,
+        });
+
+        console.log("✅ Applications fetched successfully:", {
+          count: data.applications?.length || 0,
+          total: data.pagination?.total || 0,
+        });
 
         if (reset || !useInfiniteScroll) {
           setApplications(data.applications || []);
@@ -148,13 +163,30 @@ export default function EnhancedAdminDashboard({
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Failed to fetch applications";
+        console.error("❌ Error fetching applications:", err);
         setError(errorMessage);
-        console.error("Error fetching applications:", err);
+
+        // If it's an auth error, handle appropriately
+        if (
+          err instanceof Error &&
+          (err.message.includes("401") ||
+            err.message.includes("authentication"))
+        ) {
+          setError("Authentication failed. Please login again.");
+        }
       } finally {
         setLoading(false);
       }
     },
-    [apiEndpoint, useStreaming, useInfiniteScroll, streamingState]
+    [
+      useStreaming,
+      useInfiniteScroll,
+      streamingState,
+      token,
+      currentPage,
+      debouncedSearch,
+      statusFilter,
+    ]
   );
 
   // Effect to fetch data when filters change
