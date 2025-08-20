@@ -1,6 +1,6 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import pTimeout from 'p-timeout';
-import pRetry from 'p-retry';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import pTimeout from "p-timeout";
+import pRetry from "p-retry";
 
 interface ApiClientConfig {
   baseURL?: string;
@@ -19,10 +19,10 @@ export class ApiClient {
     this.retryDelay = config.retryDelay || 1000;
 
     this.instance = axios.create({
-      baseURL: config.baseURL || '',
+      baseURL: config.baseURL || "",
       timeout: config.timeout || 30000, // 30 seconds
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
@@ -31,7 +31,7 @@ export class ApiClient {
       const token = this.getAuthToken();
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
-        config.headers['X-Admin-Token'] = token;
+        config.headers["X-Admin-Token"] = token;
       }
       return config;
     });
@@ -40,7 +40,7 @@ export class ApiClient {
     this.instance.interceptors.response.use(
       (response) => response,
       (error) => {
-        console.error('API Error:', {
+        console.error("API Error:", {
           url: error.config?.url,
           method: error.config?.method,
           status: error.response?.status,
@@ -52,8 +52,8 @@ export class ApiClient {
   }
 
   private getAuthToken(): string | null {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('adminToken');
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("adminToken");
     }
     return null;
   }
@@ -76,14 +76,16 @@ export class ApiClient {
           // Only retry on network errors or 5xx server errors
           if (
             axios.isAxiosError(error) &&
-            (error.code === 'ECONNABORTED' ||
-              error.code === 'NETWORK_ERROR' ||
+            (error.code === "ECONNABORTED" ||
+              error.code === "NETWORK_ERROR" ||
               (error.response && error.response.status >= 500))
           ) {
             throw error;
           }
           // Don't retry on 4xx client errors
-          const abortError = new Error(error instanceof Error ? error.message : 'Client error');
+          const abortError = new Error(
+            error instanceof Error ? error.message : "Client error"
+          );
           Object.assign(abortError, { isAbortError: true });
           throw abortError;
         }
@@ -137,7 +139,7 @@ export class ApiClient {
       () =>
         this.instance.post<T>(url, formData, {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            "Content-Type": "multipart/form-data",
           },
           onUploadProgress: (progressEvent) => {
             if (onProgress && progressEvent.total) {
@@ -160,7 +162,7 @@ export class ApiClient {
     const response = await this.makeRequest(
       () =>
         this.instance.get(url, {
-          responseType: 'blob',
+          responseType: "blob",
           onDownloadProgress: (progressEvent) => {
             if (onProgress && progressEvent.total) {
               const progress = Math.round(
@@ -186,17 +188,17 @@ export const apiClient = new ApiClient({
 // Helper untuk admin API calls
 export const adminApi = {
   updateStatus: (id: string, status: string) =>
-    apiClient.post('/api/admin/update-status', { id, status }),
-  
+    apiClient.post("/api/admin/update-status", { id, status }),
+
   getApplicationDetail: (id: string) =>
     apiClient.get(`/api/admin/applications/${id}/detailed`),
-  
+
   deleteApplication: (id: string) =>
-    apiClient.post('/api/admin/delete-application', { id }),
-  
+    apiClient.post("/api/admin/delete-application", { id }),
+
   downloadPDF: (id: string) =>
     apiClient.downloadFile(`/api/admin/download-pdf/${id}`),
-  
+
   getFile: (applicationId: string, fieldName: string) =>
     apiClient.get(`/api/admin/files/${applicationId}/${fieldName}`),
 };

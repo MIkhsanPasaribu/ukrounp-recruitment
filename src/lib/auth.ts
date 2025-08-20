@@ -59,9 +59,7 @@ export async function generateToken(admin: AdminUser): Promise<string> {
 }
 
 // Verify JWT token
-export function verifyToken(
-  token: string
-): {
+export function verifyToken(token: string): {
   adminId: string;
   username: string;
   email: string;
@@ -214,28 +212,28 @@ export async function getAuthData(request: NextRequest): Promise<{
 }> {
   // Try multiple ways to get token
   let token: string | null = null;
-  
+
   // 1. From Authorization header
   const authHeader = request.headers.get("Authorization");
   if (authHeader && authHeader.startsWith("Bearer ")) {
     token = authHeader.substring(7);
   }
-  
+
   // 2. From X-Admin-Token header
   if (!token) {
     token = request.headers.get("X-Admin-Token");
   }
-  
+
   // 3. From cookies
   if (!token) {
     token = request.cookies.get("adminToken")?.value || null;
   }
-  
+
   console.log("🔑 Auth check:", {
     hasAuthHeader: !!authHeader,
     hasXAdminToken: !!request.headers.get("X-Admin-Token"),
     hasCookie: !!request.cookies.get("adminToken"),
-    finalToken: !!token
+    finalToken: !!token,
   });
 
   if (!token) {

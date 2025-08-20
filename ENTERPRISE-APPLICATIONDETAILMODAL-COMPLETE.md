@@ -9,27 +9,33 @@ Semua bug utama pada ApplicationDetailModal telah diperbaiki dengan implementasi
 ## 🔧 MASALAH YANG DIPERBAIKI
 
 ### 1. ❌ Status Pendaftaran Tidak Bisa Diupdate
+
 **Masalah:** "Gagal mengupdate status. Silakan coba lagi."
 
 **✅ Solusi:**
+
 - Perbaikan pengiriman token autentikasi via header
-- Implementasi API client dengan retry mechanism 
+- Implementasi API client dengan retry mechanism
 - Perbaikan middleware `getAuthData` untuk support multi sumber token
 - Error handling yang lebih robust
 
 ### 2. ❌ Data Esai Tidak Tampil
+
 **Masalah:** Bagian esai kosong padahal data ada di database
 
 **✅ Solusi:**
+
 - Perbaikan data mapping dari API response ke UI components
 - Debug logging untuk tracking data flow
 - Perbaikan props interface di EssaySection
 - Fallback handling untuk berbagai format response
 
 ### 3. ❌ File Upload Tidak Bisa Preview
+
 **Masalah:** Tidak bisa melihat gambar/berkas yang diupload
 
 **✅ Solusi:**
+
 - Perbaikan logic preview file base64
 - Implementasi file streaming dengan progress tracking
 - Cache mechanism untuk performa loading file

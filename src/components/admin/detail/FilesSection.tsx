@@ -149,13 +149,14 @@ function FileCard({
 
   // Check if file exists in application data
   const hasFile = application[fieldName as keyof ApplicationData];
-  
+
   // Debug log untuk melihat data file
   console.log(`File ${fieldName}:`, {
     hasFile: !!hasFile,
     fileType: typeof hasFile,
-    isBase64: typeof hasFile === 'string' && hasFile.startsWith('data:'),
-    preview: typeof hasFile === 'string' ? hasFile.substring(0, 50) + '...' : null
+    isBase64: typeof hasFile === "string" && hasFile.startsWith("data:"),
+    preview:
+      typeof hasFile === "string" ? hasFile.substring(0, 50) + "..." : null,
   });
 
   const isImage =
@@ -171,9 +172,8 @@ function FileCard({
   }, [loadFile]);
 
   // Auto-load file if it's base64 data
-  const shouldShowDirectPreview = hasFile && 
-    typeof hasFile === "string" && 
-    hasFile.startsWith("data:");
+  const shouldShowDirectPreview =
+    hasFile && typeof hasFile === "string" && hasFile.startsWith("data:");
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
@@ -453,15 +453,19 @@ export default function FilesSection({ data }: FilesSectionProps) {
       try {
         // Cek apakah file sudah ada di data sebagai base64
         const fileData = data[fieldName as keyof ApplicationData] as string;
-        
-        if (fileData && typeof fileData === 'string' && fileData.startsWith('data:')) {
+
+        if (
+          fileData &&
+          typeof fileData === "string" &&
+          fileData.startsWith("data:")
+        ) {
           // Gunakan data base64 langsung
           setPreviewModal({
             isOpen: true,
             fieldName,
             label,
             fileUrl: fileData,
-            fileType: fileData.split(';')[0].split(':')[1] || 'image/jpeg',
+            fileType: fileData.split(";")[0].split(":")[1] || "image/jpeg",
           });
         } else {
           // Fallback ke API jika tidak ada data base64
@@ -475,12 +479,12 @@ export default function FilesSection({ data }: FilesSectionProps) {
               fileType: result.metadata?.mimeType || null,
             });
           } else {
-            alert('Gagal memuat file untuk preview');
+            alert("Gagal memuat file untuk preview");
           }
         }
       } catch (error) {
         console.error("Error loading file for preview:", error);
-        alert('Terjadi kesalahan saat memuat file');
+        alert("Terjadi kesalahan saat memuat file");
       }
     },
     [data]

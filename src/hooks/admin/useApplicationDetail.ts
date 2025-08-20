@@ -68,14 +68,20 @@ export function useApplicationDetail({
         }));
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const detailedData = await adminApi.getApplicationDetail(applicationId) as any;
+        const detailedData = (await adminApi.getApplicationDetail(
+          applicationId
+        )) as any;
 
         console.log("useApplicationDetail fetched data:", {
           success: detailedData?.success || true,
           hasData: !!(detailedData?.data || detailedData),
-          motivation: detailedData?.data?.motivation || detailedData?.motivation,
-          futurePlans: detailedData?.data?.futurePlans || detailedData?.futurePlans,
-          whyYouShouldBeAccepted: detailedData?.data?.whyYouShouldBeAccepted || detailedData?.whyYouShouldBeAccepted,
+          motivation:
+            detailedData?.data?.motivation || detailedData?.motivation,
+          futurePlans:
+            detailedData?.data?.futurePlans || detailedData?.futurePlans,
+          whyYouShouldBeAccepted:
+            detailedData?.data?.whyYouShouldBeAccepted ||
+            detailedData?.whyYouShouldBeAccepted,
         });
 
         setState({

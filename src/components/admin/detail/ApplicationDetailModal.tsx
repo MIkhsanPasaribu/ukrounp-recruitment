@@ -76,7 +76,7 @@ export default function ApplicationDetailModal({
       photo: !!currentData?.photo,
       studentCard: !!currentData?.studentCard,
       studyPlanCard: !!currentData?.studyPlanCard,
-    }
+    },
   });
 
   // Handle status change with optimistic updates
@@ -88,8 +88,11 @@ export default function ApplicationDetailModal({
       | "DITERIMA"
       | "DITOLAK"
   ) => {
-    console.log("🔄 Attempting status change:", { applicationId: application.id, newStatus });
-    
+    console.log("🔄 Attempting status change:", {
+      applicationId: application.id,
+      newStatus,
+    });
+
     const success = await updateStatus(newStatus);
     if (success) {
       console.log("✅ Status update successful");
