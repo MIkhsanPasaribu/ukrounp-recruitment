@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -67,7 +68,6 @@ export function useApplicationDetail({
           error: null,
         }));
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const detailedData = (await adminApi.getApplicationDetail(
           applicationId
         )) as any;
