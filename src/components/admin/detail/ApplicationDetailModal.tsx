@@ -62,6 +62,23 @@ export default function ApplicationDetailModal({
   // Use detailed data if available, fallback to initial application
   const currentData = detailedData || application;
 
+  // Debug logging untuk melihat data yang diterima
+  console.log("🔍 ApplicationDetailModal Data:", {
+    hasDetailedData: !!detailedData,
+    hasInitialData: !!application,
+    currentDataKeys: currentData ? Object.keys(currentData) : [],
+    essayFields: {
+      motivation: currentData?.motivation,
+      futurePlans: currentData?.futurePlans,
+      whyYouShouldBeAccepted: currentData?.whyYouShouldBeAccepted,
+    },
+    fileFields: {
+      photo: !!currentData?.photo,
+      studentCard: !!currentData?.studentCard,
+      studyPlanCard: !!currentData?.studyPlanCard,
+    }
+  });
+
   // Handle status change with optimistic updates
   const handleStatusChange = async (
     newStatus:
@@ -71,11 +88,16 @@ export default function ApplicationDetailModal({
       | "DITERIMA"
       | "DITOLAK"
   ) => {
+    console.log("🔄 Attempting status change:", { applicationId: application.id, newStatus });
+    
     const success = await updateStatus(newStatus);
     if (success) {
+      console.log("✅ Status update successful");
       onStatusChange(application.id, newStatus);
+      alert("Status berhasil diperbarui!");
     } else {
-      alert("Gagal mengupdate status. Silakan coba lagi.");
+      console.error("❌ Status update failed");
+      alert("Gagal mengupdate status. Silakan periksa koneksi dan coba lagi.");
     }
   };
 

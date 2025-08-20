@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { ApplicationData } from "@/types";
+import { adminApi } from "@/utils/apiClient";
 
 interface UseApplicationDetailProps {
   applicationId: string;
@@ -59,13 +60,6 @@ export function useApplicationDetail({
   const fetchApplicationDetail = useCallback(
     async (isRefresh = false) => {
       try {
-        // Cancel previous request if exists
-        if (abortControllerRef.current) {
-          abortControllerRef.current.abort();
-        }
-
-        abortControllerRef.current = new AbortController();
-
         setState((prev) => ({
           ...prev,
           loading: !isRefresh,
@@ -73,33 +67,19 @@ export function useApplicationDetail({
           error: null,
         }));
 
-        const response = await fetch(
-          `/api/admin/applications/${applicationId}/detailed`,
-          {
-            signal: abortControllerRef.current.signal,
-            headers: {
-              "Cache-Control": "no-cache",
-              Pragma: "no-cache",
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(`Gagal mengambil data: ${response.statusText}`);
-        }
-
-        const detailedData = await response.json();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const detailedData = await adminApi.getApplicationDetail(applicationId) as any;
 
         console.log("useApplicationDetail fetched data:", {
-          success: detailedData.success,
-          hasData: !!detailedData.data,
-          motivation: detailedData.data?.motivation,
-          futurePlans: detailedData.data?.futurePlans,
-          whyYouShouldBeAccepted: detailedData.data?.whyYouShouldBeAccepted,
+          success: detailedData?.success || true,
+          hasData: !!(detailedData?.data || detailedData),
+          motivation: detailedData?.data?.motivation || detailedData?.motivation,
+          futurePlans: detailedData?.data?.futurePlans || detailedData?.futurePlans,
+          whyYouShouldBeAccepted: detailedData?.data?.whyYouShouldBeAccepted || detailedData?.whyYouShouldBeAccepted,
         });
 
         setState({
-          data: detailedData.data || detailedData, // Handle both formats
+          data: (detailedData?.data || detailedData) as ApplicationData, // Handle both formats
           loading: false,
           error: null,
           isRefreshing: false,
@@ -140,18 +120,7 @@ export function useApplicationDetail({
       if (!state.data) return false;
 
       try {
-        const response = await fetch("/api/admin/update-status", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id: applicationId,
-            status: newStatus,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error("Gagal mengupdate status");
-        }
+        await adminApi.updateStatus(applicationId, newStatus);
 
         setState((prev) => ({
           ...prev,
@@ -170,16 +139,7 @@ export function useApplicationDetail({
   // Delete application
   const deleteApplication = useCallback(async () => {
     try {
-      const response = await fetch("/api/admin/delete-application", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: applicationId }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Gagal menghapus pendaftaran");
-      }
-
+      await adminApi.deleteApplication(applicationId);
       return true;
     } catch (error) {
       console.error("Error deleting application:", error);
@@ -192,13 +152,7 @@ export function useApplicationDetail({
     if (!state.data) return false;
 
     try {
-      const response = await fetch(`/api/admin/download-pdf/${applicationId}`);
-
-      if (!response.ok) {
-        throw new Error("Gagal mendownload PDF");
-      }
-
-      const blob = await response.blob();
+      const blob = await adminApi.downloadPDF(applicationId);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.style.display = "none";
@@ -232,10 +186,13 @@ export function useApplicationDetail({
       startHeartbeat();
     }
 
+    // Copy current ref value for cleanup
+    const currentAbortController = abortControllerRef.current;
+
     return () => {
       stopHeartbeat();
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
+      if (currentAbortController) {
+        currentAbortController.abort();
       }
     };
   }, [fetchApplicationDetail, initialData, startHeartbeat, stopHeartbeat]);

@@ -8,10 +8,28 @@ interface EssaySectionProps {
 
 export default function EssaySection({ data }: EssaySectionProps) {
   // Debug logging untuk melihat data essay
-  console.log("EssaySection data:", {
-    motivation: data.motivation,
-    futurePlans: data.futurePlans,
-    whyYouShouldBeAccepted: data.whyYouShouldBeAccepted,
+  console.log("🔍 EssaySection Complete Data:", {
+    id: data.id,
+    fullName: data.fullName,
+    motivation: {
+      exists: !!data.motivation,
+      type: typeof data.motivation,
+      length: data.motivation?.length || 0,
+      content: data.motivation,
+    },
+    futurePlans: {
+      exists: !!data.futurePlans,
+      type: typeof data.futurePlans,
+      length: data.futurePlans?.length || 0,
+      content: data.futurePlans,
+    },
+    whyYouShouldBeAccepted: {
+      exists: !!data.whyYouShouldBeAccepted,
+      type: typeof data.whyYouShouldBeAccepted,
+      length: data.whyYouShouldBeAccepted?.length || 0,
+      content: data.whyYouShouldBeAccepted,
+    },
+    allDataKeys: Object.keys(data),
   });
 
   const essays = [

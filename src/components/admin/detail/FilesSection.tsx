@@ -149,6 +149,15 @@ function FileCard({
 
   // Check if file exists in application data
   const hasFile = application[fieldName as keyof ApplicationData];
+  
+  // Debug log untuk melihat data file
+  console.log(`File ${fieldName}:`, {
+    hasFile: !!hasFile,
+    fileType: typeof hasFile,
+    isBase64: typeof hasFile === 'string' && hasFile.startsWith('data:'),
+    preview: typeof hasFile === 'string' ? hasFile.substring(0, 50) + '...' : null
+  });
+
   const isImage =
     fileType?.startsWith("image/") ||
     (hasFile &&
@@ -160,6 +169,11 @@ function FileCard({
     setShowLoadButton(false);
     await loadFile();
   }, [loadFile]);
+
+  // Auto-load file if it's base64 data
+  const shouldShowDirectPreview = hasFile && 
+    typeof hasFile === "string" && 
+    hasFile.startsWith("data:");
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
@@ -203,9 +217,7 @@ function FileCard({
             </svg>
             <p className="text-sm">File tidak diupload</p>
           </div>
-        ) : hasFile &&
-          typeof hasFile === "string" &&
-          hasFile.startsWith("data:") ? (
+        ) : shouldShowDirectPreview ? (
           <div>
             {/* Direct base64 preview */}
             {hasFile.startsWith("data:image/") && (
@@ -217,11 +229,12 @@ function FileCard({
                   height={128}
                   className="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={() => onPreview(fieldName, label)}
+                  unoptimized
                 />
               </div>
             )}
 
-            {/* Actions */}
+            {/* Actions for base64 files */}
             <div className="flex gap-2">
               <button
                 onClick={() => onPreview(fieldName, label)}
@@ -247,7 +260,7 @@ function FileCard({
                     d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                   />
                 </svg>
-                Lihat
+                Lihat Gambar
               </button>
               <button
                 onClick={handleDownload}
@@ -438,21 +451,39 @@ export default function FilesSection({ data }: FilesSectionProps) {
   const handlePreview = useCallback(
     async (fieldName: string, label: string) => {
       try {
-        const result = await fileService.getFile(data.id, fieldName);
-        if (result.success && result.file) {
+        // Cek apakah file sudah ada di data sebagai base64
+        const fileData = data[fieldName as keyof ApplicationData] as string;
+        
+        if (fileData && typeof fileData === 'string' && fileData.startsWith('data:')) {
+          // Gunakan data base64 langsung
           setPreviewModal({
             isOpen: true,
             fieldName,
             label,
-            fileUrl: result.file,
-            fileType: result.metadata?.mimeType || null,
+            fileUrl: fileData,
+            fileType: fileData.split(';')[0].split(':')[1] || 'image/jpeg',
           });
+        } else {
+          // Fallback ke API jika tidak ada data base64
+          const result = await fileService.getFile(data.id, fieldName);
+          if (result.success && result.file) {
+            setPreviewModal({
+              isOpen: true,
+              fieldName,
+              label,
+              fileUrl: result.file,
+              fileType: result.metadata?.mimeType || null,
+            });
+          } else {
+            alert('Gagal memuat file untuk preview');
+          }
         }
       } catch (error) {
         console.error("Error loading file for preview:", error);
+        alert('Terjadi kesalahan saat memuat file');
       }
     },
-    [data.id]
+    [data]
   );
 
   const closePreview = useCallback(() => {

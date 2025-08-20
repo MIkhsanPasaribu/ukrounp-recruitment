@@ -212,23 +212,47 @@ export async function getAuthData(request: NextRequest): Promise<{
   admin?: AdminUser;
   token?: string;
 }> {
+  // Try multiple ways to get token
+  let token: string | null = null;
+  
+  // 1. From Authorization header
   const authHeader = request.headers.get("Authorization");
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    token = authHeader.substring(7);
+  }
+  
+  // 2. From X-Admin-Token header
+  if (!token) {
+    token = request.headers.get("X-Admin-Token");
+  }
+  
+  // 3. From cookies
+  if (!token) {
+    token = request.cookies.get("adminToken")?.value || null;
+  }
+  
+  console.log("🔑 Auth check:", {
+    hasAuthHeader: !!authHeader,
+    hasXAdminToken: !!request.headers.get("X-Admin-Token"),
+    hasCookie: !!request.cookies.get("adminToken"),
+    finalToken: !!token
+  });
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if (!token) {
     return { isAuthenticated: false };
   }
-
-  const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
   // Verify JWT token
   const decoded = verifyToken(token);
   if (!decoded) {
+    console.log("❌ Token verification failed");
     return { isAuthenticated: false };
   }
 
   // Check if token exists and is valid in database
   const isValid = await isTokenValid(token);
   if (!isValid) {
+    console.log("❌ Token not valid in database");
     return { isAuthenticated: false };
   }
 
@@ -241,9 +265,11 @@ export async function getAuthData(request: NextRequest): Promise<{
     .single();
 
   if (error || !admin) {
+    console.log("❌ Admin not found or inactive:", error);
     return { isAuthenticated: false };
   }
 
+  console.log("✅ Authentication successful for:", admin.username);
   return { isAuthenticated: true, admin, token };
 }
 
