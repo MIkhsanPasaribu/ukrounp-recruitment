@@ -1,167 +1,138 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
-import { generateRegistrationConfirmation } from "@/utils/pdfGeneratorJsPDF";
-import { ApplicationData } from "@/types";
-import archiver from "archiver";
+import { BulkDownloadService } from "@/services/bulkDownload";
+import { ZipGenerationService } from "@/services/bulkDownload/zipGenerationService";
 
-export async function GET() {
+/**
+ * API Route alternatif untuk bulk download PDF yang telah dioptimasi
+ * Menggunakan archiver untuk streaming ZIP dan batch processing
+ * Dirancang khusus untuk mengatasi timeout di Vercel
+ */
+export async function GET(request: Request) {
+  const startTime = Date.now();
+
   try {
-    // Ambil semua data dari Supabase
-    const { data: applications, error } = await supabase
-      .from("applicants")
-      .select("*")
-      .order("submittedAt", { ascending: false });
+    console.log("=== API Bulk Download PDF Alt Dimulai ===");
 
-    if (error) {
-      console.error("Error mengambil aplikasi:", error);
+    // Parse query parameters
+    const url = new URL(request.url);
+    const limitParam = url.searchParams.get("limit");
+    const batchSizeParam = url.searchParams.get("batchSize");
+
+    // Konfigurasi dengan nilai default yang sangat konservatif untuk Vercel
+    const limit = limitParam ? parseInt(limitParam) : 20; // Default limit 20
+    const batchSize = batchSizeParam ? parseInt(batchSizeParam) : 5; // Batch size kecil
+
+    console.log(`Konfigurasi: limit=${limit}, batchSize=${batchSize}`);
+
+    // Inisialisasi service dengan konfigurasi sangat konservatif
+    const bulkDownloadService = new BulkDownloadService({
+      batchSize: batchSize,
+      compressionLevel: 3, // Kompresi ringan untuk kecepatan
+      timeout: 8000, // 8 detik
+      maxRetries: 1, // Minimal retry untuk menghemat waktu
+    });
+
+    // Proses dengan batasan untuk mencegah timeout
+    const result = await bulkDownloadService.prosesFormulirDenganBatasan(limit);
+
+    const endTime = Date.now();
+    const totalTime = endTime - startTime;
+
+    // Cek hasil
+    if (!result.success) {
+      console.error("Bulk download alt gagal:", result.error);
+
       return NextResponse.json(
-        { error: "Gagal mengambil aplikasi" },
+        {
+          error: result.error,
+          progressInfo: result.progressInfo,
+          waktuProses: totalTime,
+          konfigurasi: { limit, batchSize },
+          saran: [
+            "Gunakan limit yang lebih kecil (contoh: ?limit=10)",
+            "Kurangi batch size (contoh: ?batchSize=3)",
+            "Coba lagi dalam beberapa saat",
+          ],
+        },
         { status: 500 }
       );
     }
 
-    console.log(`Ditemukan ${applications.length} aplikasi untuk diproses`);
-
-    if (!applications || applications.length === 0) {
+    if (!result.zipBuffer) {
       return NextResponse.json(
-        { error: "Tidak ada aplikasi ditemukan" },
-        { status: 404 }
+        {
+          error: "ZIP buffer tidak ditemukan",
+          progressInfo: result.progressInfo,
+          waktuProses: totalTime,
+        },
+        { status: 500 }
       );
     }
 
-    // Buat arsip menggunakan archiver (sebagai format ZIP)
-    const archive = archiver("zip", {
-      zlib: { level: 9 }, // Kompresi maksimum
-    });
-
-    const chunks: Buffer[] = [];
-
-    // Kumpulkan chunks
-    archive.on("data", (chunk) => {
-      chunks.push(chunk);
-    });
-
-    // Promise untuk menunggu arsip selesai
-    const archivePromise = new Promise<void>((resolve, reject) => {
-      archive.on("end", resolve);
-      archive.on("error", reject);
-    });
-
-    // Proses setiap aplikasi
-    let processedCount = 0;
-    for (const applicantData of applications) {
-      try {
-        console.log(
-          `Memproses aplikasi ${processedCount + 1}/${
-            applications.length
-          } - ID: ${applicantData.id}, Nama: ${applicantData.fullName}`
-        );
-
-        const formattedData: ApplicationData = {
-          id: applicantData.id,
-          email: applicantData.email || "",
-          fullName: applicantData.fullName || "",
-          nickname: applicantData.nickname,
-          gender: applicantData.gender,
-          birthDate: applicantData.birthDate,
-          faculty: applicantData.faculty,
-          department: applicantData.department,
-          studyProgram: applicantData.studyProgram,
-          nim: applicantData.nim,
-          nia: applicantData.nia,
-          previousSchool: applicantData.previousSchool,
-          padangAddress: applicantData.padangAddress,
-          phoneNumber: applicantData.phoneNumber,
-          motivation: applicantData.motivation,
-          futurePlans: applicantData.futurePlans,
-          whyYouShouldBeAccepted: applicantData.whyYouShouldBeAccepted,
-          software: {
-            corelDraw: Boolean(applicantData.corelDraw),
-            photoshop: Boolean(applicantData.photoshop),
-            adobePremierePro: Boolean(applicantData.adobePremierePro),
-            adobeAfterEffect: Boolean(applicantData.adobeAfterEffect),
-            autodeskEagle: Boolean(applicantData.autodeskEagle),
-            arduinoIde: Boolean(applicantData.arduinoIde),
-            androidStudio: Boolean(applicantData.androidStudio),
-            visualStudio: Boolean(applicantData.visualStudio),
-            missionPlaner: Boolean(applicantData.missionPlaner),
-            autodeskInventor: Boolean(applicantData.autodeskInventor),
-            autodeskAutocad: Boolean(applicantData.autodeskAutocad),
-            solidworks: Boolean(applicantData.solidworks),
-            others: applicantData.otherSoftware || "",
-          },
-          studyPlanCard: applicantData.studyPlanCard,
-          igFollowProof: applicantData.igFollowProof,
-          tiktokFollowProof: applicantData.tiktokFollowProof,
-          status: applicantData.status,
-          submittedAt: applicantData.submittedAt,
-          mbtiProof: applicantData.mbtiProof || "",
-          photo: applicantData.photo || "",
-        };
-
-        // Generate PDF untuk aplikasi ini
-        const pdfBytes = await generateRegistrationConfirmation(formattedData);
-
-        if (pdfBytes && pdfBytes.length > 0) {
-          const sanitizedName = formattedData.fullName
-            .replace(/[^a-zA-Z0-9\s]/g, "")
-            .replace(/\s+/g, "-");
-          const fileName = `formulir-pendaftaran-${sanitizedName}-${formattedData.id}.pdf`;
-
-          // Append PDF ke arsip
-          archive.append(Buffer.from(pdfBytes), { name: fileName });
-
-          console.log(
-            `Berhasil menambahkan PDF untuk ${formattedData.fullName}`
-          );
-        } else {
-          console.warn(`PDF kosong untuk ${formattedData.fullName}`);
-        }
-
-        processedCount++;
-      } catch (error) {
-        console.error(
-          `Error memproses aplikasi ID ${applicantData.id}:`,
-          error
-        );
-        // Lanjutkan dengan aplikasi berikutnya
-        continue;
-      }
-    }
-
-    console.log(
-      `Berhasil memproses ${processedCount} dari ${applications.length} aplikasi`
+    // Generate nama file ZIP dengan suffix alt
+    const namaFileZip = ZipGenerationService.buatNamaFileZip(
+      "formulir-pendaftaran-alt"
     );
 
-    // Selesaikan arsip
-    archive.finalize();
+    console.log("=== API Bulk Download PDF Alt Selesai ===");
+    console.log(`Total waktu API: ${totalTime}ms`);
+    console.log(
+      `File diproses: ${result.progressInfo.processed}/${result.progressInfo.total}`
+    );
+    console.log(
+      `Ukuran ZIP: ${(result.zipBuffer.length / 1024 / 1024).toFixed(2)} MB`
+    );
 
-    // Tunggu arsip selesai
-    await archivePromise;
-
-    // Gabungkan semua chunks
-    const zipBuffer = Buffer.concat(chunks);
-
-    console.log(`ZIP berhasil dibuat dengan ukuran: ${zipBuffer.length} bytes`);
-
-    // Return ZIP sebagai respons
-    return new NextResponse(zipBuffer, {
+    // Return ZIP dengan headers yang optimal
+    return new NextResponse(new Uint8Array(result.zipBuffer), {
       status: 200,
       headers: {
         "Content-Type": "application/zip",
-        "Content-Disposition": `attachment; filename="semua-formulir-pendaftaran-alt-${
-          new Date().toISOString().split("T")[0]
-        }.zip"`,
-        "Content-Length": zipBuffer.length.toString(),
+        "Content-Disposition": `attachment; filename="${namaFileZip}"`,
+        "Content-Length": result.zipBuffer.length.toString(),
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+        // Headers untuk monitoring
+        "X-Total-Applications": result.progressInfo.total.toString(),
+        "X-Processed-Applications": result.progressInfo.processed.toString(),
+        "X-Processing-Time": totalTime.toString(),
+        "X-Batch-Size": batchSize.toString(),
+        "X-Limit-Used": limit.toString(),
       },
     });
   } catch (error) {
-    console.error("Error dalam bulk download PDF alternatif:", error);
+    const endTime = Date.now();
+    const totalTime = endTime - startTime;
+
+    console.error("Error dalam API bulk download PDF alt:", error);
+
+    // Log detail error untuk debugging
+    if (error instanceof Error) {
+      console.error("Error name:", error.name);
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+    }
+
     return NextResponse.json(
       {
         error: "Gagal menghasilkan file ZIP",
         details:
           error instanceof Error ? error.message : "Kesalahan tidak diketahui",
+        waktuProses: totalTime,
+        timestamp: new Date().toISOString(),
+        namaError: error instanceof Error ? error.name : "UnknownError",
+        saran: [
+          "Coba kurangi limit menjadi 5-10",
+          "Pastikan koneksi database stabil",
+          "Hubungi administrator jika masalah berlanjut",
+        ],
+        debugInfo: {
+          timeoutReached: totalTime > 8000,
+          memoryUsage: process.memoryUsage
+            ? process.memoryUsage()
+            : "unavailable",
+        },
       },
       { status: 500 }
     );
