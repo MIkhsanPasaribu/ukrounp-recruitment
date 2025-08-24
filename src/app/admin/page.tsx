@@ -7,6 +7,7 @@ import EnhancedAdminDashboard from "@/components/EnhancedAdminDashboard";
 import AdminLogin from "@/components/AdminLogin";
 import Pagination from "@/components/Pagination";
 import AdminHeaderButtons from "@/components/AdminHeaderButtons";
+import RegistrationStatusToggle from "@/components/admin/RegistrationStatusToggle";
 import ApplicationDetailModal from "@/components/admin/detail/ApplicationDetailModal";
 import ModifyDataModal from "@/components/ModifyDataModal";
 import AdminTabNavigation from "@/components/admin/AdminTabNavigation";
@@ -140,32 +141,17 @@ export default function AdminPage() {
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
                 Panel Admin
               </h1>
-              {/* Registration Status Indicator */}
-              <div className="ml-4 sm:ml-6">
-                <span
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                    isRegistrationOpen
-                      ? "bg-green-100 text-green-800"
-                      : "bg-red-100 text-red-800"
-                  }`}
-                >
-                  <div
-                    className={`w-2 h-2 rounded-full mr-2 ${
-                      isRegistrationOpen ? "bg-green-400" : "bg-red-400"
-                    }`}
-                  ></div>
-                  {isRegistrationOpen
-                    ? "Pendaftaran Dibuka"
-                    : "Pendaftaran Ditutup"}
-                </span>
-              </div>
             </div>
-            <div className="w-full sm:w-auto">
+            <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+              {/* Registration Status Toggle Component */}
+              <RegistrationStatusToggle
+                isOpen={isRegistrationOpen}
+                isLoading={registrationStatusLoading}
+                onToggle={toggleRegistrationStatus}
+              />
+
               <AdminHeaderButtons
                 onLogout={handleLogout}
-                isRegistrationOpen={isRegistrationOpen}
-                onToggleRegistration={toggleRegistrationStatus}
-                registrationStatusLoading={registrationStatusLoading}
                 hasApplications={applications.length > 0}
                 onExportCSV={() => exportApplicationsToCSV(applications)}
               />
