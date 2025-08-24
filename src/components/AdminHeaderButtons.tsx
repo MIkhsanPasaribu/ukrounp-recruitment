@@ -3,20 +3,14 @@
 import { useState } from "react";
 
 interface AdminHeaderButtonsProps {
-  isRegistrationOpen: boolean;
-  registrationStatusLoading: boolean;
   hasApplications: boolean;
-  onToggleRegistration: () => void;
   onExportCSV: () => void;
   onBulkDownloadPDF?: () => void;
   onLogout: () => void;
 }
 
 export default function AdminHeaderButtons({
-  isRegistrationOpen,
-  registrationStatusLoading,
   hasApplications,
-  onToggleRegistration,
   onExportCSV,
   onBulkDownloadPDF,
   onLogout,
@@ -27,22 +21,6 @@ export default function AdminHeaderButtons({
     <>
       {/* Desktop buttons - hidden on mobile */}
       <div className="hidden md:flex space-x-4">
-        <button
-          onClick={onToggleRegistration}
-          disabled={registrationStatusLoading}
-          className={`px-4 py-2 rounded-md font-medium ${
-            isRegistrationOpen
-              ? "bg-red-600 hover:bg-red-700 text-white"
-              : "bg-green-600 hover:bg-green-700 text-white"
-          }`}
-        >
-          {registrationStatusLoading
-            ? "Mengupdate..."
-            : isRegistrationOpen
-            ? "Tutup Pendaftaran"
-            : "Buka Pendaftaran"}
-        </button>
-
         <button
           onClick={onExportCSV}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium"
@@ -134,25 +112,6 @@ export default function AdminHeaderButtons({
         {mobileMenuOpen && (
           <div className="absolute right-4 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
             <div className="py-1">
-              <button
-                onClick={() => {
-                  onToggleRegistration();
-                  setMobileMenuOpen(false);
-                }}
-                disabled={registrationStatusLoading}
-                className={`w-full text-left px-4 py-2 text-sm ${
-                  isRegistrationOpen
-                    ? "text-red-700 hover:bg-red-100"
-                    : "text-green-700 hover:bg-green-100"
-                }`}
-              >
-                {registrationStatusLoading
-                  ? "Mengupdate..."
-                  : isRegistrationOpen
-                  ? "Tutup Pendaftaran"
-                  : "Buka Pendaftaran"}
-              </button>
-
               <button
                 onClick={() => {
                   onExportCSV();

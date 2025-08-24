@@ -109,22 +109,139 @@ export default function FormPage() {
       </div>
 
       {isLoading ? (
-        <div className="text-center py-10">
-          <p className="text-gray-500">Memuat...</p>
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+          <p className="text-gray-500 text-lg">
+            Memeriksa status pendaftaran...
+          </p>
+          <p className="text-gray-400 text-sm mt-2">Mohon tunggu sebentar</p>
         </div>
       ) : !isRegistrationOpen ? (
-        <div className="bg-red-50 border border-red-200 rounded-md p-6 text-center">
-          <h2 className="text-2xl font-bold text-red-700 mb-4">
-            Pendaftaran Ditutup
-          </h2>
-          <p className="text-gray-700 mb-4">
-            Mohon maaf, pendaftaran untuk Unit Kegiatan Robotika UNP saat ini
-            sudah ditutup.
-          </p>
-          <p className="text-gray-700">
-            Silakan cek kembali nanti atau hubungi kami untuk informasi lebih
-            lanjut.
-          </p>
+        <div className="max-w-2xl mx-auto">
+          {/* Header dengan ilustrasi */}
+          <div className="text-center mb-8">
+            <div className="w-32 h-32 mx-auto mb-6 bg-gradient-to-br from-red-200 to-red-300 rounded-full flex items-center justify-center shadow-lg border-4 border-red-400">
+              <div className="text-6xl">🔒</div>
+            </div>
+            <h1 className="text-3xl font-bold text-red-700 mb-4">
+              Pendaftaran Ditutup
+            </h1>
+            <div className="w-24 h-1 bg-gradient-to-r from-red-600 to-red-500 mx-auto rounded-full"></div>
+          </div>
+
+          {/* Konten utama */}
+          <div className="bg-white border-2 border-red-300 rounded-2xl shadow-xl overflow-hidden">
+            <div className="bg-gradient-to-r from-red-100 to-red-200 px-8 py-6 border-b-2 border-red-300">
+              <h2 className="text-xl font-semibold text-red-800 mb-2">
+                � Informasi Penting
+              </h2>
+              <p className="text-red-700 font-medium">
+                Periode pendaftaran Unit Kegiatan Robotika UNP saat ini sedang
+                tidak aktif.
+              </p>
+            </div>
+
+            <div className="px-8 py-6 space-y-6">
+              {/* Pesan utama */}
+              <div className="bg-red-50 border-2 border-red-300 rounded-xl p-6">
+                <div className="flex items-start space-x-3">
+                  <div className="text-2xl">❌</div>
+                  <div>
+                    <h3 className="font-semibold text-red-800 mb-2">
+                      Mengapa pendaftaran ditutup?
+                    </h3>
+                    <ul className="text-red-700 space-y-1 text-sm">
+                      <li>• Periode pendaftaran telah berakhir</li>
+                      <li>• Sedang dalam proses peninjauan data calon anggota</li>
+                      <li>• Sedang dalam proses seleksi calon anggota</li>
+                      <li>• Sedang dalam proses evaluasi</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* Informasi selanjutnya */}
+              <div className="bg-orange-50 border-2 border-orange-300 rounded-xl p-6">
+                <div className="flex items-start space-x-3">
+                  <div className="text-2xl">🗓️</div>
+                  <div>
+                    <h3 className="font-semibold text-orange-800 mb-2">
+                      Kapan pendaftaran dibuka kembali?
+                    </h3>
+                    <p className="text-orange-700 text-sm mb-3">
+                      Pantau terus pengumuman resmi kami melalui:
+                    </p>
+                    <div className="space-y-2 text-sm">
+                      <a
+                        href="https://instagram.com/ukro_unp"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center text-orange-700 hover:text-orange-800 transition-colors"
+                      >
+                        <span className="text-lg mr-2">📱</span>
+                        Instagram: @robotic_unp
+                      </a>
+                      <a
+                        href="https://tiktok.com/@ukro_unp"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center text-orange-700 hover:text-orange-800 transition-colors"
+                      >
+                        <span className="text-lg mr-2">🎵</span>
+                        TikTok: @robotic_unp
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Call to action */}
+              <div className="bg-red-50 border-2 border-red-300 rounded-xl p-6">
+                <div className="flex items-start space-x-3">
+                  <div className="text-2xl">⏳</div>
+                  <div>
+                    <h3 className="font-semibold text-red-800 mb-2">
+                      Sementara ini, Anda bisa:
+                    </h3>
+                    <ul className="text-red-700 space-y-2 text-sm">
+                      <li className="flex items-center">
+                        <span className="w-2 h-2 bg-red-500 rounded-full mr-3"></span>
+                        Follow media sosial kami untuk update kegiatan
+                      </li>
+                      <li className="flex items-center">
+                        <span className="w-2 h-2 bg-red-500 rounded-full mr-3"></span>
+                        Pelajari lebih lanjut tentang robotika dan teknologi
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer dengan tombol aksi */}
+            <div className="bg-red-50 px-8 py-6 border-t-2 border-red-300">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link
+                  href="/"
+                  className="inline-flex items-center justify-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium shadow-lg"
+                >
+                  <span className="text-lg mr-2">🏠</span>
+                  Kembali ke Beranda
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer note */}
+          <div className="text-center mt-8 text-red-600 text-sm">
+            <p className="font-medium">
+              Halaman ini akan otomatis menampilkan formulir pendaftaran ketika
+              dibuka kembali.
+            </p>
+            <p className="mt-1 text-red-500">
+              Terima kasih atas minat Anda bergabung dengan UKRO UNP! 🤖
+            </p>
+          </div>
         </div>
       ) : isSubmitted ? (
         <SuccessMessage />

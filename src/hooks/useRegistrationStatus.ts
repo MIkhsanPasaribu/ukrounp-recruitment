@@ -7,45 +7,54 @@ export const useRegistrationStatus = (token: string | null) => {
   const [registrationStatusLoading, setRegistrationStatusLoading] =
     useState(false);
 
-  // Function to fetch registration status
+  // Fungsi untuk mengambil status pendaftaran
   const fetchRegistrationStatus = useCallback(async () => {
     if (!token) return;
 
     try {
+      console.log("🔄 Mengambil status pendaftaran...");
       const response = await fetch("/api/admin/registration-status", {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
+
       if (response.ok) {
         const data = await response.json();
+        console.log("✅ Status pendaftaran berhasil diambil:", data);
         setIsRegistrationOpen(data.isOpen);
+      } else {
+        console.error(
+          "❌ Gagal mengambil status pendaftaran:",
+          response.status
+        );
       }
     } catch (error) {
-      console.error("Error fetching registration status:", error);
+      console.error("❌ Error mengambil status pendaftaran:", error);
     }
   }, [token]);
 
-  // Function to toggle registration status
+  // Fungsi untuk mengubah status pendaftaran
   const toggleRegistrationStatus = async () => {
-    if (!token) return;
+    if (!token) {
+      console.error("❌ Token tidak tersedia");
+      return;
+    }
 
-    if (
-      !confirm(
-        `Are you sure you want to ${
-          isRegistrationOpen ? "close" : "open"
-        } registration?`
-      )
-    ) {
+    const action = isRegistrationOpen ? "menutup" : "membuka";
+    const confirmMessage = `Apakah Anda yakin ingin ${action} pendaftaran?`;
+
+    if (!confirm(confirmMessage)) {
       return;
     }
 
     setRegistrationStatusLoading(true);
+    console.log(`🔄 ${action} pendaftaran...`);
 
     try {
       const response = await fetch("/api/admin/registration-status", {
-        method: "PUT",
+        method: "POST", // Menggunakan POST sesuai dengan API
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -54,16 +63,28 @@ export const useRegistrationStatus = (token: string | null) => {
       });
 
       if (response.ok) {
+        const data = await response.json();
+        console.log("✅ Status pendaftaran berhasil diubah:", data);
         setIsRegistrationOpen(!isRegistrationOpen);
-        alert(
-          `Registration has been ${!isRegistrationOpen ? "opened" : "closed"}.`
-        );
+
+        const successMessage = !isRegistrationOpen
+          ? "Pendaftaran berhasil dibuka!"
+          : "Pendaftaran berhasil ditutup!";
+        alert(successMessage);
       } else {
-        alert("Failed to update registration status");
+        const errorData = await response.json();
+        console.error("❌ Gagal mengubah status pendaftaran:", errorData);
+        alert(
+          `Gagal mengubah status pendaftaran: ${
+            errorData.message || "Error tidak diketahui"
+          }`
+        );
       }
     } catch (error) {
-      console.error("Error toggling registration status:", error);
-      alert("Failed to update registration status");
+      console.error("❌ Error mengubah status pendaftaran:", error);
+      alert(
+        "Terjadi kesalahan saat mengubah status pendaftaran. Silakan coba lagi."
+      );
     } finally {
       setRegistrationStatusLoading(false);
     }
