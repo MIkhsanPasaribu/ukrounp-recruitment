@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { logoutAdmin } from "@/lib/auth";
+import { logoutInterviewer } from "@/lib/auth-interviewer";
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,12 +14,12 @@ export async function POST(request: NextRequest) {
 
     // 2. From cookies
     if (!token) {
-      token = request.cookies.get("adminToken")?.value || null;
+      token = request.cookies.get("interviewerToken")?.value || null;
     }
 
     if (token) {
-      // Logout admin (invalidate session token)
-      await logoutAdmin(token);
+      // Logout interviewer (invalidate session token)
+      await logoutInterviewer(token);
     }
 
     // Create response
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Clear cookie
-    response.cookies.set("adminToken", "", {
+    response.cookies.set("interviewerToken", "", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error("Logout error:", error);
+    console.error("Interviewer logout error:", error);
     return NextResponse.json(
       { success: false, message: "Terjadi kesalahan server" },
       { status: 500 }

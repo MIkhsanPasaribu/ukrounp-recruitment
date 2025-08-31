@@ -4,6 +4,7 @@ import { authenticateAdmin, getClientIP } from "@/lib/auth";
 export async function POST(request: NextRequest) {
   try {
     const { identifier, password } = await request.json();
+    console.log("🔐 Login attempt for:", identifier);
 
     if (!identifier || !password) {
       return NextResponse.json(
@@ -16,6 +17,8 @@ export async function POST(request: NextRequest) {
     const ipAddress = getClientIP(request);
     const userAgent = request.headers.get("user-agent") || undefined;
 
+    console.log("🔐 Authenticating admin:", { identifier, ipAddress });
+
     // Authenticate admin
     const authResult = await authenticateAdmin(
       identifier,
@@ -24,6 +27,13 @@ export async function POST(request: NextRequest) {
       userAgent
     );
 
+    console.log("🔐 Auth result:", {
+      success: authResult.success,
+      hasToken: !!authResult.token,
+      hasAdmin: !!authResult.admin,
+      message: authResult.message,
+    });
+
     if (!authResult.success) {
       return NextResponse.json(
         { success: false, message: authResult.message },
@@ -31,7 +41,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({
+    // Create response with token and admin info
+    const response = NextResponse.json({
       success: true,
       message: authResult.message,
       token: authResult.token,
@@ -43,6 +54,19 @@ export async function POST(request: NextRequest) {
         role: authResult.admin?.role,
       },
     });
+
+    // Set httpOnly cookie for additional security
+    if (authResult.token) {
+      response.cookies.set("adminToken", authResult.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 24 * 60 * 60, // 24 hours
+        path: "/",
+      });
+    }
+
+    return response;
   } catch (error) {
     console.error("Login error:", error);
     return NextResponse.json(
