@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useInterviewerAuth } from "@/hooks/useInterviewerAuth";
-import InterviewerLogin from "@/components/interview/InterviewerLogin";
-import InterviewerDashboard from "@/components/interview/InterviewerDashboard";
+import UnifiedLogin from "@/components/UnifiedLogin";
+import OptimizedInterviewerDashboard from "@/components/interview/OptimizedInterviewerDashboard";
 import InterviewForm from "@/components/interview/InterviewForm";
 
 type ViewMode = "dashboard" | "interview-form";
@@ -50,7 +50,15 @@ export default function InterviewPage() {
 
   // Show login if not authenticated
   if (!isAuthenticated || !token || !interviewer) {
-    return <InterviewerLogin onLoginSuccess={handleLoginSuccess} />;
+    return (
+      <UnifiedLogin
+        onAdminLoginSuccess={() => {
+          // Redirect to admin page if admin tries to login here
+          window.location.href = "/admin";
+        }}
+        onInterviewerLoginSuccess={handleLoginSuccess}
+      />
+    );
   }
 
   // Show appropriate view based on current state
@@ -68,7 +76,7 @@ export default function InterviewPage() {
     case "dashboard":
     default:
       return (
-        <InterviewerDashboard
+        <OptimizedInterviewerDashboard
           token={token}
           interviewer={interviewer}
           onStartInterview={(sessionId: string) => {

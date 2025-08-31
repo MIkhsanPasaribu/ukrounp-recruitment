@@ -12,6 +12,37 @@ export interface InterviewerUser {
   updatedAt: string;
 }
 
+// NEW: Type untuk attendance/absensi
+export interface InterviewAttendance {
+  id: string;
+  nim: string;
+  applicantId: string;
+  checkedInAt: string;
+  checkedInBy?: string;
+  status: "PRESENT" | "ABSENT" | "LATE";
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  applicants?: Applicant;
+  admins?: { id: string; username: string; fullName: string };
+}
+
+// NEW: Type untuk assignment pewawancara
+export interface InterviewerAssignment {
+  id: string;
+  applicantId: string;
+  interviewerId: string;
+  assignedBy?: string;
+  assignedAt: string;
+  status: "ASSIGNED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  applicants?: Applicant;
+  interviewers?: InterviewerUser;
+  admins?: { id: string; username: string; fullName: string };
+}
+
 export interface InterviewQuestion {
   id: string;
   questionNumber: number;
@@ -21,10 +52,26 @@ export interface InterviewQuestion {
   createdAt: string;
 }
 
+// Enum definitions
+export enum AttendanceStatus {
+  PRESENT = "PRESENT",
+  ABSENT = "ABSENT",
+  LATE = "LATE",
+}
+
+export enum AssignmentStatus {
+  ASSIGNED = "ASSIGNED",
+  IN_PROGRESS = "IN_PROGRESS",
+  COMPLETED = "COMPLETED",
+  CANCELLED = "CANCELLED",
+}
+
+// Base interview session interface
 export interface InterviewSession {
   id: string;
   applicantId: string;
   interviewerId: string;
+  assignmentId?: string; // NEW: Reference to interviewer assignment
   interviewDate?: string;
   location?: string;
   status: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
@@ -39,6 +86,7 @@ export interface InterviewSession {
   updatedAt: string;
   applicants?: Applicant;
   interviewers?: InterviewerUser;
+  assignments?: InterviewerAssignment; // NEW: Assignment relationship
 }
 
 export interface InterviewResponse {
@@ -66,6 +114,12 @@ export interface InterviewCandidate extends Applicant {
   interviewStatus?: string;
   interviewDate?: string;
   totalScore?: number;
+  // NEW: Assignment information
+  assignmentId?: string;
+  assignedInterviewer?: string;
+  assignedInterviewerName?: string;
+  attendanceStatus?: "PRESENT" | "ABSENT" | "LATE";
+  checkedInAt?: string;
 }
 
 export interface Applicant {
@@ -122,6 +176,53 @@ export interface PaginationInfo {
   totalItems: number;
   itemsPerPage: number;
   hasMore: boolean;
+}
+
+// Request types
+export interface CreateAttendanceRequest {
+  nim: string;
+  status?: AttendanceStatus;
+  notes?: string;
+}
+
+export interface UpdateAttendanceRequest {
+  id: string;
+  status?: AttendanceStatus;
+  notes?: string;
+}
+
+export interface CreateAssignmentRequest {
+  nim: string;
+  interviewerId: string;
+  scheduledAt?: string;
+  notes?: string;
+}
+
+export interface UpdateAssignmentRequest {
+  id: string;
+  interviewerId?: string;
+  scheduledAt?: string;
+  status?: AssignmentStatus;
+  notes?: string;
+}
+export interface AttendanceCreateRequest {
+  nim: string;
+  status?: "PRESENT" | "ABSENT" | "LATE";
+  notes?: string;
+}
+
+export interface InterviewerAssignmentRequest {
+  applicantId: string;
+  interviewerId: string;
+  notes?: string;
+}
+
+export interface InterviewerAssignmentBulkRequest {
+  assignments: Array<{
+    applicantId: string;
+    interviewerId: string;
+    notes?: string;
+  }>;
 }
 
 export interface ApiResponse<T> {

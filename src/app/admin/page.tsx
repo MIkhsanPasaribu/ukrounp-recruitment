@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { ApplicationData, ApplicationStatus } from "@/types";
 import AdminDashboard from "@/components/AdminDashboard";
 import EnhancedAdminDashboard from "@/components/EnhancedAdminDashboard";
-import AdminLogin from "@/components/AdminLogin";
+import UnifiedLogin from "@/components/UnifiedLogin";
 import Pagination from "@/components/Pagination";
 import AdminHeaderButtons from "@/components/AdminHeaderButtons";
 import RegistrationStatusToggle from "@/components/admin/RegistrationStatusToggle";
@@ -128,7 +128,15 @@ export default function AdminPage() {
         </div>
       );
     }
-    return <AdminLogin onLoginSuccess={handleLoginSuccess} />;
+    return (
+      <UnifiedLogin
+        onAdminLoginSuccess={handleLoginSuccess}
+        onInterviewerLoginSuccess={() => {
+          // Redirect to interview page if interviewer tries to login here
+          window.location.href = "/interview";
+        }}
+      />
+    );
   }
 
   return (

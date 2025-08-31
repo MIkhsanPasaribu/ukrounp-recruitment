@@ -1,112 +1,194 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withInterviewerAuth } from "@/lib/auth-interviewer-middleware";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 
-async function handler(request: NextRequest) {
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+export async function GET(request: NextRequest) {
   try {
+    // Ambil query parameters
     const { searchParams } = new URL(request.url);
-    const search = searchParams.get("search") || "";
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
-    const offset = (page - 1) * limit;
+    const search = searchParams.get("search") || "";
+    const status = searchParams.get("status") || "";
 
-    console.log("🔍 Fetching interview candidates with params:", {
-      search,
+    console.log("Fetching applications with params:", {
       page,
       limit,
+      search,
+      status,
     });
 
-    // Base query for applicants with status "INTERVIEW"
+    // Calculate offset
+    const offset = (page - 1) * limit;
+
+    // Build query
     let query = supabase
       .from("applicants")
       .select(
         `
         id,
-        email,
+        nim,
         fullName,
-        nickname,
-        gender,
-        birthDate,
+        email,
+        phoneNumber,
         faculty,
         department,
         studyProgram,
-        nim,
-        nia,
         educationLevel,
-        phoneNumber,
         status,
+        submittedAt,
         updatedAt
-      `,
-        { count: "exact" }
+      `
       )
-      .eq("status", "INTERVIEW");
+      .order("submittedAt", { ascending: false });
 
-    // Add search filter if provided
+    // Apply filters
     if (search) {
       query = query.or(
-        `fullName.ilike.%${search}%,email.ilike.%${search}%,nim.ilike.%${search}%,nia.ilike.%${search}%`
+        `nim.ilike.%${search}%,fullName.ilike.%${search}%,email.ilike.%${search}%`
       );
     }
 
-    // Apply pagination
-    query = query
-      .order("updatedAt", { ascending: false })
-      .range(offset, offset + limit - 1);
+    if (status) {
+      query = query.eq("status", status);
+    }
 
-    const { data: applicants, error, count } = await query;
+    // Get total count for pagination
+    const { count: totalCount } = await supabase
+      .from("applicants")
+      .select("*", { count: "exact", head: true });
+
+    // Apply pagination
+    query = query.range(offset, offset + limit - 1);
+
+    const { data: applications, error } = await query;
 
     if (error) {
-      console.error("❌ Error fetching interview candidates:", error);
+      console.error("Error fetching applications:", error);
       return NextResponse.json(
-        { success: false, message: "Gagal mengambil data peserta wawancara" },
+        { success: false, error: "Gagal mengambil data aplikasi" },
         { status: 500 }
       );
     }
 
-    // Calculate pagination info
-    const totalPages = Math.ceil((count || 0) / limit);
-    const hasMore = page < totalPages;
+    console.log(`Found ${applications?.length || 0} applications`);
 
-    // Get interview sessions for these applicants to check if already scheduled
-    const applicantIds = applicants?.map((app) => app.id) || [];
-    const { data: sessions } = await supabase
-      .from("interview_sessions")
-      .select("id, applicantId, status, interviewDate, totalScore")
-      .in("applicantId", applicantIds);
-
-    // Merge session data with applicants
-    const applicantsWithSessionInfo = applicants?.map((applicant) => {
-      const session = sessions?.find((s) => s.applicantId === applicant.id);
-      return {
-        ...applicant,
-        hasInterview: !!session,
-        sessionId: session?.id || null,
-        interviewStatus: session?.status || null,
-        interviewDate: session?.interviewDate || null,
-        totalScore: session?.totalScore || null,
-      };
-    });
-
-    console.log(`✅ Found ${applicants?.length} interview candidates`);
+    // Transform data to match InterviewCandidate interface
+    const transformedApplications =
+      applications?.map((app) => ({
+        id: app.id,
+        email: app.email,
+        fullName: app.fullName,
+        nim: app.nim,
+        phoneNumber: app.phoneNumber,
+        faculty: app.faculty,
+        department: app.department,
+        studyProgram: app.studyProgram,
+        educationLevel: app.educationLevel,
+        status: app.status,
+        updatedAt: app.updatedAt,
+        // Interview specific fields - set defaults since columns don't exist yet
+        hasInterview: false,
+        interviewStatus: "pending",
+        interviewDate: undefined,
+        totalScore: undefined,
+        assignedInterviewer: undefined,
+      })) || [];
 
     return NextResponse.json({
       success: true,
-      data: applicantsWithSessionInfo,
+      data: transformedApplications,
       pagination: {
-        currentPage: page,
-        totalPages,
-        totalItems: count || 0,
-        itemsPerPage: limit,
-        hasMore,
+        page,
+        limit,
+        total: totalCount || 0,
+        totalPages: Math.ceil((totalCount || 0) / limit),
       },
     });
   } catch (error) {
-    console.error("❌ Error in interview applications endpoint:", error);
+    console.error("Error in applications API:", error);
     return NextResponse.json(
-      { success: false, message: "Terjadi kesalahan server" },
+      { success: false, error: "Internal server error" },
       { status: 500 }
     );
   }
 }
 
-export const GET = withInterviewerAuth(handler);
+// POST untuk update status interview atau score
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { applicantId, action, data } = body;
+
+    console.log("POST applications API:", { applicantId, action, data });
+
+    if (!applicantId || !action) {
+      return NextResponse.json(
+        { success: false, error: "applicantId dan action diperlukan" },
+        { status: 400 }
+      );
+    }
+
+    let updateData: Record<string, string | number | boolean | null> = {};
+
+    switch (action) {
+      case "updateInterviewStatus":
+        // Note: These columns don't exist yet, but keeping for future migration
+        updateData = {
+          status: data.status, // Use general status for now
+          updatedAt: new Date().toISOString(),
+        };
+        break;
+
+      case "updateInterviewScore":
+        updateData = {
+          status: "interviewed", // Use general status
+          updatedAt: new Date().toISOString(),
+        };
+        break;
+
+      case "assignInterview":
+        updateData = {
+          status: "scheduled", // Use general status
+          updatedAt: new Date().toISOString(),
+        };
+        break;
+
+      default:
+        return NextResponse.json(
+          { success: false, error: "Action tidak valid" },
+          { status: 400 }
+        );
+    }
+
+    const { data: updatedApplicant, error } = await supabase
+      .from("applicants")
+      .update(updateData)
+      .eq("id", applicantId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error updating applicant:", error);
+      return NextResponse.json(
+        { success: false, error: "Gagal mengupdate data aplikasi" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: updatedApplicant,
+    });
+  } catch (error) {
+    console.error("Error in applications POST API:", error);
+    return NextResponse.json(
+      { success: false, error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}

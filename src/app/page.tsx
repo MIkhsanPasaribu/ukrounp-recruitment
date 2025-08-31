@@ -109,10 +109,10 @@ export default function Home() {
             </Link>
 
             <Link
-              href="/admin"
-              className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-6 rounded-lg transition-colors duration-300"
+              href="/login"
+              className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-5 rounded-lg transition-colors duration-300 text-center text-sm"
             >
-              ADMIN
+              LOGIN ADMIN / PEWAWANCARA
             </Link>
           </div>
 
