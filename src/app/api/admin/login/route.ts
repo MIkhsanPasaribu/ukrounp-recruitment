@@ -27,11 +27,11 @@ export async function POST(request: NextRequest) {
       userAgent
     );
 
-    console.log("🔐 Auth result:", { 
-      success: authResult.success, 
+    console.log("🔐 Auth result:", {
+      success: authResult.success,
       hasToken: !!authResult.token,
       hasAdmin: !!authResult.admin,
-      message: authResult.message 
+      message: authResult.message,
     });
 
     if (!authResult.success) {

@@ -51,18 +51,21 @@ export async function generateToken(admin: AdminUser): Promise<string> {
 
   // Store token in database
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-  
+
   console.log("🔑 Storing token with expiresAt:", expiresAt.toISOString());
-  
+
   // Generate a unique ID for the session token
   const sessionId = crypto.randomUUID();
-  
-  const { data, error } = await supabase.from("session_tokens").insert({
-    id: sessionId,
-    adminId: admin.id,
-    token,
-    expiresAt: expiresAt, // Use Date object instead of ISO string
-  }).select();
+
+  const { data, error } = await supabase
+    .from("session_tokens")
+    .insert({
+      id: sessionId,
+      adminId: admin.id,
+      token,
+      expiresAt: expiresAt, // Use Date object instead of ISO string
+    })
+    .select();
 
   if (error) {
     console.error("❌ Error storing token:", error);
@@ -98,7 +101,7 @@ export function verifyToken(token: string): {
 // Check if token is valid in database
 export async function isTokenValid(token: string): Promise<boolean> {
   console.log("🔍 Checking token validity:", token.substring(0, 20) + "...");
-  
+
   const { data, error } = await supabase
     .from("session_tokens")
     .select("*")
