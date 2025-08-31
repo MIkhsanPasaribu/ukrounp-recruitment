@@ -31,7 +31,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({
+    // Create response with token and admin info
+    const response = NextResponse.json({
       success: true,
       message: authResult.message,
       token: authResult.token,
@@ -43,6 +44,19 @@ export async function POST(request: NextRequest) {
         role: authResult.admin?.role,
       },
     });
+
+    // Set httpOnly cookie for additional security
+    if (authResult.token) {
+      response.cookies.set("adminToken", authResult.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 24 * 60 * 60, // 24 hours
+        path: "/",
+      });
+    }
+
+    return response;
   } catch (error) {
     console.error("Login error:", error);
     return NextResponse.json(
