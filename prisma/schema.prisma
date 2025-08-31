@@ -122,6 +122,177 @@ model SessionToken {
   @@map("session_tokens")
 }
 
+model Interviewer {
+  id                String   @id @default(cuid())
+  username          String   @unique
+  email             String   @unique
+  passwordHash      String
+  fullName          String
+  role              InterviewerRole @default(INTERVIEWER)
+  isActive          Boolean  @default(true)
+  lastLoginAt       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  sessions          InterviewSession[]
+  tokens            InterviewerToken[]
+
+  @@map("interviewers")
+}
+
+model InterviewSession {
+  id               String   @id @default(cuid())
+  applicantId      String
+  interviewerId    String
+  interviewDate    DateTime?
+  location         String?
+  status           InterviewStatus @default(SCHEDULED)
+  notes            String?
+  totalScore       Int?
+  recommendation   InterviewRecommendation?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  applicant        Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  interviewer      Interviewer @relation(fields: [interviewerId], references: [id], onDelete: Cascade)
+  responses        InterviewResponse[]
+
+  @@map("interview_sessions")
+}
+
+model InterviewQuestion {
+  id               String   @id @default(cuid())
+  questionNumber   Int
+  questionText     String
+  category         String?
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+
+  // Relations
+  responses        InterviewResponse[]
+
+  @@map("interview_questions")
+}
+
+model InterviewResponse {
+  id               String   @id @default(cuid())
+  sessionId        String
+  questionId       String
+  response         String?
+  score            Int      // 1-5
+  notes            String?
+  createdAt        DateTime @default(now())
+
+  // Relations
+  session          InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question         InterviewQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, questionId])
+  @@map("interview_responses")
+}
+
+model InterviewerToken {
+  id               String   @id @default(cuid())
+  interviewerId    String
+  token            String   @unique
+  expiresAt        DateTime
+  isRevoked        Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  revokedAt        DateTime?
+
+  // Relations
+  interviewer      Interviewer @relation(fields: [interviewerId], references: [id], onDelete: Cascade)
+
+  @@map("interviewer_tokens")
+}
+
+// Add interview-related relations to existing models
+model Applicant {
+  id                      String   @id @default(cuid())
+  email                   String   @unique
+  fullName                String
+  nickname                String?
+  gender                  Gender?
+  birthDate               String?
+  faculty                 String?
+  department              String?
+  studyProgram            String?
+  nim                     String?
+  nia                     String?
+  educationLevel          EducationLevel?
+  previousSchool          String?
+  padangAddress           String?
+  phoneNumber             String?
+  motivation              String?
+  futurePlans             String?
+  whyYouShouldBeAccepted  String?
+  
+  // Software proficiency
+  corelDraw               Boolean  @default(false)
+  photoshop               Boolean  @default(false)
+  adobePremierePro        Boolean  @default(false)
+  adobeAfterEffect        Boolean  @default(false)
+  autodeskEagle           Boolean  @default(false)
+  arduinoIde             Boolean  @default(false)
+  androidStudio           Boolean  @default(false)
+  visualStudio            Boolean  @default(false)
+  missionPlaner           Boolean  @default(false)
+  autodeskInventor        Boolean  @default(false)
+  autodeskAutocad         Boolean  @default(false)
+  solidworks              Boolean  @default(false)
+  otherSoftware           String?
+  
+  // Document uploads (stored as base64 or file URLs)
+  mbtiProof               String?
+  studentCardProof        String?
+  gpaProof                String?
+  photo                   String?
+  portfolioFile           String?
+  
+  // Status dan metadata
+  status                  ApplicationStatus @default(SEDANG_DITINJAU)
+  registrationFee         Boolean  @default(false)
+  submissionDate          DateTime @default(now())
+  lastModified            DateTime @updatedAt
+  whatsappVerified        Boolean  @default(false)
+  whatsappVerificationCode String?
+  whatsappVerificationExpiry DateTime?
+  canModifyData           Boolean  @default(true)
+  modificationRequests    Int      @default(0)
+
+  // Relations
+  interviewSessions       InterviewSession[]
+
+  @@map("applicants")
+}
+
+enum InterviewerRole {
+  INTERVIEWER
+  HEAD_INTERVIEWER
+
+  @@map("interviewer_role")
+}
+
+enum InterviewStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+
+  @@map("interview_status")
+}
+
+enum InterviewRecommendation {
+  SANGAT_DIREKOMENDASIKAN
+  DIREKOMENDASIKAN
+  CUKUP
+  TIDAK_DIREKOMENDASIKAN
+
+  @@map("interview_recommendation")
+}
+
 enum AdminRole {
   SUPER_ADMIN
   ADMIN
