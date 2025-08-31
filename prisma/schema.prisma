@@ -86,8 +86,9 @@ model Admin {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   
-  // Audit log
+  // Relations
   auditLogs         AuditLog[]
+  sessionTokens     SessionToken[]
   
   @@map("admins")
 }
@@ -115,6 +116,8 @@ model SessionToken {
   isRevoked         Boolean  @default(false)
   createdAt         DateTime @default(now())
   revokedAt         DateTime?
+  
+  admin             Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
   
   @@map("session_tokens")
 }
