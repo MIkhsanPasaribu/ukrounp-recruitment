@@ -112,7 +112,7 @@ export default function Home() {
               href="/login"
               className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-5 rounded-lg transition-colors duration-300 text-center text-sm"
             >
-              LOGIN ADMIN / PEWAWANCARA
+              LOGIN
             </Link>
           </div>
 

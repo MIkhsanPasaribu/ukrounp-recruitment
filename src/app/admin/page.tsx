@@ -15,6 +15,7 @@ import SearchAndFilters from "@/components/admin/SearchAndFilters";
 import BulkActions from "@/components/admin/BulkActions";
 import ApplicationsTable from "@/components/admin/ApplicationsTable";
 import MobileApplicationsView from "@/components/admin/MobileApplicationsView";
+import InterviewAssignmentTab from "@/components/admin/InterviewAssignmentTab";
 import { exportApplicationsToCSV } from "@/utils/csvExport";
 
 // Custom Hooks
@@ -77,7 +78,7 @@ export default function AdminPage() {
 
   // Tab Management
   const [activeTab, setActiveTab] = useState<
-    "overview" | "applications" | "enhanced"
+    "overview" | "applications" | "enhanced" | "interviews"
   >("overview");
 
   // Modal Management
@@ -213,6 +214,11 @@ export default function AdminPage() {
                 />
               </div>
             </div>
+          )}
+
+          {/* Interview Assignment Tab */}
+          {activeTab === "interviews" && token && (
+            <InterviewAssignmentTab token={token} />
           )}
 
           {/* Applications Tab */}

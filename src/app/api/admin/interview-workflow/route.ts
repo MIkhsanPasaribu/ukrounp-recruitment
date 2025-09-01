@@ -2,15 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/auth-middleware";
 import { supabase } from "@/lib/supabase";
 
-interface AuthData {
-  isAuthenticated: boolean;
-  admin?: unknown;
-  token?: string;
-}
-
-async function handler(request: NextRequest, auth: AuthData) {
+async function handler(request: NextRequest) {
   if (request.method === "POST") {
-    return await handleWorkflowAction(request, auth);
+    return await handleWorkflowAction(request);
   }
 
   return NextResponse.json(
@@ -19,100 +13,99 @@ async function handler(request: NextRequest, auth: AuthData) {
   );
 }
 
-async function handleWorkflowAction(request: NextRequest, auth: AuthData) {
+async function handleWorkflowAction(request: NextRequest) {
   try {
-    const { action, nim, interviewerId, notes } = await request.json();
-    const admin = auth.admin as {
-      id: string;
-      username: string;
-      fullName: string;
-    };
+    const { action, nim, applicantId, interviewerId } = await request.json();
 
-    if (!action || !nim) {
+    if (!action) {
       return NextResponse.json(
-        { success: false, message: "Action dan NIM harus diisi" },
+        { success: false, message: "Action harus diisi" },
         { status: 400 }
       );
     }
 
-    // Find applicant by NIM
-    const { data: applicant, error: applicantError } = await supabase
-      .from("applicants")
-      .select("id, nim, fullName")
-      .eq("nim", nim)
-      .single();
-
-    if (applicantError || !applicant) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Peserta dengan NIM tersebut tidak ditemukan",
-        },
-        { status: 404 }
-      );
-    }
-
     if (action === "mark_attendance") {
-      // Mark attendance
-      const { data: existingAttendance } = await supabase
-        .from("interview_attendance")
-        .select("id")
-        .eq("applicantId", applicant.id)
-        .single();
-
-      if (existingAttendance) {
+      if (!nim) {
         return NextResponse.json(
-          { success: false, message: "Absensi untuk peserta ini sudah ada" },
+          {
+            success: false,
+            message: "NIM harus diisi untuk konfirmasi kehadiran",
+          },
           { status: 400 }
         );
       }
 
-      const { error: attendanceError } = await supabase
-        .from("interview_attendance")
-        .insert({
-          nim: applicant.nim,
-          applicantId: applicant.id,
-          checkedInAt: new Date().toISOString(),
-          checkedInBy: admin.id,
-          status: "PRESENT",
-          notes: notes || "",
-        });
+      // Find applicant by NIM
+      const { data: applicant, error: applicantError } = await supabase
+        .from("applicants")
+        .select("id, nim, fullName")
+        .eq("nim", nim)
+        .single();
 
-      if (attendanceError) {
-        console.error("Error creating attendance:", attendanceError);
+      if (applicantError || !applicant) {
         return NextResponse.json(
-          { success: false, message: "Gagal mencatat absensi" },
+          {
+            success: false,
+            message: "Peserta dengan NIM tersebut tidak ditemukan",
+          },
+          { status: 404 }
+        );
+      }
+
+      // Update applicant's status to INTERVIEW and mark attendance
+      const { error: updateError } = await supabase
+        .from("applicants")
+        .update({
+          status: "INTERVIEW",
+          attendanceConfirmed: true,
+          checkedInAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        })
+        .eq("id", applicant.id);
+
+      if (updateError) {
+        console.error("Error updating applicant:", updateError);
+        return NextResponse.json(
+          { success: false, message: "Gagal mengupdate status peserta" },
           { status: 500 }
         );
       }
 
-      // Update applicant's attendance status
-      await supabase
-        .from("applicants")
-        .update({
-          attendanceConfirmed: true,
-          checkedInAt: new Date().toISOString(),
-        })
-        .eq("id", applicant.id);
-
       return NextResponse.json({
         success: true,
-        message: "Absensi berhasil dicatat",
-        data: { applicant, status: "PRESENT" },
+        message: "Kehadiran berhasil dikonfirmasi",
+        data: { applicant, status: "INTERVIEW" },
       });
     } else if (action === "assign_interviewer") {
-      if (!interviewerId) {
+      if (!applicantId || !interviewerId) {
         return NextResponse.json(
-          { success: false, message: "ID pewawancara harus diisi" },
+          {
+            success: false,
+            message: "applicantId dan interviewerId harus diisi",
+          },
           { status: 400 }
+        );
+      }
+
+      // Get applicant data
+      const { data: applicant, error: applicantError } = await supabase
+        .from("applicants")
+        .select("id, nim, fullName")
+        .eq("id", applicantId)
+        .single();
+
+      if (applicantError || !applicant) {
+        return NextResponse.json(
+          { success: false, message: "Peserta tidak ditemukan" },
+          { status: 404 }
         );
       }
 
       // Verify interviewer exists
       const { data: interviewer, error: interviewerError } = await supabase
         .from("interviewers")
-        .select("id, fullName")
-        .eq("id", interviewerId)
+        .select("id, username, fullName")
+        .eq("username", interviewerId)
         .single();
 
       if (interviewerError || !interviewer) {
@@ -122,63 +115,23 @@ async function handleWorkflowAction(request: NextRequest, auth: AuthData) {
         );
       }
 
-      // Check if assignment already exists
-      const { data: existingAssignment } = await supabase
-        .from("interviewer_assignments")
-        .select("id")
-        .eq("applicantId", applicant.id)
-        .single();
-
-      if (existingAssignment) {
-        // Update existing assignment
-        const { error: updateError } = await supabase
-          .from("interviewer_assignments")
-          .update({
-            interviewerId,
-            assignedBy: admin.id,
-            assignedAt: new Date().toISOString(),
-            status: "ASSIGNED",
-            notes: notes || "",
-          })
-          .eq("applicantId", applicant.id);
-
-        if (updateError) {
-          console.error("Error updating assignment:", updateError);
-          return NextResponse.json(
-            { success: false, message: "Gagal memperbarui penugasan" },
-            { status: 500 }
-          );
-        }
-      } else {
-        // Create new assignment
-        const { error: assignmentError } = await supabase
-          .from("interviewer_assignments")
-          .insert({
-            applicantId: applicant.id,
-            interviewerId,
-            assignedBy: admin.id,
-            assignedAt: new Date().toISOString(),
-            status: "ASSIGNED",
-            notes: notes || "",
-          });
-
-        if (assignmentError) {
-          console.error("Error creating assignment:", assignmentError);
-          return NextResponse.json(
-            { success: false, message: "Gagal membuat penugasan" },
-            { status: 500 }
-          );
-        }
-      }
-
-      // Update applicant's assignment status
-      await supabase
+      // Update applicant's assignment
+      const { error: assignmentError } = await supabase
         .from("applicants")
         .update({
           assignedInterviewer: interviewerId,
           interviewStatus: "ASSIGNED",
+          updatedAt: new Date().toISOString(),
         })
-        .eq("id", applicant.id);
+        .eq("id", applicantId);
+
+      if (assignmentError) {
+        console.error("Error updating assignment:", assignmentError);
+        return NextResponse.json(
+          { success: false, message: "Gagal menugaskan pewawancara" },
+          { status: 500 }
+        );
+      }
 
       return NextResponse.json({
         success: true,

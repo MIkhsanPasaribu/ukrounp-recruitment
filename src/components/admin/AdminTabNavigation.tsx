@@ -1,8 +1,10 @@
 "use client";
 
 interface AdminTabNavigationProps {
-  activeTab: "overview" | "applications" | "enhanced";
-  setActiveTab: (tab: "overview" | "applications" | "enhanced") => void;
+  activeTab: "overview" | "applications" | "enhanced" | "interviews";
+  setActiveTab: (
+    tab: "overview" | "applications" | "enhanced" | "interviews"
+  ) => void;
   applicationsCount: number;
 }
 
@@ -61,6 +63,22 @@ export default function AdminTabNavigation({
             <span>🚀</span>
             <span className="hidden sm:inline">Enterprise Dashboard</span>
             <span className="sm:hidden">Enhanced</span>
+          </span>
+        </button>
+
+        {/* Interview Workflow Tab */}
+        <button
+          onClick={() => setActiveTab("interviews")}
+          className={`py-2 px-1 border-b-2 font-medium text-sm ${
+            activeTab === "interviews"
+              ? "border-indigo-500 text-indigo-600"
+              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+          }`}
+        >
+          <span className="flex items-center gap-1">
+            <span>🎤</span>
+            <span className="hidden sm:inline">Interview Assignment</span>
+            <span className="sm:hidden">Interviews</span>
           </span>
         </button>
       </nav>
