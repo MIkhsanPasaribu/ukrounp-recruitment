@@ -41,8 +41,6 @@ async function handler(request: NextRequest) {
           location,
           status,
           notes,
-          totalScore,
-          recommendation,
           applicants!inner(
             id,
             fullName,

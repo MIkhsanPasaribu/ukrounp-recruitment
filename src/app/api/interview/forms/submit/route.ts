@@ -99,23 +99,14 @@ async function handler(
       );
     }
 
-    // Update session with total score and status
-    const sessionUpdateData: Record<string, string | number> = {
-      totalScore,
+    // Update session with notes and status only
+    const sessionUpdateData: Record<string, string> = {
       status: "COMPLETED",
-      updatedAt: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
 
     if (sessionNotes) {
       sessionUpdateData.notes = sessionNotes;
-    }
-
-    if (recommendation) {
-      sessionUpdateData.recommendation = recommendation;
-    }
-
-    if (interviewerName) {
-      sessionUpdateData.interviewer_name = interviewerName;
     }
 
     const { error: sessionUpdateError } = await supabase
