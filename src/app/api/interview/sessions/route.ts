@@ -47,14 +47,18 @@ async function handler(
     }
 
     // Check if interview session already exists for this applicant
-    const { data: existingSession, error: existingSessionError } = await supabase
-      .from("interview_sessions")
-      .select("id, status, interviewDate, location, notes")
-      .eq("applicantId", applicantId)
-      .single();
+    const { data: existingSession, error: existingSessionError } =
+      await supabase
+        .from("interview_sessions")
+        .select("id, status, interviewDate, location, notes")
+        .eq("applicantId", applicantId)
+        .single();
 
     if (existingSession && !existingSessionError) {
-      console.log("✅ Session already exists, returning existing session:", existingSession.id);
+      console.log(
+        "✅ Session already exists, returning existing session:",
+        existingSession.id
+      );
       return NextResponse.json({
         success: true,
         message: "Sesi wawancara sudah ada, menggunakan sesi yang ada",

@@ -133,15 +133,15 @@ export async function GET(request: NextRequest) {
     );
 
     // Get interview sessions for these applicants
-    const applicantIds = applications?.map(app => app.id) || [];
+    const applicantIds = applications?.map((app) => app.id) || [];
     let interviewSessions: any[] = [];
-    
+
     if (applicantIds.length > 0) {
       const { data: sessions, error: sessionsError } = await supabase
         .from("interview_sessions")
         .select("id, applicantId, status, interviewDate, location, notes")
         .in("applicantId", applicantIds);
-      
+
       if (!sessionsError && sessions) {
         interviewSessions = sessions;
         console.log(`Found ${sessions.length} existing interview sessions`);
@@ -152,8 +152,10 @@ export async function GET(request: NextRequest) {
     const transformedApplications =
       applications?.map((app) => {
         // Find existing session for this applicant
-        const existingSession = interviewSessions.find(s => s.applicantId === app.id);
-        
+        const existingSession = interviewSessions.find(
+          (s) => s.applicantId === app.id
+        );
+
         return {
           id: app.id,
           email: app.email,

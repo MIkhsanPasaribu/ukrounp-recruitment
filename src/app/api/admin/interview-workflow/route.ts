@@ -124,7 +124,7 @@ async function handleWorkflowAction(request: NextRequest) {
 
       // Debug: First check if table exists and what tables we have
       console.log("Looking for interviewer with username:", interviewerId);
-      
+
       // Try different table name possibilities
       let interviewer = null;
       let interviewerError = null;
@@ -135,7 +135,7 @@ async function handleWorkflowAction(request: NextRequest) {
         .select("*")
         .eq("username", interviewerId)
         .single();
-      
+
       console.log("Query result from 'interviewers' table:", result1);
 
       if (result1.data) {
@@ -147,19 +147,21 @@ async function handleWorkflowAction(request: NextRequest) {
       // If not found, the interviewer doesn't exist in the expected format
       if (interviewerError || !interviewer) {
         console.error("Interviewer not found in any table:", interviewerError);
-        
+
         // Let's also try to see what interviewers exist
         const allInterviewers = await supabase
           .from("interviewers")
           .select("username, email")
           .limit(10);
-        
+
         console.log("All interviewers in database:", allInterviewers.data);
-        
+
         return NextResponse.json(
           {
             success: false,
-            message: `Pewawancara '${interviewerId}' tidak ditemukan. Debug: ${JSON.stringify(interviewerError)}`,
+            message: `Pewawancara '${interviewerId}' tidak ditemukan. Debug: ${JSON.stringify(
+              interviewerError
+            )}`,
           },
           { status: 404 }
         );
