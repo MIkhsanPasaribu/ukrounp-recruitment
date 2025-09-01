@@ -130,7 +130,7 @@ async function handler(
         location,
         status,
         notes,
-        createdAt
+        created_at
       `
       )
       .single();

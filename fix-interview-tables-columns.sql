@@ -1,8 +1,14 @@
--- Create interview tables for wawancara workflow
--- Run this script di Supabase SQL Editor
+-- Quick fix: Drop dan recreate interview tables dengan struktur yang benar
+-- Jalankan di Supabase SQL Editor
 
--- 1. Create interviewer_tokens table
-CREATE TABLE IF NOT EXISTS interviewer_tokens (
+-- 1. Drop existing tables (hati-hati, ini akan menghapus data!)
+DROP TABLE IF EXISTS interview_responses CASCADE;
+DROP TABLE IF EXISTS interview_questions CASCADE; 
+DROP TABLE IF EXISTS interview_sessions CASCADE;
+DROP TABLE IF EXISTS interviewer_tokens CASCADE;
+
+-- 2. Recreate dengan struktur yang benar
+CREATE TABLE interviewer_tokens (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     "interviewerId" UUID NOT NULL REFERENCES interviewers(id) ON DELETE CASCADE,
     token TEXT NOT NULL UNIQUE,
@@ -13,8 +19,7 @@ CREATE TABLE IF NOT EXISTS interviewer_tokens (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 2. Create interview_sessions table  
-CREATE TABLE IF NOT EXISTS interview_sessions (
+CREATE TABLE interview_sessions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     "applicantId" UUID NOT NULL REFERENCES applicants(id) ON DELETE CASCADE,
     "interviewerId" UUID NOT NULL REFERENCES interviewers(id) ON DELETE CASCADE,
@@ -26,8 +31,7 @@ CREATE TABLE IF NOT EXISTS interview_sessions (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 3. Create interview_questions table
-CREATE TABLE IF NOT EXISTS interview_questions (
+CREATE TABLE interview_questions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     "questionNumber" INTEGER NOT NULL,
     "questionText" TEXT NOT NULL,
@@ -38,8 +42,7 @@ CREATE TABLE IF NOT EXISTS interview_questions (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 4. Create interview_responses table
-CREATE TABLE IF NOT EXISTS interview_responses (
+CREATE TABLE interview_responses (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     "sessionId" UUID NOT NULL REFERENCES interview_sessions(id) ON DELETE CASCADE,
     "questionId" UUID NOT NULL REFERENCES interview_questions(id) ON DELETE CASCADE,
@@ -50,7 +53,7 @@ CREATE TABLE IF NOT EXISTS interview_responses (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 5. Insert default interview questions
+-- 3. Insert default questions
 INSERT INTO interview_questions ("questionNumber", "questionText", category, "maxScore") VALUES
 (1, 'Deskripsi Diri (Karakter/Etika, Pengalaman, Prestasi, Kelebihan/Kekurangan, Skill)', 'IDENTITAS & KEPRIBADIAN', 5),
 (2, 'Tujuan Bergabung UKRO', 'VISI & MOTIVASI', 5),
@@ -62,24 +65,17 @@ INSERT INTO interview_questions ("questionNumber", "questionText", category, "ma
 (8, 'Misal Saat Melakukan Riset Membutuhkan Materi, Apakah Bersedia Untuk Memberikan Materi Untuk Membeli Keperluan Riset', 'KONTRIBUSI & DUKUNGAN', 5),
 (9, 'Pilihan Tim Teknis', 'MINAT TEKNIS', 5),
 (10, 'Pilihan Departemen', 'ASPIRASI ORGANISASI', 5),
-(11, 'Hasil Psikologi', 'PSIKOLOGI & KECOCOKAN', 5)
-ON CONFLICT DO NOTHING;
+(11, 'Hasil Psikologi', 'PSIKOLOGI & KECOCOKAN', 5);
 
--- 6. Create useful indexes
-CREATE INDEX IF NOT EXISTS idx_interviewer_tokens_interviewer_id ON interviewer_tokens("interviewerId");
-CREATE INDEX IF NOT EXISTS idx_interviewer_tokens_token ON interviewer_tokens(token);
-CREATE INDEX IF NOT EXISTS idx_interview_sessions_applicant_id ON interview_sessions("applicantId");
-CREATE INDEX IF NOT EXISTS idx_interview_sessions_interviewer_id ON interview_sessions("interviewerId");
-CREATE INDEX IF NOT EXISTS idx_interview_responses_session_id ON interview_responses("sessionId");
-CREATE INDEX IF NOT EXISTS idx_interview_responses_question_id ON interview_responses("questionId");
+-- 4. Create indexes
+CREATE INDEX idx_interviewer_tokens_interviewer_id ON interviewer_tokens("interviewerId");
+CREATE INDEX idx_interviewer_tokens_token ON interviewer_tokens(token);
+CREATE INDEX idx_interview_sessions_applicant_id ON interview_sessions("applicantId");
+CREATE INDEX idx_interview_sessions_interviewer_id ON interview_sessions("interviewerId");
+CREATE INDEX idx_interview_responses_session_id ON interview_responses("sessionId");
+CREATE INDEX idx_interview_responses_question_id ON interview_responses("questionId");
 
--- 7. Enable RLS (Row Level Security) if needed
--- ALTER TABLE interviewer_tokens ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE interview_sessions ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE interview_questions ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE interview_responses ENABLE ROW LEVEL SECURITY;
-
--- 8. Verify tables created successfully
+-- 5. Verify semua tabel sudah dibuat
 SELECT 
     schemaname,
     tablename,
