@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import jwt from "jsonwebtoken";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,6 +9,30 @@ const supabase = createClient(
 
 export async function GET(request: NextRequest) {
   try {
+    // Ambil token dari header
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return NextResponse.json(
+        { success: false, error: "Token tidak valid" },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.substring(7);
+    let interviewerUsername = "";
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
+        username: string;
+      };
+      interviewerUsername = decoded.username;
+    } catch {
+      return NextResponse.json(
+        { success: false, error: "Token tidak valid" },
+        { status: 401 }
+      );
+    }
+
     // Ambil query parameters
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
@@ -15,17 +40,22 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "";
 
-    console.log("Fetching applications with params:", {
-      page,
-      limit,
-      search,
-      status,
-    });
+    console.log(
+      "Fetching applications for interviewer:",
+      interviewerUsername,
+      "with params:",
+      {
+        page,
+        limit,
+        search,
+        status,
+      }
+    );
 
     // Calculate offset
     const offset = (page - 1) * limit;
 
-    // Build query
+    // Build query - hanya ambil yang ditugaskan ke interviewer ini
     let query = supabase
       .from("applicants")
       .select(
@@ -41,12 +71,21 @@ export async function GET(request: NextRequest) {
         educationLevel,
         status,
         submittedAt,
-        updatedAt
+        updatedAt,
+        interviewStatus,
+        assignedInterviewer,
+        interviewDateTime,
+        attendanceConfirmed,
+        interviewScore,
+        interviewNotes
       `
       )
+      .eq("assignedInterviewer", interviewerUsername)
+      .eq("status", "INTERVIEW")
+      .eq("attendanceConfirmed", true)
       .order("submittedAt", { ascending: false });
 
-    // Apply filters
+    // Apply additional filters
     if (search) {
       query = query.or(
         `nim.ilike.%${search}%,fullName.ilike.%${search}%,email.ilike.%${search}%`
@@ -54,13 +93,16 @@ export async function GET(request: NextRequest) {
     }
 
     if (status) {
-      query = query.eq("status", status);
+      query = query.eq("interviewStatus", status);
     }
 
-    // Get total count for pagination
+    // Get total count for pagination - count only assigned applicants
     const { count: totalCount } = await supabase
       .from("applicants")
-      .select("*", { count: "exact", head: true });
+      .select("*", { count: "exact", head: true })
+      .eq("assignedInterviewer", interviewerUsername)
+      .eq("status", "INTERVIEW")
+      .eq("attendanceConfirmed", true);
 
     // Apply pagination
     query = query.range(offset, offset + limit - 1);
@@ -75,7 +117,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log(`Found ${applications?.length || 0} applications`);
+    console.log(
+      `Found ${
+        applications?.length || 0
+      } applications for interviewer: ${interviewerUsername}`
+    );
 
     // Transform data to match InterviewCandidate interface
     const transformedApplications =
@@ -91,12 +137,14 @@ export async function GET(request: NextRequest) {
         educationLevel: app.educationLevel,
         status: app.status,
         updatedAt: app.updatedAt,
-        // Interview specific fields - set defaults since columns don't exist yet
-        hasInterview: false,
-        interviewStatus: "pending",
-        interviewDate: undefined,
-        totalScore: undefined,
-        assignedInterviewer: undefined,
+        // Interview specific fields with actual data
+        hasInterview: true,
+        interviewStatus: app.interviewStatus || "assigned",
+        interviewDate: app.interviewDateTime,
+        totalScore: app.interviewScore,
+        assignedInterviewer: app.assignedInterviewer,
+        // Additional fields
+        attendanceStatus: app.attendanceConfirmed ? "PRESENT" : "ABSENT",
       })) || [];
 
     return NextResponse.json({
