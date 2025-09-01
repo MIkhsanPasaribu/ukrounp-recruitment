@@ -42,21 +42,32 @@ export default function InterviewAssignmentTab({
   const fetchCandidates = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/admin/applications?status=INTERVIEW", {
+      console.log("Fetching interview candidates...");
+
+      const response = await fetch("/api/admin/interview-candidates", {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
 
+      console.log("Response status:", response.status);
+
       if (response.ok) {
         const data = await response.json();
-        setCandidates(data.applications || []);
+        console.log("Fetched interview candidates:", data);
+        console.log("Candidates count:", data.candidates?.length || 0);
+        setCandidates(data.candidates || []);
       } else {
-        console.error("Failed to fetch candidates");
+        console.error(
+          "Failed to fetch interview candidates, status:",
+          response.status
+        );
+        const errorData = await response.json();
+        console.error("Error data:", errorData);
       }
     } catch (error) {
-      console.error("Error fetching candidates:", error);
+      console.error("Error fetching interview candidates:", error);
     } finally {
       setLoading(false);
     }
@@ -72,7 +83,7 @@ export default function InterviewAssignmentTab({
     setConfirmingAttendance(true);
     try {
       console.log("Confirming attendance for NIM:", nimInput.trim());
-      
+
       const response = await fetch("/api/admin/interview-workflow", {
         method: "POST",
         headers: {

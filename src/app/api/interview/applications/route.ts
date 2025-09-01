@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
 
     // Build query - hanya ambil yang ditugaskan ke interviewer ini
     console.log("Building query for interviewer:", interviewerUsername);
-    
+
     let query = supabase
       .from("applicants")
       .select(
@@ -89,8 +89,8 @@ export async function GET(request: NextRequest) {
 
     console.log("Query filters:", {
       assignedInterviewer: interviewerUsername,
-      status: "INTERVIEW", 
-      attendanceConfirmed: true
+      status: "INTERVIEW",
+      attendanceConfirmed: true,
     });
 
     // Apply additional filters

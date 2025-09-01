@@ -64,7 +64,7 @@ async function handleWorkflowAction(request: NextRequest) {
         attendanceConfirmed: true,
         updatedAt: new Date().toISOString(),
       };
-      
+
       console.log("Update data:", updateData);
 
       const { data: updateResult, error: updateError } = await supabase
@@ -78,10 +78,10 @@ async function handleWorkflowAction(request: NextRequest) {
       if (updateError) {
         console.error("Error updating applicant:", updateError);
         return NextResponse.json(
-          { 
-            success: false, 
+          {
+            success: false,
             message: `Gagal mengupdate status peserta: ${updateError.message}`,
-            error: updateError 
+            error: updateError,
           },
           { status: 500 }
         );
@@ -134,14 +134,20 @@ async function handleWorkflowAction(request: NextRequest) {
       if (interviewerError || !interviewer) {
         console.error("Interviewer not found:", interviewerError);
         return NextResponse.json(
-          { success: false, message: `Pewawancara '${interviewerId}' tidak ditemukan` },
+          {
+            success: false,
+            message: `Pewawancara '${interviewerId}' tidak ditemukan`,
+          },
           { status: 404 }
         );
       }
 
       if (!interviewer.active) {
         return NextResponse.json(
-          { success: false, message: `Pewawancara '${interviewerId}' tidak aktif` },
+          {
+            success: false,
+            message: `Pewawancara '${interviewerId}' tidak aktif`,
+          },
           { status: 400 }
         );
       }
@@ -166,10 +172,10 @@ async function handleWorkflowAction(request: NextRequest) {
       if (assignmentError) {
         console.error("Error updating assignment:", assignmentError);
         return NextResponse.json(
-          { 
-            success: false, 
+          {
+            success: false,
             message: `Gagal menugaskan pewawancara: ${assignmentError.message}`,
-            error: assignmentError 
+            error: assignmentError,
           },
           { status: 500 }
         );
