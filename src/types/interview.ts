@@ -111,6 +111,7 @@ export interface InterviewFormData {
 export interface InterviewCandidate extends Applicant {
   hasInterview: boolean;
   sessionId?: string;
+  sessionStatus?: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
   interviewStatus?: string;
   interviewDate?: string;
   totalScore?: number;

@@ -172,6 +172,55 @@ export default function OptimizedInterviewerDashboard({
     ]
   );
 
+  // Handle download PDF
+  const handleDownloadPDF = useCallback(
+    async (sessionId: string) => {
+      try {
+        const response = await fetch(
+          `/api/interview/download-pdf/${sessionId}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Gagal mengunduh PDF");
+        }
+
+        // Get the filename from response headers or create a default one
+        const contentDisposition = response.headers.get("content-disposition");
+        let filename = "hasil-wawancara.pdf";
+
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+          if (filenameMatch) {
+            filename = filenameMatch[1];
+          }
+        }
+
+        // Create blob and download
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+
+        // Cleanup
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(link);
+      } catch (err) {
+        console.error("Error downloading PDF:", err);
+        alert(err instanceof Error ? err.message : "Gagal mengunduh PDF");
+      }
+    },
+    [token]
+  );
+
   // Handle logout
   const handleLogout = async () => {
     try {
@@ -224,9 +273,23 @@ export default function OptimizedInterviewerDashboard({
         <td className="px-6 py-4 whitespace-nowrap">
           {candidate.hasInterview ? (
             <div>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                {candidate.interviewStatus}
-              </span>
+              {candidate.sessionStatus === "COMPLETED" ? (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                  Selesai Wawancara
+                </span>
+              ) : candidate.sessionStatus === "IN_PROGRESS" ? (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  Sedang Berlangsung
+                </span>
+              ) : candidate.sessionId ? (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  Siap Wawancara
+                </span>
+              ) : (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                  Perlu Sesi Baru
+                </span>
+              )}
               {candidate.totalScore && (
                 <div className="text-xs text-gray-500 mt-1">
                   Skor: {candidate.totalScore}
@@ -234,43 +297,57 @@ export default function OptimizedInterviewerDashboard({
               )}
             </div>
           ) : (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
               Belum dijadwalkan
             </span>
           )}
         </td>
         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-          {candidate.sessionId ? (
-            // Jika sudah ada session, tampilkan tombol mulai wawancara
+          <div className="flex flex-col space-y-2">
+            {candidate.sessionId ? (
+              candidate.sessionStatus === "COMPLETED" ? (
+                // Jika wawancara sudah selesai, tampilkan tombol download PDF
+                <button
+                  onClick={() => handleDownloadPDF(candidate.sessionId!)}
+                  className="text-purple-600 hover:text-purple-900 bg-purple-50 hover:bg-purple-100 px-3 py-1 rounded text-center"
+                >
+                  Download PDF Hasil
+                </button>
+              ) : (
+                // Jika sudah ada session tapi belum selesai, tampilkan tombol mulai wawancara
+                <button
+                  onClick={() => {
+                    onStartInterview(candidate.sessionId!);
+                  }}
+                  className="text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 px-3 py-1 rounded text-center"
+                >
+                  {candidate.sessionStatus === "IN_PROGRESS"
+                    ? "Lanjutkan Wawancara"
+                    : "Mulai Wawancara"}
+                </button>
+              )
+            ) : (
+              // Jika belum ada session, tampilkan tombol buat sesi
+              <button
+                onClick={() => handleCreateSession(candidate.id)}
+                className="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded text-center"
+              >
+                Buat Sesi Wawancara
+              </button>
+            )}
             <button
               onClick={() => {
-                onStartInterview(candidate.sessionId!);
+                /* View details */
               }}
-              className="text-green-600 hover:text-green-900 mr-4 bg-green-50 hover:bg-green-100 px-3 py-1 rounded"
+              className="text-blue-600 hover:text-blue-900 text-center"
             >
-              Mulai Wawancara
+              Lihat Detail
             </button>
-          ) : (
-            // Jika belum ada session, tampilkan tombol buat sesi
-            <button
-              onClick={() => handleCreateSession(candidate.id)}
-              className="text-indigo-600 hover:text-indigo-900 mr-4 bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded"
-            >
-              Buat Sesi Wawancara
-            </button>
-          )}
-          <button
-            onClick={() => {
-              /* View details */
-            }}
-            className="text-blue-600 hover:text-blue-900"
-          >
-            Lihat Detail
-          </button>
+          </div>
         </td>
       </tr>
     ));
-  }, [candidates, onStartInterview, handleCreateSession]);
+  }, [candidates, onStartInterview, handleCreateSession, handleDownloadPDF]);
 
   return (
     <div className="min-h-screen bg-gray-50">
