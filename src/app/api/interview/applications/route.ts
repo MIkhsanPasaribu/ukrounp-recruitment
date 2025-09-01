@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import jwt from "jsonwebtoken";
@@ -131,29 +132,53 @@ export async function GET(request: NextRequest) {
       } applications for interviewer: ${interviewerUsername}`
     );
 
+    // Get interview sessions for these applicants
+    const applicantIds = applications?.map(app => app.id) || [];
+    let interviewSessions: any[] = [];
+    
+    if (applicantIds.length > 0) {
+      const { data: sessions, error: sessionsError } = await supabase
+        .from("interview_sessions")
+        .select("id, applicantId, status, interviewDate, location, notes")
+        .in("applicantId", applicantIds);
+      
+      if (!sessionsError && sessions) {
+        interviewSessions = sessions;
+        console.log(`Found ${sessions.length} existing interview sessions`);
+      }
+    }
+
     // Transform data to match InterviewCandidate interface
     const transformedApplications =
-      applications?.map((app) => ({
-        id: app.id,
-        email: app.email,
-        fullName: app.fullName,
-        nim: app.nim,
-        phoneNumber: app.phoneNumber,
-        faculty: app.faculty,
-        department: app.department,
-        studyProgram: app.studyProgram,
-        educationLevel: app.educationLevel,
-        status: app.status,
-        updatedAt: app.updatedAt,
-        // Interview specific fields with actual data
-        hasInterview: true,
-        interviewStatus: app.interviewStatus || "assigned",
-        interviewDate: app.interviewDateTime,
-        totalScore: app.interviewScore,
-        assignedInterviewer: app.assignedInterviewer,
-        // Additional fields
-        attendanceStatus: app.attendanceConfirmed ? "PRESENT" : "ABSENT",
-      })) || [];
+      applications?.map((app) => {
+        // Find existing session for this applicant
+        const existingSession = interviewSessions.find(s => s.applicantId === app.id);
+        
+        return {
+          id: app.id,
+          email: app.email,
+          fullName: app.fullName,
+          nim: app.nim,
+          phoneNumber: app.phoneNumber,
+          faculty: app.faculty,
+          department: app.department,
+          studyProgram: app.studyProgram,
+          educationLevel: app.educationLevel,
+          status: app.status,
+          updatedAt: app.updatedAt,
+          // Interview specific fields with actual data
+          hasInterview: true,
+          interviewStatus: app.interviewStatus || "ASSIGNED",
+          interviewDate: app.interviewDateTime,
+          totalScore: app.interviewScore,
+          assignedInterviewer: app.assignedInterviewer,
+          // Session data if exists
+          sessionId: existingSession?.id || null,
+          sessionStatus: existingSession?.status || null,
+          // Additional fields
+          attendanceStatus: app.attendanceConfirmed ? "PRESENT" : "ABSENT",
+        };
+      }) || [];
 
     return NextResponse.json({
       success: true,

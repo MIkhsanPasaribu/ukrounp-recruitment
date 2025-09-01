@@ -47,20 +47,30 @@ async function handler(
     }
 
     // Check if interview session already exists for this applicant
-    const { data: existingSession } = await supabase
+    const { data: existingSession, error: existingSessionError } = await supabase
       .from("interview_sessions")
-      .select("id")
+      .select("id, status, interviewDate, location, notes")
       .eq("applicantId", applicantId)
       .single();
 
-    if (existingSession) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Sesi wawancara untuk peserta ini sudah ada",
+    if (existingSession && !existingSessionError) {
+      console.log("✅ Session already exists, returning existing session:", existingSession.id);
+      return NextResponse.json({
+        success: true,
+        message: "Sesi wawancara sudah ada, menggunakan sesi yang ada",
+        data: {
+          ...existingSession,
+          applicant: {
+            id: applicant.id,
+            fullName: applicant.fullName,
+            email: applicant.email,
+          },
+          interviewer: {
+            id: interviewer.id,
+            fullName: interviewer.fullName,
+          },
         },
-        { status: 409 }
-      );
+      });
     }
 
     // Create new interview session

@@ -258,28 +258,26 @@ export default function InterviewerDashboard({
                             )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            {!candidate.hasInterview ? (
-                              <button
-                                onClick={() =>
-                                  handleCreateSession(candidate.id)
-                                }
-                                className="text-indigo-600 hover:text-indigo-900 mr-4"
-                              >
-                                Buat Sesi
-                              </button>
-                            ) : candidate.sessionId ? (
+                            {candidate.sessionId ? (
+                              // Jika sudah ada session, tampilkan tombol mulai wawancara
                               <button
                                 onClick={() => {
                                   onStartInterview(candidate.sessionId!);
                                 }}
-                                className="text-green-600 hover:text-green-900 mr-4"
+                                className="text-green-600 hover:text-green-900 mr-4 bg-green-50 hover:bg-green-100 px-3 py-1 rounded"
                               >
                                 Mulai Wawancara
                               </button>
                             ) : (
-                              <span className="text-gray-400 mr-4">
-                                Sesi tidak tersedia
-                              </span>
+                              // Jika belum ada session, tampilkan tombol buat sesi
+                              <button
+                                onClick={() =>
+                                  handleCreateSession(candidate.id)
+                                }
+                                className="text-indigo-600 hover:text-indigo-900 mr-4 bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded"
+                              >
+                                Buat Sesi Wawancara
+                              </button>
                             )}
                             <button
                               onClick={() => {
