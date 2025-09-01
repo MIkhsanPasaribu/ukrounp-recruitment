@@ -35,14 +35,19 @@ async function handleWorkflowAction(request: NextRequest) {
         );
       }
 
+      console.log("Looking for applicant with NIM:", nim);
+
       // Find applicant by NIM
       const { data: applicant, error: applicantError } = await supabase
         .from("applicants")
-        .select("id, nim, fullName")
+        .select("id, nim, fullName, status, attendanceConfirmed")
         .eq("nim", nim)
         .single();
 
+      console.log("Applicant query result:", { applicant, applicantError });
+
       if (applicantError || !applicant) {
+        console.error("Applicant not found:", applicantError);
         return NextResponse.json(
           {
             success: false,
@@ -53,20 +58,31 @@ async function handleWorkflowAction(request: NextRequest) {
       }
 
       // Update applicant's status to INTERVIEW and mark attendance
-      const { error: updateError } = await supabase
+      console.log("Updating applicant with ID:", applicant.id);
+      const updateData = {
+        status: "INTERVIEW",
+        attendanceConfirmed: true,
+        updatedAt: new Date().toISOString(),
+      };
+      
+      console.log("Update data:", updateData);
+
+      const { data: updateResult, error: updateError } = await supabase
         .from("applicants")
-        .update({
-          status: "INTERVIEW",
-          attendanceConfirmed: true,
-          checkedInAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        })
-        .eq("id", applicant.id);
+        .update(updateData)
+        .eq("id", applicant.id)
+        .select();
+
+      console.log("Update result:", { updateResult, updateError });
 
       if (updateError) {
         console.error("Error updating applicant:", updateError);
         return NextResponse.json(
-          { success: false, message: "Gagal mengupdate status peserta" },
+          { 
+            success: false, 
+            message: `Gagal mengupdate status peserta: ${updateError.message}`,
+            error: updateError 
+          },
           { status: 500 }
         );
       }
@@ -87,48 +103,74 @@ async function handleWorkflowAction(request: NextRequest) {
         );
       }
 
+      console.log("Assigning interviewer:", { applicantId, interviewerId });
+
       // Get applicant data
       const { data: applicant, error: applicantError } = await supabase
         .from("applicants")
-        .select("id, nim, fullName")
+        .select("id, nim, fullName, status, attendanceConfirmed")
         .eq("id", applicantId)
         .single();
 
+      console.log("Applicant data:", { applicant, applicantError });
+
       if (applicantError || !applicant) {
+        console.error("Applicant not found:", applicantError);
         return NextResponse.json(
           { success: false, message: "Peserta tidak ditemukan" },
           { status: 404 }
         );
       }
 
-      // Verify interviewer exists
+      // Verify interviewer exists - check dengan username atau id
       const { data: interviewer, error: interviewerError } = await supabase
         .from("interviewers")
-        .select("id, username, fullName")
+        .select("id, username, fullName, active")
         .eq("username", interviewerId)
         .single();
 
+      console.log("Interviewer data:", { interviewer, interviewerError });
+
       if (interviewerError || !interviewer) {
+        console.error("Interviewer not found:", interviewerError);
         return NextResponse.json(
-          { success: false, message: "Pewawancara tidak ditemukan" },
+          { success: false, message: `Pewawancara '${interviewerId}' tidak ditemukan` },
           { status: 404 }
         );
       }
 
+      if (!interviewer.active) {
+        return NextResponse.json(
+          { success: false, message: `Pewawancara '${interviewerId}' tidak aktif` },
+          { status: 400 }
+        );
+      }
+
       // Update applicant's assignment
-      const { error: assignmentError } = await supabase
+      const assignmentData = {
+        assignedInterviewer: interviewerId,
+        interviewStatus: "ASSIGNED",
+        updatedAt: new Date().toISOString(),
+      };
+
+      console.log("Assignment data:", assignmentData);
+
+      const { data: assignmentResult, error: assignmentError } = await supabase
         .from("applicants")
-        .update({
-          assignedInterviewer: interviewerId,
-          interviewStatus: "ASSIGNED",
-          updatedAt: new Date().toISOString(),
-        })
-        .eq("id", applicantId);
+        .update(assignmentData)
+        .eq("id", applicantId)
+        .select();
+
+      console.log("Assignment result:", { assignmentResult, assignmentError });
 
       if (assignmentError) {
         console.error("Error updating assignment:", assignmentError);
         return NextResponse.json(
-          { success: false, message: "Gagal menugaskan pewawancara" },
+          { 
+            success: false, 
+            message: `Gagal menugaskan pewawancara: ${assignmentError.message}`,
+            error: assignmentError 
+          },
           { status: 500 }
         );
       }

@@ -71,6 +71,8 @@ export default function InterviewAssignmentTab({
 
     setConfirmingAttendance(true);
     try {
+      console.log("Confirming attendance for NIM:", nimInput.trim());
+      
       const response = await fetch("/api/admin/interview-workflow", {
         method: "POST",
         headers: {
@@ -83,16 +85,18 @@ export default function InterviewAssignmentTab({
         }),
       });
 
+      const result = await response.json();
+      console.log("Attendance confirmation response:", result);
+
       if (response.ok) {
-        const result = await response.json();
         alert(
           `Kehadiran ${result.data.applicant.fullName} berhasil dikonfirmasi`
         );
         setNimInput("");
         fetchCandidates(); // Refresh data
       } else {
-        const error = await response.json();
-        alert(error.message || "Gagal mengkonfirmasi kehadiran");
+        console.error("Attendance confirmation failed:", result);
+        alert(result.message || "Gagal mengkonfirmasi kehadiran");
       }
     } catch (error) {
       console.error("Error confirming attendance:", error);
@@ -122,15 +126,17 @@ export default function InterviewAssignmentTab({
         }),
       });
 
+      const result = await response.json();
+      console.log("Assignment response:", result);
+
       if (response.ok) {
-        const result = await response.json();
         alert(
           `${result.data.interviewer.fullName} berhasil ditugaskan untuk ${result.data.applicant.fullName}`
         );
         fetchCandidates(); // Refresh data
       } else {
-        const error = await response.json();
-        alert(error.message || "Gagal menugaskan pewawancara");
+        console.error("Assignment failed:", result);
+        alert(result.message || "Gagal menugaskan pewawancara");
       }
     } catch (error) {
       console.error("Error assigning interviewer:", error);

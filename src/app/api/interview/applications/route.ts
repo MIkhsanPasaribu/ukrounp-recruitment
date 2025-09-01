@@ -56,6 +56,8 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
 
     // Build query - hanya ambil yang ditugaskan ke interviewer ini
+    console.log("Building query for interviewer:", interviewerUsername);
+    
     let query = supabase
       .from("applicants")
       .select(
@@ -84,6 +86,12 @@ export async function GET(request: NextRequest) {
       .eq("status", "INTERVIEW")
       .eq("attendanceConfirmed", true)
       .order("submittedAt", { ascending: false });
+
+    console.log("Query filters:", {
+      assignedInterviewer: interviewerUsername,
+      status: "INTERVIEW", 
+      attendanceConfirmed: true
+    });
 
     // Apply additional filters
     if (search) {
