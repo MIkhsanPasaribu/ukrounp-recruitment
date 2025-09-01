@@ -122,6 +122,9 @@ export async function loginInterviewer(
     found: !!interviewer,
     error: error?.message,
     hasPasswordHash: !!interviewer?.passwordHash,
+    isActive: interviewer?.isActive,
+    username: interviewer?.username,
+    email: interviewer?.email,
   });
 
   if (error || !interviewer) {
@@ -129,7 +132,7 @@ export async function loginInterviewer(
     return { success: false, message: "Username/email atau password salah" };
   }
 
-  // Check if account is locked
+  // Check if account is locked (jika kolom ada)
   if (interviewer.lockedUntil) {
     const lockTime = new Date(interviewer.lockedUntil).getTime();
     if (Date.now() < lockTime) {

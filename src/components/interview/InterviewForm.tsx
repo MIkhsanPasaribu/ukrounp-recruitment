@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { InterviewFormData, InterviewSession } from "@/types/interview";
 import { interviewerApi } from "@/services/interviewerApi";
@@ -15,53 +17,48 @@ export default function InterviewForm({
   onBack,
   onComplete,
 }: Props) {
-  const [questions, setQuestions] = useState<InterviewFormData[]>([]);
   const [session, setSession] = useState<InterviewSession | null>(null);
+  const [questions, setQuestions] = useState<InterviewFormData[]>([]);
   const [sessionNotes, setSessionNotes] = useState("");
-  const [recommendation, setRecommendation] = useState<string>("");
+  const [recommendation, setRecommendation] = useState("");
+  const [interviewerName, setInterviewerName] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const fetchFormData = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         const response = await interviewerApi.getInterviewForm(
           token,
           sessionId
         );
-
-        if (response.success && response.data) {
-          setQuestions(response.data.questions);
-          setSession(response.data.session || null);
-
-          if (response.data.session) {
-            setSessionNotes(response.data.session.notes || "");
-            setRecommendation(response.data.session.recommendation || "");
-          }
-        } else {
-          setError("Gagal mengambil data form wawancara");
+        if (response.data?.session) {
+          setSession(response.data.session);
         }
-      } catch (err) {
-        console.error("Error fetching form:", err);
-        setError(err instanceof Error ? err.message : "Terjadi kesalahan");
+        if (response.data?.questions) {
+          setQuestions(response.data.questions);
+        }
+      } catch (error) {
+        console.error("Error fetching interview form:", error);
+        setError("Gagal memuat form wawancara");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchFormData();
-  }, [token, sessionId]);
+    fetchData();
+  }, [sessionId, token]);
 
   const updateResponse = (
     questionId: string,
-    field: string,
+    field: "response" | "score" | "notes",
     value: string | number
   ) => {
-    setQuestions((prev) =>
-      prev.map((q) =>
-        q.question.id === questionId ? { ...q, [field]: value } : q
+    setQuestions((prev: InterviewFormData[]) =>
+      prev.map((item) =>
+        item.question.id === questionId ? { ...item, [field]: value } : item
       )
     );
   };
@@ -69,52 +66,48 @@ export default function InterviewForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!sessionId) {
-      setError("Session ID tidak ditemukan");
+    if (!interviewerName.trim()) {
+      setError("Nama pewawancara harus diisi");
       return;
     }
 
-    // Validate all questions have scores
+    // Validate required fields
     const invalidQuestions = questions.filter(
-      (q) => !q.score || q.score < 1 || q.score > 5
+      (item) => !item.response.trim() || item.score === 0
     );
+
     if (invalidQuestions.length > 0) {
-      setError("Semua pertanyaan harus diberi skor antara 1-5");
+      setError("Semua pertanyaan harus dijawab dan diberi skor");
+      return;
+    }
+
+    if (!recommendation) {
+      setError("Rekomendasi harus dipilih");
       return;
     }
 
     try {
       setSaving(true);
-      setError("");
-
-      const formData = {
-        sessionId,
+      await interviewerApi.submitInterviewForm(token, {
+        sessionId: session!.id,
         responses: questions.map((q) => ({
           questionId: q.question.id,
           response: q.response,
-          score: Number(q.score),
+          score: q.score,
           notes: q.notes,
         })),
         sessionNotes,
         recommendation: recommendation as
+          | "SANGAT_DIREKOMENDASIKAN"
           | "DIREKOMENDASIKAN"
+          | "CUKUP"
           | "TIDAK_DIREKOMENDASIKAN",
-      };
-
-      const response = await interviewerApi.submitInterviewForm(
-        token,
-        formData
-      );
-
-      if (response.success) {
-        alert("Hasil wawancara berhasil disimpan!");
-        onComplete();
-      } else {
-        setError(response.message || "Gagal menyimpan hasil wawancara");
-      }
-    } catch (err) {
-      console.error("Error submitting form:", err);
-      setError(err instanceof Error ? err.message : "Terjadi kesalahan");
+        interviewerName: interviewerName.trim(),
+      });
+      onComplete();
+    } catch (error) {
+      console.error("Error submitting interview:", error);
+      setError("Gagal menyimpan hasil wawancara");
     } finally {
       setSaving(false);
     }
@@ -192,6 +185,26 @@ export default function InterviewForm({
 
           {/* Interview Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Interviewer Name Input */}
+            <div className="bg-white shadow rounded-lg p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Identitas Pewawancara
+              </h3>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nama Pewawancara *
+                </label>
+                <input
+                  type="text"
+                  value={interviewerName}
+                  onChange={(e) => setInterviewerName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Masukkan nama pewawancara..."
+                  required
+                />
+              </div>
+            </div>
+
             {/* Questions */}
             {questions.map((item) => (
               <div

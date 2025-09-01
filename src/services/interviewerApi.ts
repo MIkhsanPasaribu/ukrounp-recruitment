@@ -13,7 +13,8 @@ class InterviewerApiService {
     token: string,
     page: number = 1,
     limit: number = 10,
-    search: string = ""
+    search: string = "",
+    lightweight: boolean = false
   ): Promise<
     ApiResponse<InterviewCandidate[]> & { pagination: PaginationInfo }
   > {
@@ -23,6 +24,7 @@ class InterviewerApiService {
     });
 
     if (search) params.append("search", search);
+    if (lightweight) params.append("lightweight", "true");
 
     const response = await fetch(`/api/interview/applications?${params}`, {
       headers: {

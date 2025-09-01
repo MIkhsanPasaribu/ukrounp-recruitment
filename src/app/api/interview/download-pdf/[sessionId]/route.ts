@@ -23,9 +23,7 @@ async function handler(
         location,
         status,
         notes,
-        totalScore,
-        recommendation,
-        createdAt,
+        created_at,
         applicants!inner(
           id,
           fullName,
@@ -79,11 +77,13 @@ async function handler(
 
     if (responsesError) {
       console.error("❌ Error fetching responses:", responsesError);
-      return NextResponse.json(
-        { success: false, message: "Gagal mengambil data jawaban" },
-        { status: 500 }
-      );
+      // Continue without responses if error
+      console.log("⚠️ Continuing PDF generation without responses");
     }
+
+    console.log(
+      `📋 Found ${responses?.length || 0} responses for session ${sessionId}`
+    );
 
     // Create PDF
     const pdf = new jsPDF();
@@ -141,13 +141,18 @@ async function handler(
     const applicant = Array.isArray(session.applicants)
       ? session.applicants[0]
       : session.applicants;
+
     if (applicant) {
       yPosition = addText(
-        `Nama Lengkap: ${applicant.fullName}`,
+        `Nama Lengkap: ${applicant.fullName || "N/A"}`,
         margin,
         yPosition
       );
-      yPosition = addText(`Email: ${applicant.email}`, margin, yPosition);
+      yPosition = addText(
+        `Email: ${applicant.email || "N/A"}`,
+        margin,
+        yPosition
+      );
       yPosition = addText(`NIM: ${applicant.nim || "-"}`, margin, yPosition);
       yPosition = addText(`NIA: ${applicant.nia || "-"}`, margin, yPosition);
       yPosition = addText(
@@ -170,6 +175,8 @@ async function handler(
         margin,
         yPosition
       );
+    } else {
+      yPosition = addText("Data peserta tidak tersedia", margin, yPosition);
     }
     yPosition += 10;
 
@@ -218,47 +225,71 @@ async function handler(
     yPosition = addText("HASIL WAWANCARA", margin, yPosition, undefined, 12);
     yPosition += 5;
 
-    responses?.forEach((response) => {
-      // Check if need new page
-      if (yPosition > 250) {
-        pdf.addPage();
-        yPosition = margin;
-      }
+    if (responses && responses.length > 0) {
+      responses.forEach((response, index) => {
+        // Check if need new page
+        if (yPosition > 250) {
+          pdf.addPage();
+          yPosition = margin;
+        }
 
-      const question = Array.isArray(response.interview_questions)
-        ? response.interview_questions[0]
-        : response.interview_questions;
+        const question = Array.isArray(response.interview_questions)
+          ? response.interview_questions[0]
+          : response.interview_questions;
 
+        pdf.setFontSize(10);
+        pdf.setFont("helvetica", "bold");
+        if (question) {
+          yPosition = addText(
+            `${question.questionNumber || index + 1}. ${
+              question.questionText || "Pertanyaan tidak tersedia"
+            }`,
+            margin,
+            yPosition,
+            pageWidth - 2 * margin
+          );
+
+          if (question.category) {
+            pdf.setFontSize(8);
+            pdf.setFont("helvetica", "italic");
+            yPosition = addText(`(${question.category})`, margin, yPosition);
+          }
+        }
+        yPosition += 5;
+
+        pdf.setFontSize(10);
+        pdf.setFont("helvetica", "normal");
+        yPosition = addText(
+          `Jawaban: ${response.response || "Tidak ada jawaban"}`,
+          margin,
+          yPosition,
+          pageWidth - 2 * margin
+        );
+        yPosition = addText(
+          `Skor: ${response.score || 0}/5`,
+          margin,
+          yPosition
+        );
+        if (response.notes) {
+          yPosition = addText(
+            `Catatan: ${response.notes}`,
+            margin,
+            yPosition,
+            pageWidth - 2 * margin
+          );
+        }
+        yPosition += 8;
+      });
+    } else {
       pdf.setFontSize(10);
-      pdf.setFont("helvetica", "bold");
-      if (question) {
-        yPosition = addText(
-          `${question.questionNumber}. ${question.questionText}`,
-          margin,
-          yPosition,
-          pageWidth - 2 * margin
-        );
-      }
-      yPosition += 5;
-
-      pdf.setFont("helvetica", "normal");
+      pdf.setFont("helvetica", "italic");
       yPosition = addText(
-        `Jawaban: ${response.response || "Tidak ada jawaban"}`,
+        "Belum ada jawaban yang tersimpan untuk sesi wawancara ini.",
         margin,
-        yPosition,
-        pageWidth - 2 * margin
+        yPosition
       );
-      yPosition = addText(`Skor: ${response.score}/5`, margin, yPosition);
-      if (response.notes) {
-        yPosition = addText(
-          `Catatan: ${response.notes}`,
-          margin,
-          yPosition,
-          pageWidth - 2 * margin
-        );
-      }
-      yPosition += 8;
-    });
+      yPosition += 10;
+    }
 
     // Summary
     if (yPosition > 220) {
@@ -279,23 +310,34 @@ async function handler(
 
     pdf.setFontSize(10);
     pdf.setFont("helvetica", "normal");
+
+    // Calculate total score from responses
+    const totalScore =
+      responses?.reduce((sum, r) => sum + (r.score || 0), 0) || 0;
     const maxScore = responses?.length ? responses.length * 5 : 0;
-    const avgScore =
-      session.totalScore && responses?.length
-        ? (session.totalScore / responses.length).toFixed(2)
-        : 0;
+    const avgScoreNum = responses?.length ? totalScore / responses.length : 0;
+    const avgScore = avgScoreNum.toFixed(2);
 
     yPosition = addText(
-      `Total Skor: ${session.totalScore || 0}/${maxScore}`,
+      `Total Skor: ${totalScore}/${maxScore}`,
       margin,
       yPosition
     );
     yPosition = addText(`Rata-rata Skor: ${avgScore}/5`, margin, yPosition);
-    yPosition = addText(
-      `Rekomendasi: ${session.recommendation || "Belum ada rekomendasi"}`,
-      margin,
-      yPosition
-    );
+
+    // Generate recommendation based on average score
+    let recommendation = "Belum ada rekomendasi";
+    if (avgScoreNum >= 4.5) {
+      recommendation = "Sangat Direkomendasikan";
+    } else if (avgScoreNum >= 4.0) {
+      recommendation = "Direkomendasikan";
+    } else if (avgScoreNum >= 3.0) {
+      recommendation = "Dipertimbangkan";
+    } else {
+      recommendation = "Tidak Direkomendasikan";
+    }
+
+    yPosition = addText(`Rekomendasi: ${recommendation}`, margin, yPosition);
 
     if (session.notes) {
       yPosition += 5;
@@ -327,12 +369,18 @@ async function handler(
 
     console.log("✅ PDF generated successfully");
 
+    // Safe filename generation
+    const applicantName = applicant?.fullName
+      ? applicant.fullName.replace(/[^a-zA-Z0-9\-_]/g, "-").replace(/--+/g, "-")
+      : "kandidat";
+    const sessionShort = sessionId.substring(0, 8);
+    const filename = `wawancara-${applicantName}-${sessionShort}.pdf`;
+
     return new NextResponse(pdfBuffer, {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="wawancara-${
-          applicant?.fullName?.replace(/\s+/g, "-") || "kandidat"
-        }-${sessionId.substring(0, 8)}.pdf"`,
+        "Content-Disposition": `attachment; filename="${filename}"`,
+        "Content-Length": pdfBuffer.length.toString(),
       },
     });
   } catch (error) {

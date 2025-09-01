@@ -26,52 +26,97 @@ async function handler(
     console.log("🗓️ Creating interview session:", {
       applicantId,
       interviewerId: interviewer.id,
+      interviewerUsername: interviewer.username,
     });
 
     // Check if applicant exists and has interview status
     const { data: applicant, error: applicantError } = await supabase
       .from("applicants")
-      .select("id, fullName, email, status")
+      .select("id, fullName, email, status, assignedInterviewer")
       .eq("id", applicantId)
-      .eq("status", "INTERVIEW")
       .single();
 
+    console.log("📋 Applicant query result:", { applicant, applicantError });
+
     if (applicantError || !applicant) {
+      console.error("❌ Applicant not found:", applicantError);
       return NextResponse.json(
         {
           success: false,
-          message: "Peserta tidak ditemukan atau status bukan interview",
+          message: "Peserta tidak ditemukan",
         },
         { status: 404 }
       );
     }
 
-    // Check if interview session already exists for this applicant
-    const { data: existingSession } = await supabase
-      .from("interview_sessions")
-      .select("id")
-      .eq("applicantId", applicantId)
-      .single();
-
-    if (existingSession) {
+    // Check if applicant has correct status and assignment
+    if (applicant.status !== "INTERVIEW") {
+      console.error("❌ Applicant status is not INTERVIEW:", applicant.status);
       return NextResponse.json(
         {
           success: false,
-          message: "Sesi wawancara untuk peserta ini sudah ada",
+          message: `Status peserta bukan INTERVIEW (saat ini: ${applicant.status})`,
         },
-        { status: 409 }
+        { status: 400 }
       );
+    }
+
+    if (applicant.assignedInterviewer !== interviewer.username) {
+      console.error("❌ Applicant not assigned to this interviewer:", {
+        assigned: applicant.assignedInterviewer,
+        current: interviewer.username,
+      });
+      return NextResponse.json(
+        {
+          success: false,
+          message: `Peserta tidak ditugaskan ke pewawancara ini`,
+        },
+        { status: 403 }
+      );
+    }
+
+    // Check if interview session already exists for this applicant
+    const { data: existingSession, error: existingSessionError } =
+      await supabase
+        .from("interview_sessions")
+        .select("id, status, interviewDate, location, notes")
+        .eq("applicantId", applicantId)
+        .single();
+
+    if (existingSession && !existingSessionError) {
+      console.log(
+        "✅ Session already exists, returning existing session:",
+        existingSession.id
+      );
+      return NextResponse.json({
+        success: true,
+        message: "Sesi wawancara sudah ada, menggunakan sesi yang ada",
+        data: {
+          ...existingSession,
+          applicant: {
+            id: applicant.id,
+            fullName: applicant.fullName,
+            email: applicant.email,
+          },
+          interviewer: {
+            id: interviewer.id,
+            fullName: interviewer.fullName,
+          },
+        },
+      });
     }
 
     // Create new interview session
     const sessionData = {
       applicantId,
       interviewerId: interviewer.id,
-      interviewDate: interviewDate || null,
-      location: location || null,
-      notes: notes || null,
+      interviewDate: interviewDate || new Date().toISOString(),
+      location: location || "Online/Offline",
+      notes: notes || "Sesi wawancara dibuat otomatis",
       status: "SCHEDULED",
     };
+
+    console.log("📝 Creating session with data:", sessionData);
 
     const { data: session, error: sessionError } = await supabase
       .from("interview_sessions")
@@ -85,15 +130,23 @@ async function handler(
         location,
         status,
         notes,
-        createdAt
+        created_at
       `
       )
       .single();
 
     if (sessionError) {
-      console.error("❌ Error creating interview session:", sessionError);
+      console.error("❌ Error creating interview session:", {
+        error: sessionError,
+        data: sessionData,
+        tableName: "interview_sessions",
+      });
       return NextResponse.json(
-        { success: false, message: "Gagal membuat sesi wawancara" },
+        {
+          success: false,
+          message: `Gagal membuat sesi wawancara: ${sessionError.message}`,
+          debug: sessionError.details || sessionError.hint,
+        },
         { status: 500 }
       );
     }
