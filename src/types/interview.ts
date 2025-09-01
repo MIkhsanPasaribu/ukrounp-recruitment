@@ -168,6 +168,7 @@ export interface InterviewFormSubmit {
     | "DIREKOMENDASIKAN"
     | "CUKUP"
     | "TIDAK_DIREKOMENDASIKAN";
+  interviewerName?: string;
 }
 
 export interface PaginationInfo {

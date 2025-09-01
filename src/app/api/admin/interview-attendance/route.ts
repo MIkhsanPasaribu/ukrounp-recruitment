@@ -22,11 +22,11 @@ async function handler(request: NextRequest, auth: AuthData) {
     if (request.method === "POST") {
       return await handleCreateAttendance(request, auth);
     } else if (request.method === "GET") {
-      return await handleGetAttendance(request, auth);
+      return await handleGetAttendance(request);
     } else if (request.method === "PUT") {
-      return await handleUpdateAttendance(request, auth);
+      return await handleUpdateAttendance(request);
     } else if (request.method === "DELETE") {
-      return await handleDeleteAttendance(request, auth);
+      return await handleDeleteAttendance(request);
     }
 
     return NextResponse.json(
@@ -147,7 +147,7 @@ async function handleCreateAttendance(request: NextRequest, auth: AuthData) {
 }
 
 // Get attendance records
-async function handleGetAttendance(request: NextRequest, auth: AuthData) {
+async function handleGetAttendance(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
@@ -245,7 +245,7 @@ async function handleGetAttendance(request: NextRequest, auth: AuthData) {
 }
 
 // Update attendance record
-async function handleUpdateAttendance(request: NextRequest, auth: AuthData) {
+async function handleUpdateAttendance(request: NextRequest) {
   try {
     const body = await request.json();
     const { id, status, notes } = body;
@@ -291,7 +291,7 @@ async function handleUpdateAttendance(request: NextRequest, auth: AuthData) {
 }
 
 // Delete attendance record
-async function handleDeleteAttendance(request: NextRequest, auth: AuthData) {
+async function handleDeleteAttendance(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");

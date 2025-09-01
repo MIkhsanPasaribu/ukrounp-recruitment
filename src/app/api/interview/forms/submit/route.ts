@@ -12,8 +12,13 @@ async function handler(
   }
 ) {
   try {
-    const { sessionId, responses, sessionNotes, recommendation } =
-      await request.json();
+    const {
+      sessionId,
+      responses,
+      sessionNotes,
+      recommendation,
+      interviewerName,
+    } = await request.json();
     const interviewer = auth.interviewer!;
 
     if (!sessionId || !responses || !Array.isArray(responses)) {
@@ -107,6 +112,10 @@ async function handler(
 
     if (recommendation) {
       sessionUpdateData.recommendation = recommendation;
+    }
+
+    if (interviewerName) {
+      sessionUpdateData.interviewer_name = interviewerName;
     }
 
     const { error: sessionUpdateError } = await supabase

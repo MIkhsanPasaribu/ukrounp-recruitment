@@ -22,11 +22,11 @@ async function handler(request: NextRequest, auth: AuthData) {
     if (request.method === "POST") {
       return await handleCreateAssignment(request, auth);
     } else if (request.method === "GET") {
-      return await handleGetAssignments(request, auth);
+      return await handleGetAssignments(request);
     } else if (request.method === "PUT") {
-      return await handleUpdateAssignment(request, auth);
+      return await handleUpdateAssignment(request);
     } else if (request.method === "DELETE") {
-      return await handleDeleteAssignment(request, auth);
+      return await handleDeleteAssignment(request);
     }
 
     return NextResponse.json(
@@ -191,7 +191,7 @@ async function handleCreateAssignment(request: NextRequest, auth: AuthData) {
 }
 
 // Get assignments
-async function handleGetAssignments(request: NextRequest, auth: AuthData) {
+async function handleGetAssignments(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
@@ -308,7 +308,7 @@ async function handleGetAssignments(request: NextRequest, auth: AuthData) {
 }
 
 // Update assignment
-async function handleUpdateAssignment(request: NextRequest, auth: AuthData) {
+async function handleUpdateAssignment(request: NextRequest) {
   try {
     const body = await request.json();
     const { id, interviewerId, scheduledAt, status, notes } = body;
@@ -356,7 +356,7 @@ async function handleUpdateAssignment(request: NextRequest, auth: AuthData) {
 }
 
 // Delete assignment
-async function handleDeleteAssignment(request: NextRequest, auth: AuthData) {
+async function handleDeleteAssignment(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
