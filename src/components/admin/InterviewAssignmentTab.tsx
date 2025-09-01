@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 interface InterviewCandidate {
   id: string;
@@ -39,7 +39,7 @@ export default function InterviewAssignmentTab({
   ];
 
   // Fetch interview candidates
-  const fetchCandidates = async () => {
+  const fetchCandidates = useCallback(async () => {
     try {
       setLoading(true);
       console.log("Fetching interview candidates...");
@@ -71,7 +71,7 @@ export default function InterviewAssignmentTab({
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   // Confirm attendance by NIM
   const confirmAttendance = async () => {
@@ -161,7 +161,7 @@ export default function InterviewAssignmentTab({
     if (token) {
       fetchCandidates();
     }
-  }, [token]);
+  }, [token, fetchCandidates]);
 
   if (loading) {
     return (

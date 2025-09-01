@@ -1,13 +1,43 @@
--- PASTIKAN AKUN PEWAWANCARA6 ADA DAN BENAR
+-- PASTIKAN SEMUA AKUN PEWAWANCARA 1-7 ADA DAN BENAR
 
--- 1. Cek akun pewawancara6 saat ini
+-- 1. Cek semua akun pewawancara yang ada
 SELECT 
     id,
     username,
-    email,
-    "fullName",
-    role,
-    "isActive",
+    fullName,
+    active,
+    createdAt
+FROM interviewers
+WHERE username LIKE 'pewawancara%'
+ORDER BY username;
+
+-- 2. Buat/Update akun pewawancara 1-7
+-- Password: "123456" (hash bcrypt: $2b$10$N9qo8uLOickgx2ZMRZoMye7sQ.z0YnOMpyowU5Yaa6rOLKhJKKnMu)
+INSERT INTO interviewers (username, fullName, password, active, createdAt, updatedAt) VALUES
+  ('pewawancara1', 'Pewawancara 1', '$2b$10$N9qo8uLOickgx2ZMRZoMye7sQ.z0YnOMpyowU5Yaa6rOLKhJKKnMu', true, NOW(), NOW()),
+  ('pewawancara2', 'Pewawancara 2', '$2b$10$N9qo8uLOickgx2ZMRZoMye7sQ.z0YnOMpyowU5Yaa6rOLKhJKKnMu', true, NOW(), NOW()),
+  ('pewawancara3', 'Pewawancara 3', '$2b$10$N9qo8uLOickgx2ZMRZoMye7sQ.z0YnOMpyowU5Yaa6rOLKhJKKnMu', true, NOW(), NOW()),
+  ('pewawancara4', 'Pewawancara 4', '$2b$10$N9qo8uLOickgx2ZMRZoMye7sQ.z0YnOMpyowU5Yaa6rOLKhJKKnMu', true, NOW(), NOW()),
+  ('pewawancara5', 'Pewawancara 5', '$2b$10$N9qo8uLOickgx2ZMRZoMye7sQ.z0YnOMpyowU5Yaa6rOLKhJKKnMu', true, NOW(), NOW()),
+  ('pewawancara6', 'Pewawancara 6', '$2b$10$N9qo8uLOickgx2ZMRZoMye7sQ.z0YnOMpyowU5Yaa6rOLKhJKKnMu', true, NOW(), NOW()),
+  ('pewawancara7', 'Pewawancara 7', '$2b$10$N9qo8uLOickgx2ZMRZoMye7sQ.z0YnOMpyowU5Yaa6rOLKhJKKnMu', true, NOW(), NOW())
+ON CONFLICT (username) DO UPDATE SET 
+  active = true,
+  fullName = EXCLUDED.fullName,
+  password = EXCLUDED.password,
+  updatedAt = NOW();
+
+-- 3. Verifikasi semua akun berhasil dibuat
+SELECT 
+    username, 
+    fullName, 
+    active,
+    LENGTH(password) as password_length,
+    SUBSTRING(password, 1, 10) as password_prefix,
+    createdAt
+FROM interviewers 
+WHERE username LIKE 'pewawancara%'
+ORDER BY username;
     "loginAttempts",
     "lockedUntil",
     "createdAt",

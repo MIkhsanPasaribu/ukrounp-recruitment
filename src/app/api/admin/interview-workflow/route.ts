@@ -122,33 +122,46 @@ async function handleWorkflowAction(request: NextRequest) {
         );
       }
 
-      // Verify interviewer exists - check dengan username atau id
-      const { data: interviewer, error: interviewerError } = await supabase
+      // Debug: First check if table exists and what tables we have
+      console.log("Looking for interviewer with username:", interviewerId);
+      
+      // Try different table name possibilities
+      let interviewer = null;
+      let interviewerError = null;
+
+      // Try 'interviewers' table first
+      const result1 = await supabase
         .from("interviewers")
-        .select("id, username, fullName, active")
+        .select("*")
         .eq("username", interviewerId)
         .single();
+      
+      console.log("Query result from 'interviewers' table:", result1);
 
-      console.log("Interviewer data:", { interviewer, interviewerError });
-
-      if (interviewerError || !interviewer) {
-        console.error("Interviewer not found:", interviewerError);
-        return NextResponse.json(
-          {
-            success: false,
-            message: `Pewawancara '${interviewerId}' tidak ditemukan`,
-          },
-          { status: 404 }
-        );
+      if (result1.data) {
+        interviewer = result1.data;
+      } else {
+        interviewerError = result1.error;
       }
 
-      if (!interviewer.active) {
+      // If not found, the interviewer doesn't exist in the expected format
+      if (interviewerError || !interviewer) {
+        console.error("Interviewer not found in any table:", interviewerError);
+        
+        // Let's also try to see what interviewers exist
+        const allInterviewers = await supabase
+          .from("interviewers")
+          .select("username, email")
+          .limit(10);
+        
+        console.log("All interviewers in database:", allInterviewers.data);
+        
         return NextResponse.json(
           {
             success: false,
-            message: `Pewawancara '${interviewerId}' tidak aktif`,
+            message: `Pewawancara '${interviewerId}' tidak ditemukan. Debug: ${JSON.stringify(interviewerError)}`,
           },
-          { status: 400 }
+          { status: 404 }
         );
       }
 
