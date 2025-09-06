@@ -16,6 +16,7 @@ import BulkActions from "@/components/admin/BulkActions";
 import ApplicationsTable from "@/components/admin/ApplicationsTable";
 import MobileApplicationsView from "@/components/admin/MobileApplicationsView";
 import InterviewAssignmentTab from "@/components/admin/InterviewAssignmentTab";
+import AnalyticsDashboard from "@/components/dashboard/AnalyticsDashboard";
 import { exportApplicationsToCSV } from "@/utils/csvExport";
 
 // Custom Hooks
@@ -78,7 +79,7 @@ export default function AdminPage() {
 
   // Tab Management
   const [activeTab, setActiveTab] = useState<
-    "overview" | "applications" | "enhanced" | "interviews"
+    "overview" | "applications" | "enhanced" | "interviews" | "analytics"
   >("overview");
 
   // Modal Management
@@ -219,6 +220,30 @@ export default function AdminPage() {
           {/* Interview Assignment Tab */}
           {activeTab === "interviews" && token && (
             <InterviewAssignmentTab token={token} />
+          )}
+
+          {/* Analytics Tab */}
+          {activeTab === "analytics" && (
+            <div className="space-y-6">
+              <div className="bg-white shadow rounded-lg p-6">
+                <div className="border-b border-gray-200 pb-4 mb-6">
+                  <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <span>📈</span>
+                    Advanced Analytics Dashboard
+                    <span className="text-sm bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full">
+                      Real-time Insights
+                    </span>
+                  </h2>
+                  <p className="text-sm text-gray-600 mt-2">
+                    Comprehensive analytics and insights for recruitment process
+                    with interactive charts, funnel analysis, and export
+                    capabilities.
+                  </p>
+                </div>
+
+                <AnalyticsDashboard />
+              </div>
+            </div>
           )}
 
           {/* Applications Tab */}
