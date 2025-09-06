@@ -170,9 +170,25 @@ create table public.interview_sessions (
   status text null default 'SCHEDULED'::text,
   created_at timestamp with time zone null default now(),
   updated_at timestamp with time zone null default now(),
+  "totalScore" integer null,
+  recommendation text null,
+  assignment_id uuid null,
+  "interviewerName" text null,
   constraint interview_sessions_pkey primary key (id),
   constraint interview_sessions_applicantId_fkey foreign KEY ("applicantId") references applicants (id) on delete CASCADE,
-  constraint interview_sessions_interviewerId_fkey foreign KEY ("interviewerId") references interviewers (id) on delete CASCADE
+  constraint interview_sessions_interviewerId_fkey foreign KEY ("interviewerId") references interviewers (id) on delete CASCADE,
+  constraint interview_sessions_recommendation_check check (
+    (
+      recommendation = any (
+        array[
+          'SANGAT_DIREKOMENDASIKAN'::text,
+          'DIREKOMENDASIKAN'::text,
+          'CUKUP'::text,
+          'TIDAK_DIREKOMENDASIKAN'::text
+        ]
+      )
+    )
+  )
 ) TABLESPACE pg_default;
 
 create index IF not exists idx_interview_sessions_applicant_id on public.interview_sessions using btree ("applicantId") TABLESPACE pg_default;
