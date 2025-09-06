@@ -122,7 +122,7 @@ async function handler(
       16
     );
     yPosition = addText(
-      "UNIT KEGIATAN ROBOTIKA OTOMASI (UKRO)",
+      "UNIT KEGIATAN ROBOTIKA UNIVERSITAS NEGERI PADANG (UKRO UNP)",
       margin,
       yPosition,
       undefined,
