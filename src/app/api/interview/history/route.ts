@@ -32,13 +32,17 @@ async function handler(
         `
         id,
         applicantId,
+        interviewerId,
         interviewDate,
         location,
         status,
         totalScore,
         recommendation,
-        createdAt,
-        updatedAt,
+        interviewerName,
+        assignment_id,
+        notes,
+        created_at,
+        updated_at,
         applicants!inner(
           id,
           fullName,
@@ -61,7 +65,7 @@ async function handler(
 
     // Apply pagination and ordering
     query = query
-      .order("createdAt", { ascending: false })
+      .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
     const { data: sessions, error, count } = await query;

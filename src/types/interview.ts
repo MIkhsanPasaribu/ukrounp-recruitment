@@ -77,6 +77,7 @@ export interface InterviewSession {
   status: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
   notes?: string;
   totalScore?: number;
+  interviewerName?: string; // NEW: Nama pewawancara dari form
   recommendation?:
     | "SANGAT_DIREKOMENDASIKAN"
     | "DIREKOMENDASIKAN"

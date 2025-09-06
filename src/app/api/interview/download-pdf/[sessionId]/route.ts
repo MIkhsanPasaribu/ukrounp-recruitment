@@ -24,6 +24,10 @@ async function handler(
         status,
         notes,
         created_at,
+        interviewerName,
+        totalScore,
+        recommendation,
+        assignment_id,
         applicants!inner(
           id,
           fullName,
@@ -55,6 +59,14 @@ async function handler(
         { status: 404 }
       );
     }
+
+    // Type assertion to include new fields
+    const sessionData = session as typeof session & {
+      interviewerName?: string;
+      totalScore?: number;
+      recommendation?: string;
+      assignment_id?: string;
+    };
 
     // Get responses with questions
     const { data: responses, error: responsesError } = await supabase
@@ -138,9 +150,9 @@ async function handler(
 
     pdf.setFontSize(10);
     pdf.setFont("helvetica", "normal");
-    const applicant = Array.isArray(session.applicants)
-      ? session.applicants[0]
-      : session.applicants;
+    const applicant = Array.isArray(sessionData.applicants)
+      ? sessionData.applicants[0]
+      : sessionData.applicants;
 
     if (applicant) {
       yPosition = addText(
@@ -194,29 +206,31 @@ async function handler(
 
     pdf.setFontSize(10);
     pdf.setFont("helvetica", "normal");
-    const interviewer = Array.isArray(session.interviewers)
-      ? session.interviewers[0]
-      : session.interviewers;
+    const interviewer = Array.isArray(sessionData.interviewers)
+      ? sessionData.interviewers[0]
+      : sessionData.interviewers;
     yPosition = addText(
-      `Pewawancara: ${interviewer?.fullName || "N/A"}`,
+      `Pewawancara: ${
+        sessionData.interviewerName || interviewer?.fullName || "N/A"
+      }`,
       margin,
       yPosition
     );
     yPosition = addText(
       `Tanggal: ${
-        session.interviewDate
-          ? new Date(session.interviewDate).toLocaleDateString("id-ID")
+        sessionData.interviewDate
+          ? new Date(sessionData.interviewDate).toLocaleDateString("id-ID")
           : "-"
       }`,
       margin,
       yPosition
     );
     yPosition = addText(
-      `Lokasi: ${session.location || "-"}`,
+      `Lokasi: ${sessionData.location || "-"}`,
       margin,
       yPosition
     );
-    yPosition = addText(`Status: ${session.status}`, margin, yPosition);
+    yPosition = addText(`Status: ${sessionData.status}`, margin, yPosition);
     yPosition += 10;
 
     // Questions and Responses
@@ -339,11 +353,11 @@ async function handler(
 
     yPosition = addText(`Rekomendasi: ${recommendation}`, margin, yPosition);
 
-    if (session.notes) {
+    if (sessionData.notes) {
       yPosition += 5;
       yPosition = addText(`Catatan Tambahan:`, margin, yPosition);
       yPosition = addText(
-        session.notes,
+        sessionData.notes,
         margin,
         yPosition,
         pageWidth - 2 * margin

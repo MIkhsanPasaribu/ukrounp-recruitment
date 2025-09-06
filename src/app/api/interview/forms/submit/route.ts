@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextRequest, NextResponse } from "next/server";
 import { withInterviewerAuth } from "@/lib/auth-interviewer-middleware";
 import { supabase } from "@/lib/supabase";
@@ -12,8 +13,13 @@ async function handler(
   }
 ) {
   try {
-    const { sessionId, responses, sessionNotes, recommendation } =
-      await request.json();
+    const {
+      sessionId,
+      responses,
+      sessionNotes,
+      recommendation,
+      interviewerName,
+    } = await request.json();
     const interviewer = auth.interviewer!;
 
     console.log("💾 Saving interview responses:", {
@@ -23,12 +29,23 @@ async function handler(
       responsesCount: responses?.length || 0,
     });
 
-    if (!sessionId || !responses || !Array.isArray(responses)) {
+    // More thorough validation
+    if (!sessionId) {
+      return NextResponse.json(
+        { success: false, message: "Session ID diperlukan" },
+        { status: 400 }
+      );
+    }
+
+    if (!responses || !Array.isArray(responses)) {
       return NextResponse.json(
         { success: false, message: "Data form tidak valid" },
         { status: 400 }
       );
     }
+
+    // Allow empty recommendation for drafts
+    const finalRecommendation = recommendation || "BELUM_DIEVALUASI";
 
     // Verify session belongs to this interviewer
     const { data: session, error: sessionError } = await supabase
@@ -118,13 +135,30 @@ async function handler(
     console.log(`✅ Saved ${validResponses.length} responses to database`);
 
     // Update session with notes and status
-    const sessionUpdateData: Record<string, string> = {
+    const sessionUpdateData: Record<string, string | number> = {
       status: "COMPLETED",
       updated_at: new Date().toISOString(),
     };
 
-    if (sessionNotes && sessionNotes.trim()) {
-      sessionUpdateData.notes = sessionNotes.trim();
+    // Try to update additional fields if columns exist
+    try {
+      sessionUpdateData.totalScore = totalScore;
+      if (sessionNotes && sessionNotes.trim()) {
+        sessionUpdateData.notes = sessionNotes.trim();
+      }
+
+      if (finalRecommendation && finalRecommendation !== "BELUM_DIEVALUASI") {
+        sessionUpdateData.recommendation = finalRecommendation;
+      }
+
+      // Simpan nama pewawancara dari form
+      if (interviewerName && interviewerName.trim()) {
+        sessionUpdateData.interviewerName = interviewerName.trim();
+      }
+    } catch (error) {
+      console.log(
+        "ℹ️ Some columns might not exist, updating basic fields only"
+      );
     }
 
     console.log("📝 Updating session:", sessionUpdateData);
@@ -136,14 +170,55 @@ async function handler(
 
     if (sessionUpdateError) {
       console.error("❌ Error updating session:", sessionUpdateError);
-      return NextResponse.json(
-        {
-          success: false,
-          message: `Gagal memperbarui sesi wawancara: ${sessionUpdateError.message}`,
-          debug: sessionUpdateError.details || sessionUpdateError.hint,
-        },
-        { status: 500 }
-      );
+
+      // If error is about missing columns, try updating with basic fields only
+      if (
+        sessionUpdateError.message?.includes("column") &&
+        (sessionUpdateError.message?.includes("totalScore") ||
+          sessionUpdateError.message?.includes("recommendation"))
+      ) {
+        console.log("🔧 Retrying with basic fields only...");
+        const basicUpdateData: Record<string, string> = {
+          status: "COMPLETED",
+          updated_at: new Date().toISOString(),
+        };
+
+        if (sessionNotes && sessionNotes.trim()) {
+          basicUpdateData.notes = sessionNotes.trim();
+        }
+
+        // Coba simpan nama pewawancara juga di retry
+        if (interviewerName && interviewerName.trim()) {
+          basicUpdateData.interviewerName = interviewerName.trim();
+        }
+
+        const { error: retryError } = await supabase
+          .from("interview_sessions")
+          .update(basicUpdateData)
+          .eq("id", sessionId);
+
+        if (retryError) {
+          return NextResponse.json(
+            {
+              success: false,
+              message: `Gagal memperbarui sesi wawancara: ${retryError.message}`,
+              debug: retryError.details || retryError.hint,
+            },
+            { status: 500 }
+          );
+        }
+
+        console.log("✅ Session updated with basic fields only");
+      } else {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Gagal memperbarui sesi wawancara: ${sessionUpdateError.message}`,
+            debug: sessionUpdateError.details || sessionUpdateError.hint,
+          },
+          { status: 500 }
+        );
+      }
     }
 
     console.log(`✅ Interview completed successfully:`, {
