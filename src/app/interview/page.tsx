@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useInterviewerAuth } from "@/hooks/useInterviewerAuth";
 import UnifiedLogin from "@/components/UnifiedLogin";
-import OptimizedInterviewerDashboard from "@/components/interview/OptimizedInterviewerDashboard";
+import EnhancedInterviewerDashboard from "@/components/interview/EnhancedInterviewerDashboard";
 import InterviewForm from "@/components/interview/InterviewForm";
 
 type ViewMode = "dashboard" | "interview-form";
@@ -76,13 +76,9 @@ export default function InterviewPage() {
     case "dashboard":
     default:
       return (
-        <OptimizedInterviewerDashboard
+        <EnhancedInterviewerDashboard
           token={token}
           interviewer={interviewer}
-          onStartInterview={(sessionId: string) => {
-            setSelectedSessionId(sessionId);
-            setCurrentView("interview-form");
-          }}
           onLogout={handleLogout}
         />
       );

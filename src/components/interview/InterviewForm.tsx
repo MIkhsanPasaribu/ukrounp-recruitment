@@ -7,6 +7,7 @@ import { interviewerApi } from "@/services/interviewerApi";
 interface Props {
   token: string;
   sessionId?: string;
+  isEditing?: boolean;
   onBack: () => void;
   onComplete: () => void;
 }
@@ -14,6 +15,7 @@ interface Props {
 export default function InterviewForm({
   token,
   sessionId,
+  isEditing = false,
   onBack,
   onComplete,
 }: Props) {
@@ -30,13 +32,31 @@ export default function InterviewForm({
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await interviewerApi.getInterviewForm(
-          token,
-          sessionId
-        );
+        let response;
+
+        if (isEditing && sessionId) {
+          // If editing, get session details with existing responses
+          response = await interviewerApi.getSessionDetails(token, sessionId);
+        } else {
+          // If creating new, get form template
+          response = await interviewerApi.getInterviewForm(token, sessionId);
+        }
+
         if (response.data?.session) {
           setSession(response.data.session);
+
+          // Pre-fill form data if editing
+          if (isEditing && response.data.session.notes) {
+            setSessionNotes(response.data.session.notes);
+          }
+          if (isEditing && response.data.session.recommendation) {
+            setRecommendation(response.data.session.recommendation);
+          }
+          if (isEditing && response.data.session.interviewerName) {
+            setInterviewerName(response.data.session.interviewerName);
+          }
         }
+
         if (response.data?.questions) {
           setQuestions(response.data.questions);
         }
@@ -49,7 +69,7 @@ export default function InterviewForm({
     };
 
     fetchData();
-  }, [sessionId, token]);
+  }, [sessionId, token, isEditing]);
 
   const updateResponse = (
     questionId: string,
@@ -88,7 +108,8 @@ export default function InterviewForm({
 
     try {
       setSaving(true);
-      await interviewerApi.submitInterviewForm(token, {
+
+      const formData = {
         sessionId: session!.id,
         responses: questions.map((q) => ({
           questionId: q.question.id,
@@ -103,11 +124,22 @@ export default function InterviewForm({
           | "CUKUP"
           | "TIDAK_DIREKOMENDASIKAN",
         interviewerName: interviewerName.trim(),
-      });
+      };
+
+      if (isEditing) {
+        await interviewerApi.editInterviewForm(token, formData);
+      } else {
+        await interviewerApi.submitInterviewForm(token, formData);
+      }
+
       onComplete();
     } catch (error) {
       console.error("Error submitting interview:", error);
-      setError("Gagal menyimpan hasil wawancara");
+      setError(
+        isEditing
+          ? "Gagal mengupdate hasil wawancara"
+          : "Gagal menyimpan hasil wawancara"
+      );
     } finally {
       setSaving(false);
     }
@@ -155,12 +187,17 @@ export default function InterviewForm({
           <div className="flex justify-between items-center py-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                Form Wawancara
+                {isEditing ? "Edit Hasil Wawancara" : "Form Wawancara"}
               </h1>
               {session && session.applicants && (
                 <p className="text-sm text-gray-600 mt-1">
                   Peserta:{" "}
                   {(session.applicants as { fullName: string }).fullName}
+                  {isEditing && (
+                    <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      Mode Edit
+                    </span>
+                  )}
                 </p>
               )}
             </div>
@@ -375,8 +412,10 @@ export default function InterviewForm({
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       ></path>
                     </svg>
-                    Menyimpan...
+                    {isEditing ? "Mengupdate..." : "Menyimpan..."}
                   </div>
+                ) : isEditing ? (
+                  "Update Hasil Wawancara"
                 ) : (
                   "Simpan Hasil Wawancara"
                 )}

@@ -94,6 +94,32 @@ class InterviewerApiService {
     return await response.json();
   }
 
+  async getSessionDetails(
+    token: string,
+    sessionId: string
+  ): Promise<
+    ApiResponse<{
+      session?: InterviewSession;
+      questions?: InterviewFormData[];
+    }>
+  > {
+    const response = await fetch(`/api/interview/sessions/${sessionId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(
+        errorData.message || "Gagal mengambil detail sesi wawancara"
+      );
+    }
+
+    return await response.json();
+  }
+
   async submitInterviewForm(
     token: string,
     formData: InterviewFormSubmit
@@ -110,6 +136,27 @@ class InterviewerApiService {
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || "Gagal menyimpan hasil wawancara");
+    }
+
+    return await response.json();
+  }
+
+  async editInterviewForm(
+    token: string,
+    formData: InterviewFormSubmit
+  ): Promise<ApiResponse<{ success: boolean; message?: string }>> {
+    const response = await fetch("/api/interview/forms/edit", {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Gagal mengupdate hasil wawancara");
     }
 
     return await response.json();
