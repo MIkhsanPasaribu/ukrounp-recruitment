@@ -75,19 +75,23 @@ export default function DeveloperPage() {
     { name: "TypeScript", level: 90, color: "bg-blue-600" },
     { name: "Node.js", level: 88, color: "bg-green-500" },
     { name: "AI & Machine Learning", level: 85, color: "bg-purple-500" },
-    { name: "Database Design", level: 92, color: "bg-orange-500" },
-    { name: "UI/UX Design", level: 87, color: "bg-pink-500" },
+    { name: "Desain Database", level: 92, color: "bg-orange-500" },
+    { name: "Desain UI/UX", level: 87, color: "bg-pink-500" },
   ];
 
   const achievements = [
-    { icon: "🎓", title: "Student", desc: "Pendidikan Teknik Informatika" },
+    { icon: "🎓", title: "Mahasiswa", desc: "Universitas Negeri Padang" },
     {
       icon: "🚀",
       title: "Full-Stack Developer",
-      desc: "Modern Web Applications",
+      desc: "Aplikasi Web Modern",
     },
-    { icon: "🤖", title: "AI Engineer", desc: "Generative AI Solutions" },
-    { icon: "⚡", title: "Fast Learner", desc: "Always Exploring New Tech" },
+    { icon: "🤖", title: "AI Engineer", desc: "Solusi Generative AI" },
+    {
+      icon: "⚡",
+      title: "Pembelajar Cepat",
+      desc: "Selalu Eksplorasi Teknologi Baru",
+    },
   ];
 
   return (
@@ -149,6 +153,10 @@ export default function DeveloperPage() {
             Pendidikan Teknik Informatika
           </p>
 
+          <p className="text-lg text-gray-600 font-medium mb-4">
+            Universitas Negeri Padang
+          </p>
+
           <div className="flex justify-center items-center gap-3 mt-4">
             <span className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg text-sm font-semibold shadow-md">
               💻 Full-Stack Developer
@@ -168,18 +176,19 @@ export default function DeveloperPage() {
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-gray-100 hover:shadow-3xl transition-all duration-300">
             <h2 className="text-3xl font-bold mb-6 text-gray-800 flex items-center gap-3">
               <span className="text-4xl">👨‍💻</span>
-              About Me
+              Tentang Saya
             </h2>
             <p className="text-lg text-gray-700 leading-relaxed mb-4">
-              Passionate developer specializing in building modern, scalable web
-              applications and exploring the frontiers of Generative AI. I
-              combine creativity with technical expertise to create innovative
-              solutions that make a difference.
+              Seorang developer yang passionate dalam membangun aplikasi web
+              modern dan scalable, serta mengeksplorasi dunia Generative AI.
+              Saya menggabungkan kreativitas dengan keahlian teknis untuk
+              menciptakan solusi inovatif yang memberikan dampak nyata.
             </p>
             <p className="text-lg text-gray-700 leading-relaxed">
-              Currently studying at Universitas Negeri Padang, I&apos;m
-              constantly learning and implementing cutting-edge technologies to
-              solve real-world problems.
+              Saat ini sedang menempuh pendidikan sebagai mahasiswa Program
+              Studi Pendidikan Teknik Informatika di Universitas Negeri Padang.
+              Saya terus belajar dan mengimplementasikan teknologi terkini untuk
+              menyelesaikan masalah di dunia nyata.
             </p>
           </div>
         </div>
@@ -193,7 +202,7 @@ export default function DeveloperPage() {
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-gray-100">
             <h2 className="text-3xl font-bold mb-8 text-gray-800 flex items-center gap-3">
               <span className="text-4xl">⚡</span>
-              Technical Skills
+              Keahlian Teknis
             </h2>
             <div className="space-y-6">
               {skills.map((skill, index) => (
@@ -237,7 +246,7 @@ export default function DeveloperPage() {
           }`}
         >
           <h2 className="text-3xl font-bold mb-8 text-center text-gray-800">
-            Highlights
+            Sorotan
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {achievements.map((achievement, index) => (
@@ -269,7 +278,7 @@ export default function DeveloperPage() {
         >
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-gray-100">
             <h2 className="text-3xl font-bold mb-8 text-center text-gray-800">
-              Let&apos;s Connect! 🚀
+              Mari Terhubung! 🚀
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {socialLinks.map((link, index) => (
@@ -294,7 +303,6 @@ export default function DeveloperPage() {
                       {link.svg}
                     </div>
                     <div className="font-bold text-lg">{link.name}</div>
-                    <div className="text-sm opacity-90 mt-1">@mikhsanp</div>
                   </div>
                 </a>
               ))}
@@ -306,11 +314,11 @@ export default function DeveloperPage() {
         <div className="text-center mt-16 pb-8">
           <div className="inline-block px-8 py-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-full text-white font-semibold shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 cursor-default">
             <span className="mr-2">✨</span>
-            Crafted with passion and code
+            Dibuat dengan semangat dan kode
             <span className="ml-2">✨</span>
           </div>
           <p className="text-gray-600 mt-4 text-sm">
-            © 2025 M. Ikhsan Pasaribu. All rights reserved.
+            © 2025 M. Ikhsan Pasaribu. Hak cipta dilindungi.
           </p>
         </div>
       </div>
