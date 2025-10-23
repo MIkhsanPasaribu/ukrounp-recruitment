@@ -389,6 +389,18 @@ export default function Home() {
           © {new Date().getFullYear()} Unit Kegiatan Robotika UNP. Semua hak
           cipta dilindungi.
         </p>
+        <p className="text-gray-400 text-sm mt-2">
+          Developed by{" "}
+          <a
+            href="https://github.com/MIkhsanPasaribu"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-400 hover:text-blue-300 hover:underline transition-colors duration-200"
+          >
+            M. Ikhsan Pasaribu
+          </a>{" "}
+          (23076039)
+        </p>
       </footer>
     </div>
   );

@@ -318,7 +318,16 @@ export default function DeveloperPage() {
             <span className="ml-2">✨</span>
           </div>
           <p className="text-gray-600 mt-4 text-sm">
-            © 2025 M. Ikhsan Pasaribu. Hak cipta dilindungi.
+            © {new Date().getFullYear()}{" "}
+            <a
+              href="https://github.com/MIkhsanPasaribu"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-500 hover:underline transition-colors duration-200 font-semibold"
+            >
+              M. Ikhsan Pasaribu
+            </a>{" "}
+            (23076039). Hak cipta dilindungi.
           </p>
         </div>
       </div>
