@@ -66,7 +66,7 @@ Dengan menggunakan cloud computing melalui Microsoft Azure, aplikasi ini dapat b
 | Jenis Aplikasi         | Web Application (Full-Stack Next.js)                                             |
 | Provider Domain        | Domainesia.com (untuk custom domain)                                             |
 | Cloud Provider         | Microsoft Azure                                                                  |
-| Compute Service        | Azure App Service (Linux, Node.js 20 LTS)                                        |
+| Compute Service        | Azure App Service (Linux, Node.js 22 LTS)                                        |
 | Service Plan           | B1 Basic (1 Core, 1.75 GB RAM, 10 GB Storage)                                    |
 | Database Provider      | Supabase (PostgreSQL Cloud Database)                                             |
 | DNS Configuration      | CNAME record mengarah ke azurewebsites.net, TXT record untuk domain verification |
@@ -74,7 +74,7 @@ Dengan menggunakan cloud computing melalui Microsoft Azure, aplikasi ini dapat b
 | Deployment Method      | GitHub Actions CI/CD (Auto-deploy dari repository)                               |
 | Region                 | Southeast Asia (Singapore)                                                       |
 | Estimasi Biaya Bulanan | ~$13-15 USD                                                                      |
-| Tech Stack             | Next.js 15.2.3, React 19, TypeScript, Tailwind CSS, Supabase, Node.js 20         |
+| Tech Stack             | Next.js 15.2.3, React 19, TypeScript, Tailwind CSS, Supabase, Node.js 22         |
 | Monitoring             | Azure Application Insights (5GB free tier)                                       |
 | Environment Variables  | NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, JWT_SECRET, NODE_ENV        |
 | Build Configuration    | npm install → npm run build → npm run start                                      |
