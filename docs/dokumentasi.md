@@ -62,7 +62,7 @@ Dengan menggunakan cloud computing melalui Microsoft Azure, aplikasi ini dapat b
 
 | **Aspek**              | **Detail**                                                                       |
 | ---------------------- | -------------------------------------------------------------------------------- |
-| URL Aplikasi           | https://ukro-recruitment-c2c8b9gqaxckf4bq.indonesiacentral-01.azurewebsites.net |
+| URL Aplikasi           | https://ukro-recruitment-c2c8b9gqaxckf4bq.indonesiacentral-01.azurewebsites.net  |
 | Jenis Aplikasi         | Web Application (Full-Stack Next.js)                                             |
 | Provider Domain        | Domainesia.com (untuk custom domain)                                             |
 | Cloud Provider         | Microsoft Azure                                                                  |

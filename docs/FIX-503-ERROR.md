@@ -13,15 +13,16 @@
 
 ### Pastikan SEMUA variable ini ada:
 
-| Name | Value Example | Catatan |
-|------|---------------|---------|
-| `NEXT_PUBLIC_SUPABASE_URL` | `https://xxx.supabase.co` | URL Supabase project |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `eyJhbGciOi...` | Public anon key |
-| `SUPABASE_SERVICE_ROLE_KEY` | `eyJhbGciOi...` | Service role key (SECRET!) |
-| `JWT_SECRET` | `your-secret-key` | Minimal 32 karakter |
-| `NODE_ENV` | `production` | HARUS production |
+| Name                            | Value Example             | Catatan                    |
+| ------------------------------- | ------------------------- | -------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | `https://xxx.supabase.co` | URL Supabase project       |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `eyJhbGciOi...`           | Public anon key            |
+| `SUPABASE_SERVICE_ROLE_KEY`     | `eyJhbGciOi...`           | Service role key (SECRET!) |
+| `JWT_SECRET`                    | `your-secret-key`         | Minimal 32 karakter        |
+| `NODE_ENV`                      | `production`              | HARUS production           |
 
 **Cara tambah:**
+
 - Klik "+ New application setting"
 - Masukkan Name dan Value
 - Klik OK
@@ -38,21 +39,25 @@
 ### Harus salah satu dari ini:
 
 **Option A (Recommended):**
+
 ```bash
 npm run start
 ```
 
 **Option B:**
+
 ```bash
 node server.js
 ```
 
 **Option C:**
+
 ```bash
 npx next start
 ```
 
 Jika kosong atau salah:
+
 - Edit → ketik command yang benar
 - Save → tunggu restart
 
@@ -63,11 +68,13 @@ Jika kosong atau salah:
 Ini akan kasih tahu error sebenarnya:
 
 ### Via Portal:
+
 1. App Service → **Monitoring** → **Log stream**
 2. Tunggu logs muncul
 3. **Cari error message** (biasanya berwarna merah atau ada kata "ERROR", "FAIL", "FATAL")
 
 ### Via PowerShell (lebih cepat):
+
 ```powershell
 # Install Azure CLI dulu
 winget install Microsoft.AzureCLI
@@ -81,13 +88,13 @@ az webapp log tail --name ukro-recruitment --resource-group ukro-recruitment-rg
 
 ### Common Errors & Artinya:
 
-| Error Message | Penyebab | Fix |
-|---------------|----------|-----|
-| `Error: Cannot find module 'next'` | Dependencies tidak ter-install | Re-deploy atau manual `npm install` |
-| `ECONNREFUSED` atau `ETIMEDOUT` | Database connection gagal | Cek Supabase URL/Key |
-| `JWT_SECRET is not defined` | Environment variable hilang | Tambah di Configuration |
-| `Port 8080 already in use` | Startup command salah | Hapus custom startup command |
-| `Cannot read property of undefined` | Runtime error di code | Cek code di src/app/** |
+| Error Message                       | Penyebab                       | Fix                                 |
+| ----------------------------------- | ------------------------------ | ----------------------------------- |
+| `Error: Cannot find module 'next'`  | Dependencies tidak ter-install | Re-deploy atau manual `npm install` |
+| `ECONNREFUSED` atau `ETIMEDOUT`     | Database connection gagal      | Cek Supabase URL/Key                |
+| `JWT_SECRET is not defined`         | Environment variable hilang    | Tambah di Configuration             |
+| `Port 8080 already in use`          | Startup command salah          | Hapus custom startup command        |
+| `Cannot read property of undefined` | Runtime error di code          | Cek code di src/app/\*\*            |
 
 ---
 
@@ -96,6 +103,7 @@ az webapp log tail --name ukro-recruitment --resource-group ukro-recruitment-rg
 Jika masih 503, coba force rebuild:
 
 ### A. Hapus Cache di GitHub Actions:
+
 ```powershell
 # Di terminal local
 git commit --allow-empty -m "Force rebuild for Azure deployment"
@@ -103,6 +111,7 @@ git push origin main
 ```
 
 ### B. Manual Restart di Azure:
+
 1. Portal → App Service → Overview
 2. Klik **Restart** (button atas)
 3. Confirm → tunggu 1-2 menit
@@ -115,6 +124,7 @@ git push origin main
 Pastikan file-file penting ada di deployment:
 
 ### Files yang HARUS ada:
+
 ```
 /home/site/wwwroot/
 ├── .next/              (Build output Next.js)
@@ -128,9 +138,11 @@ Pastikan file-file penting ada di deployment:
 ```
 
 ### Cara cek via SSH Console (Advanced):
+
 1. Portal → App Service → **Development Tools** → **SSH**
 2. Click "Go →"
 3. Di terminal:
+
 ```bash
 cd /home/site/wwwroot
 ls -la
@@ -167,6 +179,7 @@ npm run start
 ```
 
 Lalu di Azure Configuration → General settings:
+
 - Startup Command: `bash startup.sh`
 - Save
 
@@ -188,6 +201,7 @@ Pastikan scripts di `package.json` benar:
 ```
 
 **PENTING:**
+
 - `"start": "next start"` BUKAN `"start": "next dev"` ❌
 - `"start": "next start"` BUKAN `"start": "node server.js"` (kecuali ada custom server)
 
@@ -198,20 +212,22 @@ Pastikan scripts di `package.json` benar:
 Buat file test sederhana untuk cek apakah runtime OK:
 
 `src/app/api/health/route.ts`:
+
 ```typescript
-import { NextResponse } from 'next/server'
+import { NextResponse } from "next/server";
 
 export async function GET() {
   return NextResponse.json({
-    status: 'OK',
+    status: "OK",
     timestamp: new Date().toISOString(),
     env: process.env.NODE_ENV,
     node: process.version,
-  })
+  });
 }
 ```
 
 Push → deploy → test:
+
 ```
 https://ukro-recruitment-c2c8b9gqaxckf4bq.indonesiacentral-01.azurewebsites.net/api/health
 ```
@@ -256,10 +272,12 @@ curl -I https://ukro-recruitment-c2c8b9gqaxckf4bq.indonesiacentral-01.azurewebsi
 ---
 
 **Priority Actions (DO FIRST):**
+
 1. ✅ Cek Environment Variables
 2. ✅ Cek Application Logs
 3. ✅ Restart App Service
 
 **Last Resort:**
+
 - Delete App Service
 - Create new one dengan GitHub Actions workflow baru

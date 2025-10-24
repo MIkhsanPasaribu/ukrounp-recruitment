@@ -3,17 +3,20 @@
 ## Issue: Application Error 404 di Azure Portal
 
 ### Gejala:
+
 - GitHub Actions berhasil ✅
 - Deployment logs sukses ✅
 - Azure Portal menampilkan error 404 ❌
 - URL error: `/slots/c2c8b9gqaxckf4bq`
 
 ### Penyebab:
+
 Azure Portal mencoba akses deployment slot yang tidak ada atau URL cache browser corrupt.
 
 ### Solusi:
 
 #### 1. Clear Browser Cache
+
 ```bash
 # Atau buka Incognito/Private window
 Ctrl+Shift+N (Chrome/Edge)
@@ -21,19 +24,24 @@ Ctrl+Shift+P (Firefox)
 ```
 
 #### 2. Akses App Service dengan Benar
+
 - Login ke https://portal.azure.com
 - Search bar atas: ketik "ukro-recruitment"
 - Klik App Service Anda
 - Klik "Browse" atau copy Default domain
 
 #### 3. Cek URL Aplikasi yang Benar
+
 URL Aplikasi Anda:
+
 ```
 https://ukro-recruitment-c2c8b9gqaxckf4bq.indonesiacentral-01.azurewebsites.net
 ```
 
 #### 4. Verifikasi Environment Variables
+
 Di Azure Portal → App Service → Configuration, pastikan ada:
+
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
@@ -41,16 +49,19 @@ Di Azure Portal → App Service → Configuration, pastikan ada:
 - `NODE_ENV=production`
 
 #### 5. Cek Application Logs
+
 ```powershell
 # Via Azure CLI
 az webapp log tail --name ukro-recruitment --resource-group ukro-recruitment-rg
 ```
 
 Atau via Portal:
+
 - App Service → Monitoring → Log stream
 - App Service → Diagnose and solve problems
 
 #### 6. Test Endpoints
+
 ```bash
 # Homepage
 curl https://ukro-recruitment-c2c8b9gqaxckf4bq.indonesiacentral-01.azurewebsites.net
@@ -67,11 +78,13 @@ curl https://ukro-recruitment-c2c8b9gqaxckf4bq.indonesiacentral-01.azurewebsites
 ### Issue: "Application Error" atau 503
 
 **Penyebab:**
+
 - Environment variables tidak diset
 - Database connection error
 - Build output tidak complete
 
 **Fix:**
+
 1. Cek Configuration → Application settings
 2. Restart App Service
 3. Re-deploy dari GitHub Actions
@@ -79,10 +92,12 @@ curl https://ukro-recruitment-c2c8b9gqaxckf4bq.indonesiacentral-01.azurewebsites
 ### Issue: Static Files 404
 
 **Penyebab:**
+
 - `.next` folder tidak ter-deploy
 - `next.config.ts` salah konfigurasi
 
 **Fix:**
+
 1. Pastikan `zip` command di workflow include `.next`
 2. Cek `next.config.ts`:
    ```typescript
@@ -94,26 +109,30 @@ curl https://ukro-recruitment-c2c8b9gqaxckf4bq.indonesiacentral-01.azurewebsites
 ### Issue: Database Connection Timeout
 
 **Penyebab:**
+
 - Supabase URL/Key salah
 - Network/firewall block
 
 **Fix:**
+
 1. Test connection dari local:
    ```javascript
-   const { createClient } = require('@supabase/supabase-js')
-   const supabase = createClient(url, key)
-   const { data, error } = await supabase.from('applicants').select('count')
-   console.log(data, error)
+   const { createClient } = require("@supabase/supabase-js");
+   const supabase = createClient(url, key);
+   const { data, error } = await supabase.from("applicants").select("count");
+   console.log(data, error);
    ```
 2. Whitelist Azure IP di Supabase (jika perlu)
 
 ### Issue: Build Succeeds but App Crashes
 
 **Penyebab:**
+
 - Runtime error yang tidak terdeteksi saat build
 - Missing dependencies di production
 
 **Fix:**
+
 1. Cek dependencies di `package.json`:
    - Pastikan tidak ada dev dependencies yang dipakai di runtime
 2. Test build locally:
