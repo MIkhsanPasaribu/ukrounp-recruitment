@@ -10,13 +10,14 @@ Since Azure CLI is not installed, follow these steps in Azure Portal:
 4. **Click**: "+ New application setting" and add each:
 
 ### Required Settings:
+
 ```
 Name: SCM_DO_BUILD_DURING_DEPLOYMENT
 Value: false
 ```
 
 ```
-Name: WEBSITE_NODE_DEFAULT_VERSION  
+Name: WEBSITE_NODE_DEFAULT_VERSION
 Value: 22-lts
 ```
 
@@ -42,7 +43,7 @@ Value: 0.0.0.0
 1. **Still in Configuration**, go to: **General settings** tab
 2. **Find**: "Startup Command" field
 3. **Enter**: `node server.js`
-4. **Verify**: 
+4. **Verify**:
    - Stack: Node
    - Major version: 22
    - Minor version: 22-lts
@@ -64,11 +65,13 @@ git push origin main
 
 ## Step 5: Monitor Deployment
 
-1. **Watch GitHub Actions**: 
+1. **Watch GitHub Actions**:
+
    - Go to: https://github.com/MIkhsanPasaribu/ititanix-recruitment/actions
    - Wait for workflow to complete (5-10 minutes)
 
 2. **Check Azure Logs**:
+
    - Azure Portal → App Service → Log stream
    - Look for: "✓ Ready in XXXms"
 
@@ -79,6 +82,7 @@ git push origin main
 ## Expected Success Indicators
 
 ✅ **In Log Stream:**
+
 ```
 ✓ Starting...
 ✓ Ready in XXXms
@@ -86,16 +90,19 @@ git push origin main
 ```
 
 ✅ **In Browser:**
+
 - Homepage loads correctly
 - No "Application Error" message
 
 ## If Still Having Issues
 
 1. **Check Deployment Center**:
+
    - Azure Portal → App Service → Deployment Center
    - Verify latest deployment succeeded
 
 2. **Check File Structure** (Advanced Tools):
+
    - Azure Portal → App Service → Advanced Tools → Go
    - Click "Debug console" → CMD
    - Navigate to: `site/wwwroot`
@@ -114,17 +121,17 @@ git push origin main
 
 Your Application Settings should look like:
 
-| Name | Value |
-|------|-------|
-| SCM_DO_BUILD_DURING_DEPLOYMENT | false |
-| WEBSITE_NODE_DEFAULT_VERSION | 22-lts |
-| NODE_ENV | production |
-| PORT | 8080 |
-| HOSTNAME | 0.0.0.0 |
-| NEXT_PUBLIC_SUPABASE_URL | (your value) |
-| NEXT_PUBLIC_SUPABASE_ANON_KEY | (your value) |
-| SUPABASE_SERVICE_ROLE_KEY | (your value) |
-| JWT_SECRET | (your value) |
+| Name                           | Value        |
+| ------------------------------ | ------------ |
+| SCM_DO_BUILD_DURING_DEPLOYMENT | false        |
+| WEBSITE_NODE_DEFAULT_VERSION   | 22-lts       |
+| NODE_ENV                       | production   |
+| PORT                           | 8080         |
+| HOSTNAME                       | 0.0.0.0      |
+| NEXT_PUBLIC_SUPABASE_URL       | (your value) |
+| NEXT_PUBLIC_SUPABASE_ANON_KEY  | (your value) |
+| SUPABASE_SERVICE_ROLE_KEY      | (your value) |
+| JWT_SECRET                     | (your value) |
 
 **Startup Command**: `node server.js`
 

@@ -1,12 +1,15 @@
 # Azure App Service Deployment Fix Guide
 
 ## Problem
+
 Your Next.js app is failing to start on Azure App Service with error:
+
 - Container exits during startup
 - "didn't respond to HTTP pings on port: 8080"
 - Oryx is interfering with standalone deployment
 
 ## Root Causes
+
 1. **Oryx build interference**: Azure is trying to rebuild the app instead of running the standalone build
 2. **Missing startup configuration**: App Service doesn't know how to start the Next.js server
 3. **Incorrect deployment structure**: Static files or server.js not properly deployed
@@ -14,7 +17,9 @@ Your Next.js app is failing to start on Azure App Service with error:
 ## Solution Steps
 
 ### Step 1: Update GitHub Actions Workflow ✅ DONE
+
 The workflow has been updated to:
+
 - Create a proper standalone deployment structure
 - Include web.config to prevent Oryx interference
 - Add .deployment file to disable Oryx build
@@ -29,6 +34,7 @@ Run the PowerShell script to configure Azure:
 ```
 
 This script will:
+
 - Disable Oryx build (`SCM_DO_BUILD_DURING_DEPLOYMENT=false`)
 - Set startup command (`node server.js`)
 - Configure Node.js version (22-lts)
@@ -50,6 +56,7 @@ Watch the GitHub Actions workflow:
 https://github.com/MIkhsanPasaribu/ititanix-recruitment/actions
 
 Then check Azure logs:
+
 1. Go to Azure Portal → Your App Service
 2. Navigate to "Log stream" or "Advanced Tools" → "Log stream"
 3. Look for successful startup message
@@ -57,6 +64,7 @@ Then check Azure logs:
 ### Expected Success Logs
 
 You should see:
+
 ```
 ✓ Starting...
 ✓ Ready in XXXms
@@ -72,6 +80,7 @@ If you prefer to configure manually instead of using the script:
 
 1. **Go to Configuration → Application Settings**
    Add these settings:
+
    - `SCM_DO_BUILD_DURING_DEPLOYMENT` = `false`
    - `WEBSITE_NODE_DEFAULT_VERSION` = `22-lts`
    - `NODE_ENV` = `production`
@@ -79,6 +88,7 @@ If you prefer to configure manually instead of using the script:
    - `HOSTNAME` = `0.0.0.0`
 
 2. **Go to Configuration → General Settings**
+
    - Startup Command: `node server.js`
    - Stack: Node
    - Major version: 22 LTS
@@ -122,11 +132,13 @@ az webapp restart --name $appName --resource-group $resourceGroup
 After deployment, verify:
 
 1. **Check if app is running:**
+
    ```bash
    curl https://ukro-recruitment-c2c8b9gqaxckf4bq.indonesiacentral-01.azurewebsites.net/api/health
    ```
 
 2. **Check Azure logs:**
+
    - Azure Portal → App Service → Log stream
    - Look for "✓ Ready in XXXms"
 
@@ -137,34 +149,44 @@ After deployment, verify:
 ## Troubleshooting
 
 ### Issue: Still getting Oryx logs
+
 **Solution:** Check that `.deployment` file is in root of deployed package
+
 - Verify web.config exists
 - Ensure SCM_DO_BUILD_DURING_DEPLOYMENT=false
 
 ### Issue: "Cannot find module 'next'"
+
 **Solution:** Standalone build should include all dependencies
+
 - Verify .next/standalone contains node_modules
 - Check that copy steps in workflow succeeded
 
 ### Issue: Port binding errors
+
 **Solution:** Ensure app listens on PORT environment variable
+
 - Next.js standalone automatically uses process.env.PORT
 - Default is 3000, but Azure requires 8080
 
 ### Issue: Static files not loading
+
 **Solution:** Verify .next/static and public folders
+
 - Check workflow copy steps
 - Ensure paths are correct in deployment
 
 ## Key Changes Made
 
 ### 1. GitHub Workflow Updates
+
 - ✅ Added web.config for IIS node configuration
 - ✅ Created .deployment file to disable Oryx
 - ✅ Optimized package.json for production
 - ✅ Added verification step to check deployment structure
 
 ### 2. Azure Configuration (via script)
+
 - ✅ Disabled Oryx build system
 - ✅ Set proper startup command
 - ✅ Configured Node.js version
@@ -174,13 +196,14 @@ After deployment, verify:
 
 1. **Add health check endpoint** (if not exists):
    Create `src/app/api/health/route.ts`:
+
    ```typescript
-   import { NextResponse } from 'next/server';
+   import { NextResponse } from "next/server";
 
    export async function GET() {
-     return NextResponse.json({ 
-       status: 'healthy',
-       timestamp: new Date().toISOString()
+     return NextResponse.json({
+       status: "healthy",
+       timestamp: new Date().toISOString(),
      });
    }
    ```
@@ -200,6 +223,7 @@ After deployment, verify:
 ## Support
 
 If issues persist:
+
 1. Check GitHub Actions logs for build errors
 2. Check Azure "Deployment Center" for deployment logs
 3. Check Azure "Log stream" for runtime errors
