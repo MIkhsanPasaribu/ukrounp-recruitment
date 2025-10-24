@@ -170,7 +170,7 @@ Setelah App Service Plan siap, langkah selanjutnya adalah membuat Web App yang a
   - **Continuous deployment**: Enable
   - Login dengan akun GitHub saya
   - **Organization**: MIkhsanPasaribu
-  - **Repository**: ititanix-recruitment (nama repository project saya)
+  - **Repository**: ukrounp-recruitment (nama repository project saya)
   - **Branch**: main
   - Konfigurasi ini akan otomatis membuat GitHub Actions workflow untuk auto-deploy setiap kali ada push ke branch main
 
@@ -213,7 +213,7 @@ Setelah web server siap, langkah berikutnya adalah menginstall dan mengkonfigura
 
 Sebelum deploy, saya memastikan repository GitHub sudah siap dengan struktur yang benar:
 
-- Repository saya di https://github.com/MIkhsanPasaribu/ititanix-recruitment sudah memiliki file-file penting:
+- Repository saya di https://github.com/MIkhsanPasaribu/ukrounp-recruitment sudah memiliki file-file penting:
   - `package.json` dengan semua dependencies
   - `next.config.ts` untuk konfigurasi Next.js
   - `.gitignore` untuk mengabaikan node_modules dan file sensitive
@@ -318,7 +318,7 @@ Salah satu fitur terbaik Azure adalah CI/CD integration dengan GitHub. Saya meng
 - Source yang sudah terkoneksi:
   - **Source**: GitHub
   - **Organization**: MIkhsanPasaribu
-  - **Repository**: ititanix-recruitment
+  - **Repository**: ukrounp-recruitment
   - **Branch**: main
 - **Build provider**: GitHub Actions (Azure otomatis generate workflow file)
 - Klik "Save"
