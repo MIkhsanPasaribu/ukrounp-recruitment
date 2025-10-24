@@ -54,8 +54,55 @@ jobs:
             cp -r public deploy/
           fi
 
-          # Copy package.json for reference
-          cp package.json deploy/
+          # Create package.json with start script
+          cat > deploy/package.json << 'EOF'
+          {
+            "name": "ukro-recruitment-standalone",
+            "version": "1.0.0",
+            "private": true,
+            "scripts": {
+              "start": "node server.js"
+            },
+            "engines": {
+              "node": "22.x"
+            }
+          }
+          EOF
+
+          # Create web.config to prevent Oryx interference
+          cat > deploy/web.config << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <configuration>
+            <system.webServer>
+              <handlers>
+                <add name="iisnode" path="server.js" verb="*" modules="iisnode"/>
+              </handlers>
+              <rewrite>
+                <rules>
+                  <rule name="NodeInspector" patternSyntax="ECMAScript" stopProcessing="true">
+                    <match url="^server.js\/debug[\/]?" />
+                  </rule>
+                  <rule name="StaticContent">
+                    <action type="Rewrite" url="public{REQUEST_URI}"/>
+                  </rule>
+                  <rule name="DynamicContent">
+                    <conditions>
+                      <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="True"/>
+                    </conditions>
+                    <action type="Rewrite" url="server.js"/>
+                  </rule>
+                </rules>
+              </rewrite>
+              <iisnode node_env="production" />
+            </system.webServer>
+          </configuration>
+          EOF
+
+          # Create .deployment file to prevent Oryx build
+          cat > deploy/.deployment << 'EOF'
+          [config]
+          SCM_DO_BUILD_DURING_DEPLOYMENT=false
+          EOF
 
           echo "✅ Standalone deployment prepared"
 
@@ -88,23 +135,21 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip
 
-      - name: Remove oryx-manifest.toml to prevent Oryx interference
+      - name: Verify deployment structure
         run: |
-          rm -f oryx-manifest.toml
-          rm -f .oryx_manifest.toml
-          echo "✅ Oryx manifest files removed (if existed)"
-
-      - name: Create startup configuration
-        run: |
-          echo "node server.js" > startup.sh
-          chmod +x startup.sh
-          echo "✅ Startup script created"
+          echo "📋 Deployment structure:"
+          ls -la
+          echo ""
+          echo "📋 Server.js exists:"
+          ls -la server.js || echo "❌ server.js not found!"
+          echo ""
+          echo "📋 .next directory:"
+          ls -la .next/ || echo "❌ .next not found!"
 
       - name: "Deploy to Azure Web App"
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: "ukro-recruitment"
-          # Removed slot-name - deploy to main slot
           package: .
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_6AF59876D5CD4F86B63B69F2C3D40407 }}
