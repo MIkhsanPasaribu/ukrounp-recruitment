@@ -62,7 +62,7 @@ Dengan menggunakan cloud computing melalui Microsoft Azure, aplikasi ini dapat b
 
 | **Aspek**              | **Detail**                                                                       |
 | ---------------------- | -------------------------------------------------------------------------------- |
-| URL Aplikasi           | https://ukro-recruitment.azurewebsites.net                                       |
+| URL Aplikasi           | https://ukro-recruitment-c2c8b9gqaxckf4bq.indonesiacentral-01.azurewebsites.net |
 | Jenis Aplikasi         | Web Application (Full-Stack Next.js)                                             |
 | Provider Domain        | Domainesia.com (untuk custom domain)                                             |
 | Cloud Provider         | Microsoft Azure                                                                  |
@@ -72,7 +72,7 @@ Dengan menggunakan cloud computing melalui Microsoft Azure, aplikasi ini dapat b
 | DNS Configuration      | CNAME record mengarah ke azurewebsites.net, TXT record untuk domain verification |
 | SSL Certificate        | Azure Managed Certificate (Auto-renewal)                                         |
 | Deployment Method      | GitHub Actions CI/CD (Auto-deploy dari repository)                               |
-| Region                 | Southeast Asia (Singapore)                                                       |
+| Region                 | Indonesia Central (Jakarta)                                                      |
 | Estimasi Biaya Bulanan | ~$13-15 USD                                                                      |
 | Tech Stack             | Next.js 15.2.3, React 19, TypeScript, Tailwind CSS, Supabase, Node.js 22         |
 | Monitoring             | Azure Application Insights (5GB free tier)                                       |
