@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  output: "standalone", // ← BEST PRACTICE: Standalone build for Azure deployment
   reactStrictMode: false, // Change to false to reduce double-rendering in development
   experimental: {
     optimizeCss: false,
@@ -18,4 +19,3 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
-

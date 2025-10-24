@@ -1,2 +1,6 @@
 [config]
+# Disable Oryx build during deployment - we use pre-built standalone artifacts
 SCM_DO_BUILD_DURING_DEPLOYMENT=false
+
+# Use custom command for Next.js standalone mode
+command = node server.js
