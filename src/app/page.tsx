@@ -392,7 +392,7 @@ export default function Home() {
         <p className="text-gray-400 text-sm mt-2">
           Developed by{" "}
           <a
-            href="https://github.com/MIkhsanPasaribu"
+            href="/developer"
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-400 hover:text-blue-300 hover:underline transition-colors duration-200"
