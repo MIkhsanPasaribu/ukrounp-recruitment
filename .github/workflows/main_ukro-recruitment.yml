@@ -43,7 +43,7 @@ jobs:
           npm ci --production
 
       - name: Zip artifact for deployment (include node_modules and .next)
-        run: zip release.zip ./* .next node_modules -r -x ".git/*" ".github/*" ".next/cache/*" "*.md" "docs/*" "database/*" "scripts/*" "test*.js"
+        run: zip release.zip ./* -r -x ".git/*" ".github/*" ".next/cache/*" "*.md" "docs/*" "database/*" "scripts/*" "test*.js"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
