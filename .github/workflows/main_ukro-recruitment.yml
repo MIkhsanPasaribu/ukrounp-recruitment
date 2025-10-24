@@ -27,12 +27,12 @@ jobs:
         run: |
           npm install
           npm run build --if-present
-          env:
-            NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-            SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-            JWT_SECRET: ${{ secrets.JWT_SECRET }}
-            NODE_ENV: production
           npm run test --if-present
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          NODE_ENV: production
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -59,3 +59,4 @@ jobs:
           package: .
 
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_6AF59876D5CD4F86B63B69F2C3D40407 }}
+
