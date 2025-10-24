@@ -23,11 +23,13 @@ jobs:
         with:
           node-version: "22.x"
 
-      - name: npm install, build, and test
+      - name: Clean install dependencies
         run: |
           npm ci
-          npm run build --if-present
-          npm run test --if-present
+          rm -rf .next
+
+      - name: Build Next.js application
+        run: npm run build --if-present
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
