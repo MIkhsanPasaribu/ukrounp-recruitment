@@ -57,10 +57,12 @@ async function handler(request: NextRequest) {
     }
 
     // Type assertion untuk allApplicants dengan properties tambahan
-    const applicants = allApplicants as (Applicant & {
-      attendanceConfirmed?: boolean;
-      interviewScore?: number;
-    })[] | null;
+    const applicants = allApplicants as
+      | (Applicant & {
+          attendanceConfirmed?: boolean;
+          interviewScore?: number;
+        })[]
+      | null;
 
     // Calculate overview statistics
     const overview = [
@@ -74,14 +76,12 @@ async function handler(request: NextRequest) {
           applicants?.filter((app) => app.status === "SEDANG_DITINJAU")
             .length || 0,
         interview_count:
-          applicants?.filter((app) => app.status === "INTERVIEW").length ||
-          0,
+          applicants?.filter((app) => app.status === "INTERVIEW").length || 0,
         attendance_confirmed_count:
           applicants?.filter((app) => app.attendanceConfirmed === true)
             .length || 0,
         interviewed_count:
-          applicants?.filter((app) => app.interviewScore !== null).length ||
-          0,
+          applicants?.filter((app) => app.interviewScore !== null).length || 0,
         avg_interview_score: (() => {
           const interviewedApps =
             applicants?.filter((app) => app.interviewScore !== null) || [];
