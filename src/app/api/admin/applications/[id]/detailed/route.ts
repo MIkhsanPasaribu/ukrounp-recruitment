@@ -27,7 +27,18 @@ export async function GET(
       .eq("id", id)
       .single();
 
-    if (error || !data) {
+    // Type assertion untuk data applicant
+    interface ApplicantDetailData {
+      id: string;
+      fullName: string;
+      motivation?: string;
+      futurePlans?: string;
+      whyYouShouldBeAccepted?: string;
+      [key: string]: string | number | boolean | null | undefined;
+    }
+    const applicantData = data as ApplicantDetailData | null;
+
+    if (error || !applicantData) {
       console.error("🔍 Detailed API - Supabase Error:", { id, error });
       return NextResponse.json(
         { error: "Pendaftaran tidak ditemukan" },
@@ -38,34 +49,34 @@ export async function GET(
     // Debug logging untuk melihat data esai yang diambil dari database
     console.log("🔍 Detailed API - Raw Supabase Data:", {
       id,
-      fullName: data.fullName,
+      fullName: applicantData.fullName,
       essayFields: {
         motivation: {
-          exists: !!data.motivation,
-          type: typeof data.motivation,
-          length: data.motivation?.length || 0,
-          preview: data.motivation
-            ? data.motivation.substring(0, 100) + "..."
+          exists: !!applicantData.motivation,
+          type: typeof applicantData.motivation,
+          length: applicantData.motivation?.length || 0,
+          preview: applicantData.motivation
+            ? applicantData.motivation.substring(0, 100) + "..."
             : "NO DATA",
         },
         futurePlans: {
-          exists: !!data.futurePlans,
-          type: typeof data.futurePlans,
-          length: data.futurePlans?.length || 0,
-          preview: data.futurePlans
-            ? data.futurePlans.substring(0, 100) + "..."
+          exists: !!applicantData.futurePlans,
+          type: typeof applicantData.futurePlans,
+          length: applicantData.futurePlans?.length || 0,
+          preview: applicantData.futurePlans
+            ? applicantData.futurePlans.substring(0, 100) + "..."
             : "NO DATA",
         },
         whyYouShouldBeAccepted: {
-          exists: !!data.whyYouShouldBeAccepted,
-          type: typeof data.whyYouShouldBeAccepted,
-          length: data.whyYouShouldBeAccepted?.length || 0,
-          preview: data.whyYouShouldBeAccepted
-            ? data.whyYouShouldBeAccepted.substring(0, 100) + "..."
+          exists: !!applicantData.whyYouShouldBeAccepted,
+          type: typeof applicantData.whyYouShouldBeAccepted,
+          length: applicantData.whyYouShouldBeAccepted?.length || 0,
+          preview: applicantData.whyYouShouldBeAccepted
+            ? applicantData.whyYouShouldBeAccepted.substring(0, 100) + "..."
             : "NO DATA",
         },
       },
-      allFieldsFromDB: Object.keys(data),
+      allFieldsFromDB: Object.keys(applicantData),
     });
 
     // Analyze file uploads and add metadata
