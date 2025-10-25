@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { NextRequest } from "next/server";
-import { supabase } from "./supabase";
+import { supabase, supabaseUntyped } from "./supabase";
 
 const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret-key";
 const MAX_LOGIN_ATTEMPTS = 5;
@@ -94,7 +94,7 @@ export async function generateToken(admin: AdminUser): Promise<string> {
     token,
     expiresAt: expiresAt, // Use Date object instead of ISO string
   };
-  const { data, error } = await supabase
+  const { data, error } = await supabaseUntyped
     .from("session_tokens")
     .insert(sessionData as Record<string, unknown>)
     .select();
@@ -363,7 +363,7 @@ export async function logAdminAction(
   userAgent?: string
 ): Promise<void> {
   try {
-    await supabase.from("audit_logs").insert({
+    await supabaseUntyped.from("audit_logs").insert({
       adminId,
       action,
       resource,
@@ -398,7 +398,7 @@ export async function createFirstAdmin(
     const passwordHash = await hashPassword(password);
 
     // Create admin
-    const { error } = await supabase.from("admins").insert({
+    const { error } = await supabaseUntyped.from("admins").insert({
       username,
       email,
       passwordHash,
@@ -451,7 +451,7 @@ export async function cleanupExpiredTokens(): Promise<void> {
 export async function logoutAdmin(token: string): Promise<void> {
   try {
     // Invalidate the session token
-    await supabase.from("session_tokens").delete().eq("token", token);
+    await supabaseUntyped.from("session_tokens").delete().eq("token", token);
   } catch (error) {
     console.error("Error during logout:", error);
   }

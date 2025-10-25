@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/auth-middleware";
-import { supabase } from "@/lib/supabase";
+import { supabase, supabaseUntyped } from "@/lib/supabase";
 import { checkMemoryUsage } from "@/utils/vercelOptimization";
 
 interface AuthData {
@@ -155,9 +155,9 @@ async function handleCreateAssignment(request: NextRequest, auth: AuthData) {
       scheduled_at: scheduledAt || new Date().toISOString(),
       notes,
     };
-    const { data: assignment, error: assignmentError } = await supabase
+    const { data: assignment, error: assignmentError } = await supabaseUntyped
       .from("interviewer_assignments")
-      .insert(assignmentData as Record<string, unknown>)
+      .insert(assignmentData)
       .select(
         `
         id,
@@ -359,9 +359,9 @@ async function handleUpdateAssignment(request: NextRequest) {
     if (status) updateData.status = status;
     if (notes !== undefined) updateData.notes = notes;
 
-    const { data: assignment, error } = await supabase
+    const { data: assignment, error } = await supabaseUntyped
       .from("interviewer_assignments")
-      .update(updateData as Record<string, unknown>)
+      .update(updateData)
       .eq("id", id)
       .select()
       .single();

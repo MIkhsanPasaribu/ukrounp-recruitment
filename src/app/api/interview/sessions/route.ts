@@ -12,23 +12,23 @@ interface ApplicantData {
   [key: string]: unknown;
 }
 
-interface SessionData {
-  id: string;
-  applicantId: string;
-  interviewerId: string;
-  interviewDate: string;
-  location: string;
-  status: string;
-  notes: string;
-  created_at: string;
-  [key: string]: unknown;
-}
+// interface SessionData {
+//   id: string;
+//   applicantId: string;
+//   interviewerId: string;
+//   interviewDate: string;
+//   location: string;
+//   status: string;
+//   notes: string;
+//   created_at: string;
+//   [key: string]: unknown;
+// }
 
-interface InterviewerData {
-  id: string;
-  fullName: string;
-  [key: string]: unknown;
-}
+// interface InterviewerData {
+//   id: string;
+//   fullName: string;
+//   [key: string]: unknown;
+// }
 
 async function handler(
   request: NextRequest,

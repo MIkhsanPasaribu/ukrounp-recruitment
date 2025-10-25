@@ -46,6 +46,29 @@ const supabase = createClient<Database>(supabaseUrl, supabaseServiceKey, {
   },
 });
 
+// Untyped client untuk tabel interview yang tidak terdefinisi dalam Database types
+const supabaseUntyped = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false,
+  },
+  db: {
+    schema: "public",
+  },
+  global: {
+    headers: {
+      "x-connection-timeout": "30",
+      "x-statement-timeout": "25",
+      "x-application-name": "ukro-recruitment-admin",
+    },
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
+    },
+  },
+});
+
 // Optimized Database Class dengan caching
 export class OptimizedDatabase {
   private static cache = new Map<
@@ -288,4 +311,67 @@ export class OptimizedDatabase {
   }
 }
 
-export { supabase };
+export { supabase, supabaseUntyped };
+
+// Helper functions untuk operasi database yang tidak typed
+export const dbOperations = {
+  // Insert operations
+  insertInterviewAttendance: (data: Record<string, unknown>) =>
+    supabaseUntyped.from("interview_attendance").insert(data),
+
+  insertInterviewSessions: (data: Record<string, unknown>) =>
+    supabaseUntyped.from("interview_sessions").insert(data),
+
+  insertInterviewResponses: (data: Record<string, unknown>[]) =>
+    supabaseUntyped.from("interview_responses").insert(data),
+
+  insertInterviewerAssignments: (data: Record<string, unknown>) =>
+    supabaseUntyped.from("interviewer_assignments").insert(data),
+
+  insertInterviewerTokens: (data: Record<string, unknown>) =>
+    supabaseUntyped.from("interviewer_tokens").insert(data),
+
+  insertSessionTokens: (data: Record<string, unknown>) =>
+    supabaseUntyped.from("session_tokens").insert(data),
+
+  insertAuditLogs: (data: Record<string, unknown>) =>
+    supabaseUntyped.from("audit_logs").insert(data),
+
+  insertAdmins: (data: Record<string, unknown>) =>
+    supabaseUntyped.from("admins").insert(data),
+
+  // Update operations
+  updateInterviewAttendance: (data: Record<string, unknown>) =>
+    supabaseUntyped.from("interview_attendance").update(data),
+
+  updateInterviewWorkflow: (data: Record<string, unknown>) =>
+    supabaseUntyped.from("applicants").update(data),
+
+  updateInterviewSessions: (data: Record<string, unknown>) =>
+    supabaseUntyped.from("interview_sessions").update(data),
+
+  updateInterviewResponses: (data: Record<string, unknown>) =>
+    supabaseUntyped.from("interview_responses").update(data),
+
+  updateInterviewerAssignments: (data: Record<string, unknown>) =>
+    supabaseUntyped.from("interviewer_assignments").update(data),
+
+  updateInterviewerTokens: (data: Record<string, unknown>) =>
+    supabaseUntyped.from("interviewer_tokens").update(data),
+
+  updateInterviewers: (data: Record<string, unknown>) =>
+    supabaseUntyped.from("interviewers").update(data),
+
+  updateSessionTokens: (data: Record<string, unknown>) =>
+    supabaseUntyped.from("session_tokens").update(data),
+
+  updateAdmins: (data: Record<string, unknown>) =>
+    supabaseUntyped.from("admins").update(data),
+
+  // Upsert operations
+  upsertSettings: (data: Record<string, unknown>) =>
+    supabaseUntyped.from("settings").upsert(data),
+
+  // Select operations (tetap pakai yang typed kalau ada)
+  selectFrom: (table: string) => supabaseUntyped.from(table).select("*"),
+};

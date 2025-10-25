@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabase, supabaseUntyped } from "@/lib/supabase";
 import { verifyToken } from "@/lib/auth";
 
 interface SettingData {
@@ -45,9 +45,9 @@ export async function GET() {
         key: "registrationOpen",
         value: "true",
       };
-      const { error: insertError } = await supabase
+      const { error: insertError } = await supabaseUntyped
         .from("settings")
-        .insert(settingData as Record<string, unknown>);
+        .upsert(settingData);
 
       if (insertError) {
         console.error("❌ Error membuat setting default:", insertError);
@@ -155,9 +155,7 @@ export async function POST(request: Request) {
       key: "registrationOpen",
       value: isOpen.toString(),
     };
-    const { error } = await supabase
-      .from("settings")
-      .upsert(upsertData as Record<string, unknown>);
+    const { error } = await supabaseUntyped.from("settings").upsert(upsertData);
 
     if (error) {
       console.error("❌ Error memperbarui status pendaftaran:", error);

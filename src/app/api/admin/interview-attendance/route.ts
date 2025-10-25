@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/auth-middleware";
-import { supabase } from "@/lib/supabase";
+import { supabase, supabaseUntyped } from "@/lib/supabase";
 import { checkMemoryUsage } from "@/utils/vercelOptimization";
 
 interface AuthData {
@@ -131,11 +131,12 @@ async function handleCreateAttendance(request: NextRequest, auth: AuthData) {
       notes,
     };
 
-    const { data: attendanceResult, error: attendanceError } = await supabase
-      .from("interview_attendance")
-      .insert(attendanceData as Record<string, unknown>)
-      .select(
-        `
+    const { data: attendanceResult, error: attendanceError } =
+      await supabaseUntyped
+        .from("interview_attendance")
+        .insert(attendanceData)
+        .select(
+          `
         id,
         nim,
         applicant_id,
@@ -153,8 +154,8 @@ async function handleCreateAttendance(request: NextRequest, auth: AuthData) {
           department
         )
       `
-      )
-      .single();
+        )
+        .single();
 
     const attendance = attendanceResult as {
       id: string;
@@ -304,9 +305,9 @@ async function handleUpdateAttendance(request: NextRequest) {
     if (status) updateData.status = status;
     if (notes !== undefined) updateData.notes = notes;
 
-    const { data: attendanceData, error } = await supabase
+    const { data: attendanceData, error } = await supabaseUntyped
       .from("interview_attendance")
-      .update(updateData as Record<string, unknown>)
+      .update(updateData)
       .eq("id", id)
       .select()
       .single();

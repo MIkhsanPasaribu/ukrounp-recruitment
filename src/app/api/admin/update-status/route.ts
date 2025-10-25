@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabaseUntyped } from "@/lib/supabase";
 import { getAuthData } from "@/lib/auth";
 
 interface StatusUpdateData {
@@ -47,9 +47,9 @@ async function updateStatus(request: NextRequest) {
 
     // Update status aplikasi menggunakan Supabase
     const updateData: StatusUpdateData = { status };
-    const { error } = await supabase
+    const { error } = await supabaseUntyped
       .from("applicants")
-      .update(updateData as Record<string, unknown>)
+      .update(updateData)
       .eq("id", id);
 
     if (error) {

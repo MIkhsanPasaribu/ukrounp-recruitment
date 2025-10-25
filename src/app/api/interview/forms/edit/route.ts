@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withInterviewerAuth } from "@/lib/auth-interviewer-middleware";
-import { supabase } from "@/lib/supabase";
+import { supabase, supabaseUntyped } from "@/lib/supabase";
 import { InterviewerUser } from "@/types/interview";
 
 // Interface for interview response data
@@ -143,7 +143,7 @@ async function handler(
       })
     );
 
-    const { error: responseError } = await supabase
+    const { error: responseError } = await supabaseUntyped
       .from("interview_responses")
       .insert(responsesToInsert);
 
@@ -180,7 +180,7 @@ async function handler(
       updateData.interviewerName = interviewerName.trim();
     }
 
-    const { error: sessionUpdateError } = await supabase
+    const { error: sessionUpdateError } = await supabaseUntyped
       .from("interview_sessions")
       .update(updateData)
       .eq("id", sessionId);

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/auth-middleware";
-import { supabase } from "@/lib/supabase";
+import { supabase, supabaseUntyped } from "@/lib/supabase";
 
 interface InterviewerData {
   id: string;
@@ -99,9 +99,9 @@ async function handleWorkflowAction(request: NextRequest) {
 
       console.log("Update data:", updateData);
 
-      const { data: updateResult, error: updateError } = await supabase
+      const { data: updateResult, error: updateError } = await supabaseUntyped
         .from("applicants")
-        .update(updateData as Record<string, unknown>)
+        .update(updateData)
         .eq("id", applicant.id)
         .select();
 
@@ -209,11 +209,12 @@ async function handleWorkflowAction(request: NextRequest) {
 
       console.log("Assignment data:", assignmentData);
 
-      const { data: assignmentResult, error: assignmentError } = await supabase
-        .from("applicants")
-        .update(assignmentData as Record<string, unknown>)
-        .eq("id", applicantId)
-        .select();
+      const { data: assignmentResult, error: assignmentError } =
+        await supabaseUntyped
+          .from("applicants")
+          .update(assignmentData)
+          .eq("id", applicantId)
+          .select();
 
       console.log("Assignment result:", { assignmentResult, assignmentError });
 
