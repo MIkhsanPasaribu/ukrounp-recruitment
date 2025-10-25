@@ -4,6 +4,35 @@ import { withInterviewerAuth } from "@/lib/auth-interviewer-middleware";
 import { supabase } from "@/lib/supabase";
 import { InterviewerUser } from "@/types/interview";
 
+interface AdditionalData {
+  totalScore: number;
+  recommendation: string;
+  interviewerName: string;
+  [key: string]: unknown;
+}
+
+interface QuestionData {
+  id: string;
+  questionNumber: number;
+  questionText: string;
+  category: string;
+  [key: string]: unknown;
+}
+
+interface ResponseData {
+  questionId: string;
+  response: string;
+  score: number;
+  notes: string;
+  [key: string]: unknown;
+}
+
+interface SessionData {
+  id: string;
+  status: string;
+  [key: string]: unknown;
+}
+
 async function handler(
   request: NextRequest,
   auth: {
@@ -82,9 +111,10 @@ async function handler(
         .single();
 
       if (additionalData) {
-        totalScore = additionalData.totalScore;
-        recommendation = additionalData.recommendation;
-        interviewerName = additionalData.interviewerName;
+        const typedData = additionalData as AdditionalData;
+        totalScore = typedData.totalScore;
+        recommendation = typedData.recommendation;
+        interviewerName = typedData.interviewerName;
       }
     } catch (error) {
       // Columns might not exist yet, that's okay
@@ -121,14 +151,14 @@ async function handler(
     // Map responses to questions
     const formQuestions = questions.map((question) => {
       const existingResponse = responses?.find(
-        (r) => r.questionId === question.id
+        (r) => (r as ResponseData).questionId === (question as QuestionData).id
       );
 
       return {
         question,
-        response: existingResponse?.response || "",
-        score: existingResponse?.score || 0,
-        notes: existingResponse?.notes || "",
+        response: (existingResponse as ResponseData)?.response || "",
+        score: (existingResponse as ResponseData)?.score || 0,
+        notes: (existingResponse as ResponseData)?.notes || "",
       };
     });
 
@@ -136,12 +166,12 @@ async function handler(
       sessionId,
       questionsCount: formQuestions.length,
       responsesCount: responses?.length || 0,
-      sessionStatus: session.status,
+      sessionStatus: (session as SessionData).status,
     });
 
     // Combine session data with additional fields
     const enhancedSession = {
-      ...session,
+      ...(session as Record<string, unknown>),
       totalScore,
       recommendation,
       interviewerName,

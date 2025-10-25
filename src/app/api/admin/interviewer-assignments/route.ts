@@ -22,6 +22,7 @@ interface AssignmentInsertData {
   assigned_by: string;
   scheduled_at: string;
   notes?: string;
+  [key: string]: unknown;
 }
 
 interface AssignmentResult {
@@ -156,7 +157,7 @@ async function handleCreateAssignment(request: NextRequest, auth: AuthData) {
     };
     const { data: assignment, error: assignmentError } = await supabase
       .from("interviewer_assignments")
-      .insert(assignmentData as AssignmentInsertData)
+      .insert(assignmentData as Record<string, unknown>)
       .select(
         `
         id,
@@ -360,7 +361,7 @@ async function handleUpdateAssignment(request: NextRequest) {
 
     const { data: assignment, error } = await supabase
       .from("interviewer_assignments")
-      .update(updateData as UpdateAssignmentData)
+      .update(updateData as Record<string, unknown>)
       .eq("id", id)
       .select()
       .single();

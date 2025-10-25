@@ -1,6 +1,16 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
+interface ApplicationData {
+  id: string;
+  email: string;
+  fullName: string;
+  status: string;
+  submittedAt: string;
+  birthDate: string;
+  [key: string]: unknown;
+}
+
 export async function POST(request: Request) {
   try {
     const { email } = await request.json();
@@ -34,7 +44,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const application = applications[0];
+    const application = applications[0] as ApplicationData;
 
     return NextResponse.json({
       success: true,

@@ -5,10 +5,12 @@ import { verifyToken } from "@/lib/auth";
 interface SettingData {
   key: string;
   value: string;
+  [key: string]: unknown;
 }
 
 interface SettingRecord {
   value: string;
+  [key: string]: unknown;
 }
 
 export async function GET() {
@@ -45,7 +47,7 @@ export async function GET() {
       };
       const { error: insertError } = await supabase
         .from("settings")
-        .insert(settingData as SettingData);
+        .insert(settingData as Record<string, unknown>);
 
       if (insertError) {
         console.error("❌ Error membuat setting default:", insertError);
@@ -155,9 +157,7 @@ export async function POST(request: Request) {
     };
     const { error } = await supabase
       .from("settings")
-      .upsert(upsertData as SettingData, {
-        onConflict: "key",
-      });
+      .upsert(upsertData as Record<string, unknown>);
 
     if (error) {
       console.error("❌ Error memperbarui status pendaftaran:", error);

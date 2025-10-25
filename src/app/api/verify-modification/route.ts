@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
+interface ApplicationData {
+  fullName: string;
+  [key: string]: unknown;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { email, birthDate } = await request.json();
@@ -33,8 +38,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Verifikasi berhasil! Data ditemukan untuk ${application.fullName}`,
-      data: application,
+      message: `Verifikasi berhasil! Data ditemukan untuk ${
+        (application as ApplicationData).fullName
+      }`,
+      data: application as Record<string, unknown>,
     });
   } catch (error) {
     console.error("Verification error:", error);

@@ -15,11 +15,13 @@ interface AttendanceInsertData {
   checked_in_by: string;
   status: string;
   notes?: string;
+  [key: string]: unknown;
 }
 
 interface AttendanceUpdateData {
   status?: string;
   notes?: string;
+  [key: string]: unknown;
 }
 
 interface ApplicantData {
@@ -131,7 +133,7 @@ async function handleCreateAttendance(request: NextRequest, auth: AuthData) {
 
     const { data: attendanceResult, error: attendanceError } = await supabase
       .from("interview_attendance")
-      .insert(attendanceData as AttendanceInsertData)
+      .insert(attendanceData as Record<string, unknown>)
       .select(
         `
         id,
@@ -304,7 +306,7 @@ async function handleUpdateAttendance(request: NextRequest) {
 
     const { data: attendanceData, error } = await supabase
       .from("interview_attendance")
-      .update(updateData as AttendanceUpdateData)
+      .update(updateData as Record<string, unknown>)
       .eq("id", id)
       .select()
       .single();

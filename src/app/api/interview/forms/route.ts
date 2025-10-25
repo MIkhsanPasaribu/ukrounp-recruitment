@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { withInterviewerAuth } from "@/lib/auth-interviewer-middleware";
 import { supabase } from "@/lib/supabase";
 
+interface QuestionData {
+  id: string;
+  questionText: string;
+  questionNumber: number;
+  [key: string]: unknown;
+}
+
 async function handler(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -24,7 +31,13 @@ async function handler(request: NextRequest) {
       );
     }
 
-    let responses = [];
+    let responses: Array<{
+      questionId: string;
+      response: string;
+      score: number;
+      notes: string;
+      id: string;
+    }> = [];
     let sessionData = null;
 
     // If sessionId provided, get existing responses and session data
@@ -83,7 +96,7 @@ async function handler(request: NextRequest) {
     // Merge questions with existing responses
     const formData = questions.map((question) => {
       const existingResponse = responses.find(
-        (r) => r.questionId === question.id
+        (r) => r.questionId === (question as QuestionData).id
       );
       return {
         question,

@@ -25,6 +25,29 @@ interface SessionTokenData {
   adminId: string;
   token: string;
   expiresAt: Date;
+  [key: string]: unknown;
+}
+
+interface UpdateData {
+  isRevoked?: boolean;
+  revokedAt?: string;
+  loginAttempts?: number;
+  lockedUntil?: string | null;
+  lastLoginAt?: string;
+  [key: string]: unknown;
+}
+
+interface AdminData {
+  id: string;
+  username: string;
+  email: string;
+  fullName: string;
+  role: string;
+  isActive: boolean;
+  passwordHash: string;
+  loginAttempts?: number;
+  lockedUntil?: string;
+  [key: string]: unknown;
 }
 
 // Hash password utility
@@ -73,7 +96,7 @@ export async function generateToken(admin: AdminUser): Promise<string> {
   };
   const { data, error } = await supabase
     .from("session_tokens")
-    .insert(sessionData as SessionTokenData)
+    .insert(sessionData as Record<string, unknown>)
     .select();
 
   if (error) {
@@ -133,23 +156,27 @@ export async function isTokenValid(token: string): Promise<boolean> {
 
 // Revoke token
 export async function revokeToken(token: string): Promise<void> {
+  const revokeData: UpdateData = {
+    isRevoked: true,
+    revokedAt: new Date().toISOString(),
+  };
+
   await supabase
     .from("session_tokens")
-    .update({
-      isRevoked: true,
-      revokedAt: new Date().toISOString(),
-    })
+    .update(revokeData as Record<string, unknown>)
     .eq("token", token);
 }
 
 // Revoke all tokens for an admin
 export async function revokeAllTokensForAdmin(adminId: string): Promise<void> {
+  const revokeData: UpdateData = {
+    isRevoked: true,
+    revokedAt: new Date().toISOString(),
+  };
+
   await supabase
     .from("session_tokens")
-    .update({
-      isRevoked: true,
-      revokedAt: new Date().toISOString(),
-    })
+    .update(revokeData as Record<string, unknown>)
     .eq("adminId", adminId)
     .eq("isRevoked", false);
 }
@@ -179,9 +206,14 @@ export async function authenticateAdmin(
       return { success: false, message: "Username/email atau password salah" };
     }
 
+    const adminTyped = admin as AdminData;
+
     // Check if account is locked
-    if (admin.lockedUntil && new Date(admin.lockedUntil) > new Date()) {
-      const unlockTime = new Date(admin.lockedUntil).toLocaleString();
+    if (
+      adminTyped.lockedUntil &&
+      new Date(adminTyped.lockedUntil) > new Date()
+    ) {
+      const unlockTime = new Date(adminTyped.lockedUntil).toLocaleString();
       return {
         success: false,
         message: `Akun terkunci hingga ${unlockTime}. Coba lagi nanti.`,
@@ -189,12 +221,15 @@ export async function authenticateAdmin(
     }
 
     // Verify password
-    const isPasswordValid = await verifyPassword(password, admin.passwordHash);
+    const isPasswordValid = await verifyPassword(
+      password,
+      adminTyped.passwordHash
+    );
 
     if (!isPasswordValid) {
       // Increment login attempts
-      const newAttempts = (admin.loginAttempts || 0) + 1;
-      const updateData: { loginAttempts: number; lockedUntil?: string } = {
+      const newAttempts = (adminTyped.loginAttempts || 0) + 1;
+      const updateData: UpdateData = {
         loginAttempts: newAttempts,
       };
 
@@ -203,27 +238,32 @@ export async function authenticateAdmin(
         updateData.lockedUntil = new Date(Date.now() + LOCK_TIME).toISOString();
       }
 
-      await supabase.from("admins").update(updateData).eq("id", admin.id);
+      await supabase
+        .from("admins")
+        .update(updateData as Record<string, unknown>)
+        .eq("id", adminTyped.id);
 
       return { success: false, message: "Username/email atau password salah" };
     }
 
     // Reset login attempts on successful login
+    const resetData: UpdateData = {
+      loginAttempts: 0,
+      lockedUntil: null,
+      lastLoginAt: new Date().toISOString(),
+    };
+
     await supabase
       .from("admins")
-      .update({
-        loginAttempts: 0,
-        lockedUntil: null,
-        lastLoginAt: new Date().toISOString(),
-      })
-      .eq("id", admin.id);
+      .update(resetData as Record<string, unknown>)
+      .eq("id", adminTyped.id);
 
     // Generate token
-    const token = await generateToken(admin);
+    const token = await generateToken(admin as AdminUser);
 
     // Log successful login
     await logAdminAction(
-      admin.id,
+      adminTyped.id,
       "LOGIN",
       undefined,
       "Successful login",
@@ -306,7 +346,10 @@ export async function getAuthData(request: NextRequest): Promise<{
     return { isAuthenticated: false };
   }
 
-  console.log("✅ Authentication successful for:", admin.username);
+  console.log(
+    "✅ Authentication successful for:",
+    (admin as AdminData).username
+  );
   return { isAuthenticated: true, admin, token };
 }
 
@@ -327,7 +370,7 @@ export async function logAdminAction(
       details,
       ipAddress,
       userAgent,
-    });
+    } as Record<string, unknown>);
   } catch (error) {
     console.error("Error logging admin action:", error);
   }
@@ -362,7 +405,7 @@ export async function createFirstAdmin(
       fullName,
       role: "SUPER_ADMIN",
       isActive: true,
-    });
+    } as Record<string, unknown>);
 
     if (error) {
       console.error("Error creating admin:", error);

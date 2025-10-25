@@ -4,6 +4,7 @@ import { getAuthData } from "@/lib/auth";
 
 interface StatusUpdateData {
   status: string;
+  [key: string]: unknown;
 }
 
 async function updateStatus(request: NextRequest) {
@@ -48,7 +49,7 @@ async function updateStatus(request: NextRequest) {
     const updateData: StatusUpdateData = { status };
     const { error } = await supabase
       .from("applicants")
-      .update(updateData as StatusUpdateData)
+      .update(updateData as Record<string, unknown>)
       .eq("id", id);
 
     if (error) {

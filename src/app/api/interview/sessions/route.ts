@@ -3,6 +3,33 @@ import { withInterviewerAuth } from "@/lib/auth-interviewer-middleware";
 import { supabase } from "@/lib/supabase";
 import { InterviewerUser } from "@/types/interview";
 
+interface ApplicantData {
+  id: string;
+  fullName: string;
+  email: string;
+  status: string;
+  assignedInterviewer: string;
+  [key: string]: unknown;
+}
+
+interface SessionData {
+  id: string;
+  applicantId: string;
+  interviewerId: string;
+  interviewDate: string;
+  location: string;
+  status: string;
+  notes: string;
+  created_at: string;
+  [key: string]: unknown;
+}
+
+interface InterviewerData {
+  id: string;
+  fullName: string;
+  [key: string]: unknown;
+}
+
 async function handler(
   request: NextRequest,
   auth: {
@@ -50,20 +77,24 @@ async function handler(
     }
 
     // Check if applicant has correct status and assignment
-    if (applicant.status !== "INTERVIEW") {
-      console.error("❌ Applicant status is not INTERVIEW:", applicant.status);
+    const applicantTyped = applicant as ApplicantData;
+    if (applicantTyped.status !== "INTERVIEW") {
+      console.error(
+        "❌ Applicant status is not INTERVIEW:",
+        applicantTyped.status
+      );
       return NextResponse.json(
         {
           success: false,
-          message: `Status peserta bukan INTERVIEW (saat ini: ${applicant.status})`,
+          message: `Status peserta bukan INTERVIEW (saat ini: ${applicantTyped.status})`,
         },
         { status: 400 }
       );
     }
 
-    if (applicant.assignedInterviewer !== interviewer.username) {
+    if (applicantTyped.assignedInterviewer !== interviewer.username) {
       console.error("❌ Applicant not assigned to this interviewer:", {
-        assigned: applicant.assignedInterviewer,
+        assigned: applicantTyped.assignedInterviewer,
         current: interviewer.username,
       });
       return NextResponse.json(
@@ -92,11 +123,11 @@ async function handler(
         success: true,
         message: "Sesi wawancara sudah ada, menggunakan sesi yang ada",
         data: {
-          ...existingSession,
+          ...(existingSession as Record<string, unknown>),
           applicant: {
-            id: applicant.id,
-            fullName: applicant.fullName,
-            email: applicant.email,
+            id: applicantTyped.id,
+            fullName: applicantTyped.fullName,
+            email: applicantTyped.email,
           },
           interviewer: {
             id: interviewer.id,
@@ -120,7 +151,7 @@ async function handler(
 
     const { data: session, error: sessionError } = await supabase
       .from("interview_sessions")
-      .insert(sessionData)
+      .insert(sessionData as Record<string, unknown>)
       .select(
         `
         id,
@@ -157,11 +188,11 @@ async function handler(
       success: true,
       message: "Sesi wawancara berhasil dibuat",
       data: {
-        ...session,
+        ...(session as Record<string, unknown>),
         applicant: {
-          id: applicant.id,
-          fullName: applicant.fullName,
-          email: applicant.email,
+          id: applicantTyped.id,
+          fullName: applicantTyped.fullName,
+          email: applicantTyped.email,
         },
         interviewer: {
           id: interviewer.id,

@@ -11,6 +11,14 @@ interface InterviewResponseData {
   response?: string;
 }
 
+interface SessionData {
+  id: string;
+  interviewerId: string;
+  applicantId: string;
+  status: string;
+  [key: string]: unknown;
+}
+
 async function handler(
   request: NextRequest,
   auth: {
@@ -63,7 +71,7 @@ async function handler(
     }
 
     // Check if session is completed (only allow editing completed sessions)
-    if (session.status !== "COMPLETED") {
+    if ((session as SessionData).status !== "COMPLETED") {
       return NextResponse.json(
         {
           success: false,

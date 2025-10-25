@@ -3,6 +3,21 @@ import { withInterviewerAuth } from "@/lib/auth-interviewer-middleware";
 import { supabase } from "@/lib/supabase";
 import { InterviewerUser } from "@/types/interview";
 
+interface SessionData {
+  id: string;
+  status: string;
+  totalScore?: number;
+  interviewDate: string;
+  location: string;
+  notes?: string;
+  [key: string]: unknown;
+}
+
+interface ResponseData {
+  sessionId: string;
+  [key: string]: unknown;
+}
+
 async function handler(
   request: NextRequest,
   auth: {
@@ -79,7 +94,7 @@ async function handler(
     }
 
     // Get response counts for each session
-    const sessionIds = sessions?.map((s) => s.id) || [];
+    const sessionIds = sessions?.map((s) => (s as SessionData).id) || [];
     const { data: responseCounts } = await supabase
       .from("interview_responses")
       .select("sessionId")
@@ -88,20 +103,26 @@ async function handler(
     // Group response counts by session
     const responseCountMap =
       responseCounts?.reduce((acc, response) => {
-        acc[response.sessionId] = (acc[response.sessionId] || 0) + 1;
+        acc[(response as ResponseData).sessionId] =
+          (acc[(response as ResponseData).sessionId] || 0) + 1;
         return acc;
       }, {} as Record<string, number>) || {};
 
     // Merge session data with response counts
-    const sessionsWithCounts = sessions?.map((session) => ({
-      ...session,
-      responseCount: responseCountMap[session.id] || 0,
-      isCompleted: session.status === "COMPLETED",
-      averageScore:
-        session.totalScore && responseCountMap[session.id]
-          ? (session.totalScore / responseCountMap[session.id]).toFixed(2)
-          : null,
-    }));
+    const sessionsWithCounts = sessions?.map((session) => {
+      const typedSession = session as SessionData;
+      return {
+        ...(session as Record<string, unknown>),
+        responseCount: responseCountMap[typedSession.id] || 0,
+        isCompleted: typedSession.status === "COMPLETED",
+        averageScore:
+          typedSession.totalScore && responseCountMap[typedSession.id]
+            ? (
+                typedSession.totalScore / responseCountMap[typedSession.id]
+              ).toFixed(2)
+            : null,
+      };
+    });
 
     // Calculate pagination info
     const totalPages = Math.ceil((count || 0) / limit);
@@ -122,11 +143,14 @@ async function handler(
       summary: {
         totalSessions: count || 0,
         completedSessions:
-          sessions?.filter((s) => s.status === "COMPLETED").length || 0,
+          sessions?.filter((s) => (s as SessionData).status === "COMPLETED")
+            .length || 0,
         scheduledSessions:
-          sessions?.filter((s) => s.status === "SCHEDULED").length || 0,
+          sessions?.filter((s) => (s as SessionData).status === "SCHEDULED")
+            .length || 0,
         inProgressSessions:
-          sessions?.filter((s) => s.status === "IN_PROGRESS").length || 0,
+          sessions?.filter((s) => (s as SessionData).status === "IN_PROGRESS")
+            .length || 0,
       },
     });
   } catch (error) {

@@ -23,6 +23,7 @@ interface ApplicantUpdateData {
   updatedAt?: string;
   assignedInterviewer?: string;
   interviewStatus?: string;
+  [key: string]: unknown;
 }
 
 async function handler(request: NextRequest) {
@@ -100,7 +101,7 @@ async function handleWorkflowAction(request: NextRequest) {
 
       const { data: updateResult, error: updateError } = await supabase
         .from("applicants")
-        .update(updateData as ApplicantUpdateData)
+        .update(updateData as Record<string, unknown>)
         .eq("id", applicant.id)
         .select();
 
@@ -210,7 +211,7 @@ async function handleWorkflowAction(request: NextRequest) {
 
       const { data: assignmentResult, error: assignmentError } = await supabase
         .from("applicants")
-        .update(assignmentData as ApplicantUpdateData)
+        .update(assignmentData as Record<string, unknown>)
         .eq("id", applicantId)
         .select();
 

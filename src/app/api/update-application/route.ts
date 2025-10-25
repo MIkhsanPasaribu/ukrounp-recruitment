@@ -218,7 +218,7 @@ export async function PUT(request: NextRequest) {
     // Update data aplikasi
     const { error: updateError } = await supabase
       .from("applicants")
-      .update(updateObject)
+      .update(updateObject as Record<string, unknown>)
       .eq("id", id);
 
     if (updateError) {

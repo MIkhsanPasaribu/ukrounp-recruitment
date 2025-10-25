@@ -4,6 +4,11 @@ import { supabase } from "@/lib/supabase";
 import { ApplicationData } from "@/types";
 import { ApplicantInsert } from "@/types/supabase";
 
+interface InsertResult {
+  id: string;
+  [key: string]: unknown;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -62,7 +67,7 @@ export async function POST(request: Request) {
     // Masukkan data menggunakan Supabase
     const { data, error } = await supabase
       .from("applicants")
-      .insert([applicationData])
+      .insert([applicationData as Record<string, unknown>])
       .select("id")
       .single();
 
@@ -81,7 +86,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       message: "Aplikasi berhasil dikirimkan",
-      id: data?.id,
+      id: (data as InsertResult)?.id,
     });
   } catch (error) {
     console.error("Error memasukkan pelamar:", error);

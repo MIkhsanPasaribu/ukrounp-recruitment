@@ -1,6 +1,24 @@
 import { createClient } from "@supabase/supabase-js";
 import { Database } from "@/types/supabase";
 
+interface ApplicantData {
+  submittedAt: string;
+  corelDraw: boolean;
+  photoshop: boolean;
+  adobePremierePro: boolean;
+  adobeAfterEffect: boolean;
+  autodeskEagle: boolean;
+  arduinoIde: boolean;
+  androidStudio: boolean;
+  visualStudio: boolean;
+  missionPlaner: boolean;
+  autodeskInventor: boolean;
+  autodeskAutocad: boolean;
+  solidworks: boolean;
+  otherSoftware: string;
+  [key: string]: unknown;
+}
+
 // Konfigurasi Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -160,7 +178,7 @@ export class OptimizedDatabase {
         : page * limit < (count || 0);
       const nextCursor =
         hasMore && data && data.length > 0
-          ? data[data.length - 1]?.submittedAt
+          ? (data[data.length - 1] as ApplicantData)?.submittedAt
           : null;
 
       const result = {
@@ -214,22 +232,23 @@ export class OptimizedDatabase {
       if (error) throw error;
 
       // Transform data
+      const dataTyped = data as ApplicantData;
       const transformedData = {
-        ...data,
+        ...(data as Record<string, unknown>),
         software: {
-          corelDraw: Boolean(data.corelDraw),
-          photoshop: Boolean(data.photoshop),
-          adobePremierePro: Boolean(data.adobePremierePro),
-          adobeAfterEffect: Boolean(data.adobeAfterEffect),
-          autodeskEagle: Boolean(data.autodeskEagle),
-          arduinoIde: Boolean(data.arduinoIde),
-          androidStudio: Boolean(data.androidStudio),
-          visualStudio: Boolean(data.visualStudio),
-          missionPlaner: Boolean(data.missionPlaner),
-          autodeskInventor: Boolean(data.autodeskInventor),
-          autodeskAutocad: Boolean(data.autodeskAutocad),
-          solidworks: Boolean(data.solidworks),
-          others: data.otherSoftware || "",
+          corelDraw: Boolean(dataTyped.corelDraw),
+          photoshop: Boolean(dataTyped.photoshop),
+          adobePremierePro: Boolean(dataTyped.adobePremierePro),
+          adobeAfterEffect: Boolean(dataTyped.adobeAfterEffect),
+          autodeskEagle: Boolean(dataTyped.autodeskEagle),
+          arduinoIde: Boolean(dataTyped.arduinoIde),
+          androidStudio: Boolean(dataTyped.androidStudio),
+          visualStudio: Boolean(dataTyped.visualStudio),
+          missionPlaner: Boolean(dataTyped.missionPlaner),
+          autodeskInventor: Boolean(dataTyped.autodeskInventor),
+          autodeskAutocad: Boolean(dataTyped.autodeskAutocad),
+          solidworks: Boolean(dataTyped.solidworks),
+          others: dataTyped.otherSoftware || "",
         },
       };
 

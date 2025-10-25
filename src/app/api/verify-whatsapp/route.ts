@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
+interface ApplicationData {
+  id: string;
+  email: string;
+  fullName: string;
+  birthDate: string;
+  status: string;
+  [key: string]: unknown;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { email, birthDate, step } = await request.json();
@@ -39,7 +48,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const application = applications[0];
+      const application = applications[0] as ApplicationData;
 
       return NextResponse.json({
         success: true,
@@ -89,7 +98,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const application = applications[0];
+      const application = applications[0] as ApplicationData;
 
       return NextResponse.json({
         success: true,

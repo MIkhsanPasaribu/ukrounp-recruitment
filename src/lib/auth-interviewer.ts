@@ -4,6 +4,34 @@ import { NextRequest } from "next/server";
 import { supabase } from "./supabase";
 import { InterviewerUser } from "@/types/interview";
 
+interface TokenInsertData {
+  id: string;
+  interviewerId: string;
+  token: string;
+  expiresAt: string;
+  [key: string]: unknown;
+}
+
+interface InterviewerData {
+  id: string;
+  username: string;
+  email: string;
+  passwordHash: string;
+  isActive: boolean;
+  loginAttempts?: number;
+  lockedUntil?: string;
+  [key: string]: unknown;
+}
+
+interface UpdateData {
+  loginAttempts?: number;
+  lockedUntil?: string | null;
+  lastLoginAt?: string;
+  isRevoked?: boolean;
+  revokedAt?: string;
+  [key: string]: unknown;
+}
+
 const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret-key";
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCK_TIME = 15 * 60 * 1000; // 15 minutes
@@ -30,14 +58,16 @@ export async function generateInterviewerToken(
   const expiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000); // 8 hours
   const sessionId = crypto.randomUUID();
 
+  const tokenData: TokenInsertData = {
+    id: sessionId,
+    interviewerId: interviewer.id,
+    token,
+    expiresAt: expiresAt.toISOString(),
+  };
+
   const { data, error } = await supabase
     .from("interviewer_tokens")
-    .insert({
-      id: sessionId,
-      interviewerId: interviewer.id,
-      token,
-      expiresAt: expiresAt.toISOString(),
-    })
+    .insert(tokenData as Record<string, unknown>)
     .select();
 
   if (error) {
@@ -118,13 +148,14 @@ export async function loginInterviewer(
     .eq("isActive", true)
     .single();
 
+  const interviewerTyped = interviewer as InterviewerData;
   console.log("🔍 Database query result:", {
     found: !!interviewer,
     error: error?.message,
-    hasPasswordHash: !!interviewer?.passwordHash,
-    isActive: interviewer?.isActive,
-    username: interviewer?.username,
-    email: interviewer?.email,
+    hasPasswordHash: !!interviewerTyped?.passwordHash,
+    isActive: interviewerTyped?.isActive,
+    username: interviewerTyped?.username,
+    email: interviewerTyped?.email,
   });
 
   if (error || !interviewer) {
@@ -133,8 +164,8 @@ export async function loginInterviewer(
   }
 
   // Check if account is locked (jika kolom ada)
-  if (interviewer.lockedUntil) {
-    const lockTime = new Date(interviewer.lockedUntil).getTime();
+  if (interviewerTyped.lockedUntil) {
+    const lockTime = new Date(interviewerTyped.lockedUntil).getTime();
     if (Date.now() < lockTime) {
       const remainingTime = Math.ceil((lockTime - Date.now()) / (1000 * 60));
       return {
@@ -148,14 +179,14 @@ export async function loginInterviewer(
   console.log("🔑 Comparing passwords...");
   const isPasswordValid = await bcrypt.compare(
     password,
-    interviewer.passwordHash
+    interviewerTyped.passwordHash
   );
   console.log("🔑 Password validation result:", isPasswordValid);
 
   if (!isPasswordValid) {
     console.log("❌ Password verification failed");
     // Increment login attempts
-    const newAttempts = (interviewer.loginAttempts || 0) + 1;
+    const newAttempts = (interviewerTyped.loginAttempts || 0) + 1;
     const updateData: { loginAttempts: number; lockedUntil?: string } = {
       loginAttempts: newAttempts,
     };
@@ -167,24 +198,26 @@ export async function loginInterviewer(
 
     await supabase
       .from("interviewers")
-      .update(updateData)
-      .eq("id", interviewer.id);
+      .update(updateData as Record<string, unknown>)
+      .eq("id", interviewerTyped.id);
 
     return { success: false, message: "Username/email atau password salah" };
   }
 
   // Reset login attempts on successful login
+  const resetData: UpdateData = {
+    loginAttempts: 0,
+    lockedUntil: null,
+    lastLoginAt: new Date().toISOString(),
+  };
+
   await supabase
     .from("interviewers")
-    .update({
-      loginAttempts: 0,
-      lockedUntil: null,
-      lastLoginAt: new Date().toISOString(),
-    })
-    .eq("id", interviewer.id);
+    .update(resetData as Record<string, unknown>)
+    .eq("id", interviewerTyped.id);
 
   // Generate token
-  const token = await generateInterviewerToken(interviewer);
+  const token = await generateInterviewerToken(interviewer as InterviewerUser);
 
   return {
     success: true,
@@ -196,12 +229,14 @@ export async function loginInterviewer(
 
 // Logout untuk pewawancara
 export async function logoutInterviewer(token: string): Promise<void> {
+  const revokeData: UpdateData = {
+    isRevoked: true,
+    revokedAt: new Date().toISOString(),
+  };
+
   await supabase
     .from("interviewer_tokens")
-    .update({
-      isRevoked: true,
-      revokedAt: new Date().toISOString(),
-    })
+    .update(revokeData as Record<string, unknown>)
     .eq("token", token);
 }
 
@@ -268,9 +303,14 @@ export async function getInterviewerAuthData(request: NextRequest): Promise<{
     return { isAuthenticated: false };
   }
 
+  const interviewerResult = interviewer as InterviewerData;
   console.log(
     "✅ Interviewer authentication successful for:",
-    interviewer.username
+    interviewerResult.username
   );
-  return { isAuthenticated: true, interviewer, token };
+  return {
+    isAuthenticated: true,
+    interviewer: interviewer as InterviewerUser,
+    token,
+  };
 }
