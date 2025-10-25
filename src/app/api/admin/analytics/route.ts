@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/auth-middleware";
 import { supabase } from "@/lib/supabase";
@@ -31,24 +32,61 @@ async function handler(request: NextRequest) {
       facultyFilter = `AND faculty = '${faculty}'`;
     }
 
-    // 1. STATISTIK OVERVIEW
-    const overviewQuery = `
-      SELECT 
-        COUNT(*) as total_applications,
-        COUNT(CASE WHEN status = 'DITERIMA' THEN 1 END) as accepted_count,
-        COUNT(CASE WHEN status = 'DITOLAK' THEN 1 END) as rejected_count,
-        COUNT(CASE WHEN status = 'SEDANG_DITINJAU' THEN 1 END) as under_review_count,
-        COUNT(CASE WHEN status = 'INTERVIEW' THEN 1 END) as interview_count,
-        COUNT(CASE WHEN "attendanceConfirmed" = true THEN 1 END) as attendance_confirmed_count,
-        COUNT(CASE WHEN "interviewScore" IS NOT NULL THEN 1 END) as interviewed_count,
-        AVG(CASE WHEN "interviewScore" IS NOT NULL THEN "interviewScore" END) as avg_interview_score
-      FROM applicants 
-      WHERE 1=1 ${dateFilter} ${facultyFilter}
-    `;
+    // 1. STATISTIK OVERVIEW - menggunakan query builder
+    let overviewQuery = supabase.from("applicants").select("*");
 
-    const { data: overview } = await supabase.rpc("execute_sql", {
-      query: overviewQuery,
-    });
+    if (dateFrom && dateTo) {
+      overviewQuery = overviewQuery
+        .gte("createdAt", dateFrom)
+        .lte("createdAt", dateTo);
+    }
+
+    if (faculty && faculty !== "all") {
+      overviewQuery = overviewQuery.eq("faculty", faculty);
+    }
+
+    const { data: allApplicants, error: overviewError } = await overviewQuery;
+
+    if (overviewError) {
+      console.error("❌ Error fetching overview:", overviewError);
+      return NextResponse.json(
+        { error: "Failed to fetch overview data" },
+        { status: 500 }
+      );
+    }
+
+    // Calculate overview statistics
+    const overview = [
+      {
+        total_applications: allApplicants?.length || 0,
+        accepted_count:
+          allApplicants?.filter((app) => app.status === "DITERIMA").length || 0,
+        rejected_count:
+          allApplicants?.filter((app) => app.status === "DITOLAK").length || 0,
+        under_review_count:
+          allApplicants?.filter((app) => app.status === "SEDANG_DITINJAU")
+            .length || 0,
+        interview_count:
+          allApplicants?.filter((app) => app.status === "INTERVIEW").length ||
+          0,
+        attendance_confirmed_count:
+          allApplicants?.filter((app) => app.attendanceConfirmed === true)
+            .length || 0,
+        interviewed_count:
+          allApplicants?.filter((app) => app.interviewScore !== null).length ||
+          0,
+        avg_interview_score: (() => {
+          const interviewedApps =
+            allApplicants?.filter((app) => app.interviewScore !== null) || [];
+          if (interviewedApps.length === 0) return 0;
+          const sum = interviewedApps.reduce(
+            (sum, app) => sum + (app.interviewScore || 0),
+            0
+          );
+          return sum / interviewedApps.length;
+        })(),
+      },
+    ];
 
     // 2. BREAKDOWN FAKULTAS
     const { data: facultyBreakdown, error: facultyError } = await supabase

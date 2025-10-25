@@ -237,13 +237,37 @@ echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
    # Install dependencies
    yarn install --frozen-lockfile
 
+   # Setup environment variables first (sebelum build)
+   cp .env.example .env.production
+   # Edit .env.production dengan credentials yang benar
+
    # Build aplikasi
    yarn build
 
-   # Setup process management
-   pm2 ecosystem create ukro-recruitment
+   # Setup PM2 ecosystem configuration
+   cat > ecosystem.config.js << EOF
+   module.exports = {
+     apps: [{
+       name: 'ukro-recruitment',
+       script: 'npm',
+       args: 'start',
+       cwd: '/var/www/ukro-recruitment',
+       instances: 1,
+       autorestart: true,
+       watch: false,
+       max_memory_restart: '1G',
+       env: {
+         NODE_ENV: 'production',
+         PORT: 3000
+       }
+     }]
+   };
+   EOF
+
+   # Start aplikasi dengan PM2
    pm2 start ecosystem.config.js
    pm2 save
+   pm2 startup
    ```
 
 3. **Nginx Configuration**
@@ -710,6 +734,106 @@ echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
    EOF
 
    chmod +x /home/ikhsan/troubleshoot.sh
+   ```
+
+### F. Troubleshooting Common Issues
+
+1. **Build Errors**
+
+   ```bash
+   # Error: TypeScript compilation failed
+   # Solusi: Check tipe data dan API yang digunakan
+
+   # Contoh masalah yang sering terjadi:
+   # - supabase.rpc() tidak tersedia di client
+   # - Environment variables tidak ter-load
+   # - Dependency version mismatch
+
+   # Langkah debugging:
+   npx tsc --noemit  # Check TypeScript errors
+   yarn build --debug  # Build dengan debug mode
+
+   # Jika ada error supabase.rpc():
+   # Ganti dengan query builder standard:
+   # const { data } = await supabase.from('table').select('*')
+   ```
+
+2. **PM2 Process Issues**
+
+   ```bash
+   # Check PM2 status
+   pm2 status
+   pm2 logs ukro-recruitment
+
+   # Restart jika error
+   pm2 restart ukro-recruitment
+
+   # Reload dengan zero downtime
+   pm2 reload ukro-recruitment
+
+   # Complete reset
+   pm2 delete ukro-recruitment
+   pm2 start ecosystem.config.js
+   ```
+
+3. **Nginx Configuration Issues**
+
+   ```bash
+   # Test nginx configuration
+   sudo nginx -t
+
+   # Check nginx logs
+   sudo tail -f /var/log/nginx/error.log
+
+   # Reload nginx config
+   sudo systemctl reload nginx
+
+   # Restart nginx jika diperlukan
+   sudo systemctl restart nginx
+   ```
+
+4. **SSL Certificate Issues**
+
+   ```bash
+   # Check certificate status
+   sudo certbot certificates
+
+   # Renew manually
+   sudo certbot renew --dry-run
+
+   # Regenerate certificate
+   sudo certbot delete --cert-name mikhsanpasaribu.my.id
+   sudo certbot certonly --standalone -d mikhsanpasaribu.my.id
+   ```
+
+5. **Database Connection Issues**
+
+   ```bash
+   # Test Supabase connection
+   cd /var/www/ukro-recruitment
+   node -e "
+   require('dotenv').config();
+   console.log('SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+   console.log('NODE_ENV:', process.env.NODE_ENV);
+   "
+
+   # Check environment variables
+   cat .env.production | grep -v SECRET
+   ```
+
+6. **Performance Issues**
+
+   ```bash
+   # Monitor system resources
+   htop
+   df -h
+   free -m
+
+   # Check application performance
+   pm2 monit
+
+   # Analyze nginx logs
+   sudo tail -100 /var/log/nginx/access.log | awk '{print $1}' | sort | uniq -c | sort -nr
    ```
 
 ## 5. Refleksi dan Pembelajaran
