@@ -105,9 +105,12 @@ async function handler(request: NextRequest) {
       console.error("❌ Error breakdown fakultas:", facultyError);
     }
 
+    // Type assertion untuk facultyBreakdown
+    const facultyData = facultyBreakdown as { faculty: string }[] | null;
+
     // Memproses data fakultas
     const facultyStats: Record<string, number> = {};
-    facultyBreakdown?.forEach((item) => {
+    facultyData?.forEach((item) => {
       const faculty = item.faculty;
       facultyStats[faculty] = (facultyStats[faculty] || 0) + 1;
     });
@@ -122,9 +125,12 @@ async function handler(request: NextRequest) {
       console.error("❌ Error breakdown status:", statusError);
     }
 
+    // Type assertion untuk statusBreakdown
+    const statusData = statusBreakdown as { status: string }[] | null;
+
     // Memproses data status
     const statusStats: Record<string, number> = {};
-    statusBreakdown?.forEach((item) => {
+    statusData?.forEach((item) => {
       const status = item.status;
       statusStats[status] = (statusStats[status] || 0) + 1;
     });
@@ -139,9 +145,14 @@ async function handler(request: NextRequest) {
       console.error("❌ Error breakdown tingkat pendidikan:", educationError);
     }
 
+    // Type assertion untuk educationBreakdown
+    const educationData = educationBreakdown as
+      | { educationLevel: string }[]
+      | null;
+
     // Memproses data pendidikan
     const educationStats: Record<string, number> = {};
-    educationBreakdown?.forEach((item) => {
+    educationData?.forEach((item) => {
       const level = item.educationLevel;
       educationStats[level] = (educationStats[level] || 0) + 1;
     });
@@ -156,9 +167,12 @@ async function handler(request: NextRequest) {
       console.error("❌ Error breakdown jenis kelamin:", genderError);
     }
 
+    // Type assertion untuk genderBreakdown
+    const genderData = genderBreakdown as { gender: string }[] | null;
+
     // Memproses data jenis kelamin
     const genderStats: Record<string, number> = {};
-    genderBreakdown?.forEach((item) => {
+    genderData?.forEach((item) => {
       const gender = item.gender;
       genderStats[gender] = (genderStats[gender] || 0) + 1;
     });
@@ -176,6 +190,23 @@ async function handler(request: NextRequest) {
       console.error("❌ Error analisis skill:", skillsError);
     }
 
+    // Type assertion untuk skillsData
+    interface SkillsData {
+      corelDraw?: boolean;
+      photoshop?: boolean;
+      adobePremierePro?: boolean;
+      adobeAfterEffect?: boolean;
+      autodeskEagle?: boolean;
+      arduinoIde?: boolean;
+      androidStudio?: boolean;
+      visualStudio?: boolean;
+      missionPlaner?: boolean;
+      autodeskInventor?: boolean;
+      autodeskAutocad?: boolean;
+      solidworks?: boolean;
+    }
+    const skillsResults = skillsData as SkillsData[] | null;
+
     // Memproses data skill
     const skillsStats: Record<string, number> = {};
     const skillColumns = [
@@ -191,12 +222,12 @@ async function handler(request: NextRequest) {
       "autodeskInventor",
       "autodeskAutocad",
       "solidworks",
-    ];
+    ] as const;
 
     skillColumns.forEach((skill) => {
       skillsStats[skill] =
-        skillsData?.filter((item) => {
-          return item[skill as keyof typeof item] === true;
+        skillsResults?.filter((item) => {
+          return item[skill] === true;
         }).length || 0;
     });
 
@@ -224,6 +255,30 @@ async function handler(request: NextRequest) {
       console.error("❌ Error performa interviewer:", interviewError);
     }
 
+    // Type assertion untuk interviewSessions
+    interface InterviewSessionData {
+      id: string;
+      interviewerId: string;
+      totalScore: number;
+      recommendation: string;
+      status: string;
+      created_at: string;
+      interviewers:
+        | {
+            id: string;
+            fullName: string;
+            username: string;
+          }
+        | {
+            id: string;
+            fullName: string;
+            username: string;
+          }[];
+    }
+    const interviewSessionsResults = interviewSessions as
+      | InterviewSessionData[]
+      | null;
+
     // Memproses data interview
     const interviewerStats: Record<
       string,
@@ -240,7 +295,7 @@ async function handler(request: NextRequest) {
         };
       }
     > = {};
-    interviewSessions?.forEach((session) => {
+    interviewSessionsResults?.forEach((session) => {
       const interviewer = Array.isArray(session.interviewers)
         ? session.interviewers[0]
         : session.interviewers;
@@ -296,12 +351,17 @@ async function handler(request: NextRequest) {
       console.error("❌ Error analisis timeline:", timelineError);
     }
 
+    // Type assertion untuk timelineData
+    const timelineResults = timelineData as
+      | { submittedAt: string; status: string }[]
+      | null;
+
     // Memproses data timeline (group by hari)
     const timelineStats: Record<
       string,
       { total: number; statuses: Record<string, number> }
     > = {};
-    timelineData?.forEach((item) => {
+    timelineResults?.forEach((item) => {
       const date = new Date(item.submittedAt).toISOString().split("T")[0];
       if (!timelineStats[date]) {
         timelineStats[date] = { total: 0, statuses: {} };

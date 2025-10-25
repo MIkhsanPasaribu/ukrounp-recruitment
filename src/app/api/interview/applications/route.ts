@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import jwt from "jsonwebtoken";
@@ -134,7 +133,16 @@ export async function GET(request: NextRequest) {
 
     // Get interview sessions for these applicants
     const applicantIds = applications?.map((app) => app.id) || [];
-    let interviewSessions: any[] = [];
+
+    interface InterviewSessionData {
+      id: string;
+      applicantId: string;
+      status: string;
+      interviewDate: string;
+      location: string;
+      notes: string;
+    }
+    let interviewSessions: InterviewSessionData[] = [];
 
     if (applicantIds.length > 0) {
       const { data: sessions, error: sessionsError } = await supabase
@@ -143,7 +151,7 @@ export async function GET(request: NextRequest) {
         .in("applicantId", applicantIds);
 
       if (!sessionsError && sessions) {
-        interviewSessions = sessions;
+        interviewSessions = sessions as InterviewSessionData[];
         console.log(`Found ${sessions.length} existing interview sessions`);
       }
     }

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
@@ -94,8 +93,51 @@ export async function PUT(request: NextRequest) {
       }
     }
 
+    // Interface untuk update object
+    interface UpdateObject {
+      fullName?: string;
+      email?: string;
+      phoneNumber?: string;
+      birthDate?: string;
+      nickname?: string;
+      gender?: string;
+      faculty?: string;
+      department?: string;
+      studyProgram?: string;
+      educationLevel?: string;
+      nim?: string;
+      nia?: string;
+      previousSchool?: string;
+      padangAddress?: string;
+      motivation?: string;
+      futurePlans?: string;
+      whyYouShouldBeAccepted?: string;
+      corelDraw?: boolean;
+      photoshop?: boolean;
+      adobePremierePro?: boolean;
+      adobeAfterEffect?: boolean;
+      autodeskEagle?: boolean;
+      arduinoIde?: boolean;
+      androidStudio?: boolean;
+      visualStudio?: boolean;
+      missionPlaner?: boolean;
+      autodeskInventor?: boolean;
+      autodeskAutocad?: boolean;
+      solidworks?: boolean;
+      others?: string;
+      otherSoftware?: string;
+      photo?: string;
+      studentCard?: string;
+      studyPlanCard?: string;
+      igFollowProof?: string;
+      tiktokFollowProof?: string;
+      mbtiProof?: string;
+      updatedAt?: string;
+      [key: string]: string | boolean | undefined; // Index signature untuk dynamic access
+    }
+
     // Prepare update object dengan struktur yang benar
-    const updateObject: any = {
+    const updateObject: UpdateObject = {
       // Data pribadi
       fullName: updateData.fullName,
       email: updateData.email,
