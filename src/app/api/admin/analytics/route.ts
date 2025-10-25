@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/auth-middleware";
 import { supabase } from "@/lib/supabase";
+import { Applicant } from "@/types/interview";
 
 async function handler(request: NextRequest) {
   try {
@@ -55,29 +56,35 @@ async function handler(request: NextRequest) {
       );
     }
 
+    // Type assertion untuk allApplicants dengan properties tambahan
+    const applicants = allApplicants as (Applicant & {
+      attendanceConfirmed?: boolean;
+      interviewScore?: number;
+    })[] | null;
+
     // Calculate overview statistics
     const overview = [
       {
-        total_applications: allApplicants?.length || 0,
+        total_applications: applicants?.length || 0,
         accepted_count:
-          allApplicants?.filter((app) => app.status === "DITERIMA").length || 0,
+          applicants?.filter((app) => app.status === "DITERIMA").length || 0,
         rejected_count:
-          allApplicants?.filter((app) => app.status === "DITOLAK").length || 0,
+          applicants?.filter((app) => app.status === "DITOLAK").length || 0,
         under_review_count:
-          allApplicants?.filter((app) => app.status === "SEDANG_DITINJAU")
+          applicants?.filter((app) => app.status === "SEDANG_DITINJAU")
             .length || 0,
         interview_count:
-          allApplicants?.filter((app) => app.status === "INTERVIEW").length ||
+          applicants?.filter((app) => app.status === "INTERVIEW").length ||
           0,
         attendance_confirmed_count:
-          allApplicants?.filter((app) => app.attendanceConfirmed === true)
+          applicants?.filter((app) => app.attendanceConfirmed === true)
             .length || 0,
         interviewed_count:
-          allApplicants?.filter((app) => app.interviewScore !== null).length ||
+          applicants?.filter((app) => app.interviewScore !== null).length ||
           0,
         avg_interview_score: (() => {
           const interviewedApps =
-            allApplicants?.filter((app) => app.interviewScore !== null) || [];
+            applicants?.filter((app) => app.interviewScore !== null) || [];
           if (interviewedApps.length === 0) return 0;
           const sum = interviewedApps.reduce(
             (sum, app) => sum + (app.interviewScore || 0),
