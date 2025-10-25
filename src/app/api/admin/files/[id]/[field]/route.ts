@@ -41,14 +41,23 @@ export async function GET(
       .eq("id", id)
       .single();
 
-    if (error || !data) {
+    // Type assertion for applicant data
+    interface ApplicantFileData {
+      id: string;
+      fullName: string;
+      submittedAt: string;
+      [key: string]: string | number | boolean | null | undefined;
+    }
+    const applicantData = data as ApplicantFileData | null;
+
+    if (error || !applicantData) {
       return NextResponse.json(
         { error: "Pendaftaran tidak ditemukan" },
         { status: 404 }
       );
     }
 
-    const fileData = data[field as keyof typeof data];
+    const fileData = applicantData[field as keyof typeof applicantData];
 
     if (!fileData) {
       return NextResponse.json(
@@ -64,8 +73,8 @@ export async function GET(
       metadata: {
         id,
         fieldName: field,
-        fileName: `${field}-${data.fullName}`,
-        uploadedAt: data.submittedAt,
+        fileName: `${field}-${applicantData.fullName}`,
+        uploadedAt: applicantData.submittedAt,
         isBase64: true,
       },
     });
@@ -112,11 +121,20 @@ export async function HEAD(
       .eq("id", id)
       .single();
 
-    if (error || !data) {
+    // Type assertion for applicant data
+    interface ApplicantFileData2 {
+      id: string;
+      fullName: string;
+      submittedAt: string;
+      [key: string]: string | number | boolean | null | undefined;
+    }
+    const applicantFileData = data as ApplicantFileData2 | null;
+
+    if (error || !applicantFileData) {
       return new NextResponse(null, { status: 404 });
     }
 
-    const fileData = data[field as keyof typeof data];
+    const fileData = applicantFileData[field as keyof typeof applicantFileData];
     if (!fileData || typeof fileData !== "string") {
       return new NextResponse(null, { status: 404 });
     }

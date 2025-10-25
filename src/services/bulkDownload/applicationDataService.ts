@@ -2,6 +2,54 @@ import { supabase } from "@/lib/supabase";
 import { ApplicationData } from "@/types";
 
 /**
+ * Interface untuk raw applicant data dari database
+ */
+interface RawApplicantData {
+  id: string;
+  email?: string;
+  fullName?: string;
+  nickname?: string;
+  gender?: "LAKI_LAKI" | "PEREMPUAN";
+  birthDate?: string;
+  faculty?: string;
+  department?: string;
+  studyProgram?: string;
+  nim?: string;
+  nia?: string;
+  previousSchool?: string;
+  padangAddress?: string;
+  phoneNumber?: string;
+  motivation?: string;
+  futurePlans?: string;
+  whyYouShouldBeAccepted?: string;
+  corelDraw?: boolean;
+  photoshop?: boolean;
+  adobePremierePro?: boolean;
+  adobeAfterEffect?: boolean;
+  autodeskEagle?: boolean;
+  arduinoIde?: boolean;
+  androidStudio?: boolean;
+  visualStudio?: boolean;
+  missionPlaner?: boolean;
+  autodeskInventor?: boolean;
+  autodeskAutocad?: boolean;
+  solidworks?: boolean;
+  otherSoftware?: string;
+  studyPlanCard?: string;
+  igFollowProof?: string;
+  tiktokFollowProof?: string;
+  status?:
+    | "SEDANG_DITINJAU"
+    | "DAFTAR_PENDEK"
+    | "INTERVIEW"
+    | "DITERIMA"
+    | "DITOLAK";
+  submittedAt?: string;
+  mbtiProof?: string;
+  photo?: string;
+}
+
+/**
  * Service untuk mengambil data aplikasi dari database
  */
 export class ApplicationDataService {
@@ -97,8 +145,9 @@ export class ApplicationDataService {
    * @param applicantData - Data mentah dari database
    * @returns Data yang sudah diformat
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private static formatApplicationData(applicantData: any): ApplicationData {
+  private static formatApplicationData(
+    applicantData: RawApplicantData
+  ): ApplicationData {
     return {
       id: applicantData.id,
       email: applicantData.email || "",

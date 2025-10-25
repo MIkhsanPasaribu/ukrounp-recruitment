@@ -1,8 +1,15 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import { withInterviewerAuth } from "@/lib/auth-interviewer-middleware";
 import { supabase } from "@/lib/supabase";
 import { InterviewerUser } from "@/types/interview";
+
+// Interface for interview response data
+interface InterviewResponseData {
+  questionId: string;
+  score: number;
+  notes?: string;
+  response?: string;
+}
 
 async function handler(
   request: NextRequest,
@@ -68,7 +75,7 @@ async function handler(
 
     // Validate responses structure
     const validResponses = responses.filter(
-      (response: any) =>
+      (response: InterviewResponseData) =>
         response.questionId &&
         response.score !== undefined &&
         response.score >= 1 &&
@@ -87,7 +94,7 @@ async function handler(
 
     // Calculate total score
     const totalScore = validResponses.reduce(
-      (sum: number, response: any) => sum + response.score,
+      (sum: number, response: InterviewResponseData) => sum + response.score,
       0
     );
 
@@ -117,14 +124,16 @@ async function handler(
     }
 
     // Insert new responses
-    const responsesToInsert = validResponses.map((response: any) => ({
-      sessionId,
-      questionId: response.questionId,
-      response: response.response || "",
-      score: response.score,
-      notes: response.notes || "",
-      created_at: new Date().toISOString(),
-    }));
+    const responsesToInsert = validResponses.map(
+      (response: InterviewResponseData) => ({
+        sessionId,
+        questionId: response.questionId,
+        response: response.response || "",
+        score: response.score,
+        notes: response.notes || "",
+        created_at: new Date().toISOString(),
+      })
+    );
 
     const { error: responseError } = await supabase
       .from("interview_responses")
@@ -139,7 +148,13 @@ async function handler(
     }
 
     // Update session with new notes, recommendation, and total score
-    const updateData: any = {
+    const updateData: {
+      totalScore: number;
+      updated_at: string;
+      notes?: string;
+      recommendation?: string;
+      interviewerName?: string;
+    } = {
       totalScore,
       updated_at: new Date().toISOString(),
     };

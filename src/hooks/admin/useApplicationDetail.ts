@@ -1,9 +1,18 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { ApplicationData } from "@/types";
 import { adminApi } from "@/utils/apiClient";
+
+// Interface for API response from detailed endpoint
+interface DetailedApplicationResponse {
+  success: boolean;
+  data: ApplicationData;
+  metadata: {
+    retrievedAt: string;
+    version: string;
+  };
+}
 
 interface UseApplicationDetailProps {
   applicationId: string;
@@ -67,7 +76,7 @@ export function useApplicationDetail({
 
         const detailedData = (await adminApi.getApplicationDetail(
           applicationId
-        )) as any;
+        )) as DetailedApplicationResponse;
 
         console.log("🔍 useApplicationDetail Raw API Response:", {
           apiCallUrl: `/api/admin/applications/${applicationId}/detailed`,
@@ -81,19 +90,19 @@ export function useApplicationDetail({
             motivation: {
               inRoot: "motivation" in detailedData,
               inData: detailedData?.data?.motivation !== undefined,
-              rootValue: detailedData?.motivation,
+              rootValue: detailedData?.data?.motivation,
               dataValue: detailedData?.data?.motivation,
             },
             futurePlans: {
               inRoot: "futurePlans" in detailedData,
               inData: detailedData?.data?.futurePlans !== undefined,
-              rootValue: detailedData?.futurePlans,
+              rootValue: detailedData?.data?.futurePlans,
               dataValue: detailedData?.data?.futurePlans,
             },
             whyYouShouldBeAccepted: {
               inRoot: "whyYouShouldBeAccepted" in detailedData,
               inData: detailedData?.data?.whyYouShouldBeAccepted !== undefined,
-              rootValue: detailedData?.whyYouShouldBeAccepted,
+              rootValue: detailedData?.data?.whyYouShouldBeAccepted,
               dataValue: detailedData?.data?.whyYouShouldBeAccepted,
             },
           },
@@ -103,13 +112,11 @@ export function useApplicationDetail({
         console.log("useApplicationDetail fetched data:", {
           success: detailedData?.success || true,
           hasData: !!(detailedData?.data || detailedData),
-          motivation:
-            detailedData?.data?.motivation || detailedData?.motivation,
-          futurePlans:
-            detailedData?.data?.futurePlans || detailedData?.futurePlans,
+          motivation: detailedData?.data?.motivation,
+          futurePlans: detailedData?.data?.futurePlans,
           whyYouShouldBeAccepted:
             detailedData?.data?.whyYouShouldBeAccepted ||
-            detailedData?.whyYouShouldBeAccepted,
+            detailedData?.data?.whyYouShouldBeAccepted,
         });
 
         setState({
@@ -183,7 +190,7 @@ export function useApplicationDetail({
 
   // Download PDF
   const downloadPDF = useCallback(async () => {
-    if (!state.data) return false;
+    if (!state.data || !state.data.fullName) return false;
 
     try {
       const blob = await adminApi.downloadPDF(applicationId);

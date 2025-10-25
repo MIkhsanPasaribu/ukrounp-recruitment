@@ -169,9 +169,47 @@ async function* processApplicationsBatch(params: {
   }
 }
 
+// Interface for raw application data from database
+interface RawApplicationData {
+  id: string;
+  email: string;
+  fullName: string;
+  nim: string;
+  faculty: string;
+  department: string;
+  studyProgram: string;
+  educationLevel: string;
+  status: string;
+  submittedAt: string | Date;
+  phoneNumber: string;
+  nickname?: string;
+  gender?: string;
+  birthDate?: string;
+  nia?: string;
+  previousSchool?: string;
+  padangAddress?: string;
+  motivation?: string;
+  futurePlans?: string;
+  whyYouShouldBeAccepted?: string;
+  software?: string;
+  // Software skills
+  corelDraw?: boolean;
+  photoshop?: boolean;
+  adobePremierePro?: boolean;
+  adobeAfterEffect?: boolean;
+  autodeskEagle?: boolean;
+  arduinoIde?: boolean;
+  androidStudio?: boolean;
+  visualStudio?: boolean;
+  missionPlaner?: boolean;
+  autodeskInventor?: boolean;
+  autodeskAutocad?: boolean;
+  solidworks?: boolean;
+  otherSoftware?: string;
+}
+
 // Transform application data based on mode
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function transformApplication(app: any, lightweight = false) {
+function transformApplication(app: RawApplicationData, lightweight = false) {
   const baseData = {
     id: app.id,
     email: app.email,

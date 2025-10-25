@@ -91,7 +91,7 @@ export async function GET(
 
     const fileMetadata = fileFields.reduce(
       (acc, field) => {
-        const fileData = data[field as keyof typeof data];
+        const fileData = applicantData[field as keyof typeof applicantData];
         if (fileData && typeof fileData === "string") {
           // Extract metadata from base64 data
           const isBase64 = fileData.startsWith("data:");
