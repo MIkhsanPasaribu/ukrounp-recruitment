@@ -2,12 +2,6 @@ import { NextResponse } from "next/server";
 import { supabase, supabaseUntyped } from "@/lib/supabase";
 import { verifyToken } from "@/lib/auth";
 
-interface SettingData {
-  key: string;
-  value: string;
-  [key: string]: unknown;
-}
-
 interface SettingRecord {
   value: string;
   [key: string]: unknown;
@@ -40,14 +34,16 @@ export async function GET() {
         "⚠️ Tabel settings tidak ditemukan atau tidak ada data, default ke pendaftaran terbuka"
       );
 
-      // Buat entry default
-      const settingData: SettingData = {
-        key: "registrationOpen",
-        value: "true",
-      };
+      // Buat entry default dengan INSERT
       const { error: insertError } = await supabaseUntyped
         .from("settings")
-        .upsert(settingData);
+        .insert({
+          key: "registrationOpen",
+          value: "true",
+          description: "Status pendaftaran terbuka/tertutup",
+          dataType: "boolean",
+          createdBy: "system",
+        });
 
       if (insertError) {
         console.error("❌ Error membuat setting default:", insertError);
@@ -150,20 +146,46 @@ export async function POST(request: Request) {
 
     console.log(`🔄 ${isOpen ? "Membuka" : "Menutup"} pendaftaran...`);
 
-    // Upsert status pendaftaran menggunakan Supabase
-    const upsertData: SettingData = {
-      key: "registrationOpen",
-      value: isOpen.toString(),
-    };
-    const { error } = await supabaseUntyped.from("settings").upsert(upsertData);
+    // Cek apakah setting sudah ada
+    const { data: existingSetting } = await supabase
+      .from("settings")
+      .select("id, key, value")
+      .eq("key", "registrationOpen")
+      .single();
 
-    if (error) {
-      console.error("❌ Error memperbarui status pendaftaran:", error);
+    let updateError = null;
+
+    if (existingSetting) {
+      // Update existing setting
+      console.log("🔄 Memperbarui setting yang sudah ada...");
+      const { error } = await supabaseUntyped
+        .from("settings")
+        .update({
+          value: isOpen.toString(),
+          updatedAt: new Date().toISOString(),
+        })
+        .eq("key", "registrationOpen");
+      updateError = error;
+    } else {
+      // Insert new setting
+      console.log("🔄 Membuat setting baru...");
+      const { error } = await supabaseUntyped.from("settings").insert({
+        key: "registrationOpen",
+        value: isOpen.toString(),
+        description: "Status pendaftaran terbuka/tertutup",
+        dataType: "boolean",
+        createdBy: decoded.username || "admin",
+      });
+      updateError = error;
+    }
+
+    if (updateError) {
+      console.error("❌ Error memperbarui status pendaftaran:", updateError);
       return NextResponse.json(
         {
           success: false,
           message: "Gagal memperbarui status pendaftaran di database",
-          error: error.message,
+          error: updateError.message,
         },
         { status: 500 }
       );

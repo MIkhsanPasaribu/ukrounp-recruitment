@@ -13,7 +13,28 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
+    // Validasi email untuk mencegah duplikasi
+    console.log("📧 Memeriksa email duplikasi untuk:", body.email);
+    const { data: existingUser } = await supabase
+      .from("applicants")
+      .select("id, email")
+      .eq("email", body.email)
+      .single();
+
+    if (existingUser) {
+      console.log("❌ Email sudah terdaftar:", body.email);
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Email sudah terdaftar. Silakan gunakan email lain atau periksa status aplikasi Anda.",
+        },
+        { status: 409 }
+      );
+    }
+
     // Siapkan data aplikasi
+    const currentTime = new Date().toISOString();
     const applicationData: ApplicantInsert = {
       email: body.email,
       fullName: body.fullName,
@@ -62,14 +83,36 @@ export async function POST(request: Request) {
       tiktokFollowProof: body.tiktokFollowProof,
 
       status: "SEDANG_DITINJAU",
+      submittedAt: currentTime,
+      updatedAt: currentTime,
     };
 
-    // Masukkan data menggunakan Supabase
+    // Pastikan id tidak dikirim untuk menggunakan UUID auto-generated
+    const dataToInsert = { ...applicationData };
+    delete dataToInsert.id; // Hapus id jika ada untuk memastikan auto-generation
+
+    console.log("📝 Mengirimkan data aplikasi ke database...");
+    console.log("🔍 Data yang akan dikirim (sample):", {
+      email: dataToInsert.email,
+      fullName: dataToInsert.fullName,
+      hasId: "id" in dataToInsert,
+      keysCount: Object.keys(dataToInsert).length,
+    });
+
+    // Buat object baru tanpa field id menggunakan destructuring yang aman
+    const { id, ...cleanData } = dataToInsert as Record<string, unknown>;
+
+    console.log("🔍 Debug: Object akan dikirim ke DB:", {
+      hasIdProperty: "id" in cleanData,
+      fieldCount: Object.keys(cleanData).length,
+      sampleFields: Object.keys(cleanData).slice(0, 5),
+    });
+
+    // Masukkan data menggunakan Supabase untyped client dengan data yang bersih
     const { data, error } = await supabaseUntyped
       .from("applicants")
-      .insert([applicationData as Record<string, unknown>])
-      .select("id")
-      .single();
+      .insert([cleanData]) // Array format untuk konsistensi
+      .select("id");
 
     if (error) {
       console.error("Error memasukkan pelamar:", error);
@@ -86,7 +129,10 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       message: "Aplikasi berhasil dikirimkan",
-      id: (data as InsertResult)?.id,
+      id:
+        Array.isArray(data) && data.length > 0
+          ? (data[0] as InsertResult)?.id
+          : null,
     });
   } catch (error) {
     console.error("Error memasukkan pelamar:", error);
