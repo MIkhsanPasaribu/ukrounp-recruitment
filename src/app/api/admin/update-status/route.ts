@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { getAuthData } from "@/lib/auth";
 
+interface StatusUpdateData {
+  status: string;
+}
+
 async function updateStatus(request: NextRequest) {
   try {
     // Check authentication
@@ -41,9 +45,10 @@ async function updateStatus(request: NextRequest) {
     }
 
     // Update status aplikasi menggunakan Supabase
+    const updateData: StatusUpdateData = { status };
     const { error } = await supabase
       .from("applicants")
-      .update({ status })
+      .update(updateData as StatusUpdateData)
       .eq("id", id);
 
     if (error) {

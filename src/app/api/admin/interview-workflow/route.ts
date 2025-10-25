@@ -17,6 +17,14 @@ interface SupabaseResponse<T = unknown> {
   } | null;
 }
 
+interface ApplicantUpdateData {
+  status?: string;
+  attendanceConfirmed?: boolean;
+  updatedAt?: string;
+  assignedInterviewer?: string;
+  interviewStatus?: string;
+}
+
 async function handler(request: NextRequest) {
   if (request.method === "POST") {
     return await handleWorkflowAction(request);
@@ -82,11 +90,7 @@ async function handleWorkflowAction(request: NextRequest) {
 
       // Update applicant's status to INTERVIEW and mark attendance
       console.log("Updating applicant with ID:", applicant.id);
-      const updateData: {
-        status: string;
-        attendanceConfirmed: boolean;
-        updatedAt: string;
-      } = {
+      const updateData: ApplicantUpdateData = {
         status: "INTERVIEW",
         attendanceConfirmed: true,
         updatedAt: new Date().toISOString(),
@@ -96,7 +100,7 @@ async function handleWorkflowAction(request: NextRequest) {
 
       const { data: updateResult, error: updateError } = await supabase
         .from("applicants")
-        .update(updateData)
+        .update(updateData as ApplicantUpdateData)
         .eq("id", applicant.id)
         .select();
 
@@ -196,11 +200,7 @@ async function handleWorkflowAction(request: NextRequest) {
       }
 
       // Update applicant's assignment
-      const assignmentData: {
-        assignedInterviewer: string;
-        interviewStatus: string;
-        updatedAt: string;
-      } = {
+      const assignmentData: ApplicantUpdateData = {
         assignedInterviewer: interviewerId,
         interviewStatus: "ASSIGNED",
         updatedAt: new Date().toISOString(),
@@ -210,7 +210,7 @@ async function handleWorkflowAction(request: NextRequest) {
 
       const { data: assignmentResult, error: assignmentError } = await supabase
         .from("applicants")
-        .update(assignmentData)
+        .update(assignmentData as ApplicantUpdateData)
         .eq("id", applicantId)
         .select();
 

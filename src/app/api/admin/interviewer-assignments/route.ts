@@ -9,6 +9,34 @@ interface AuthData {
   token?: string;
 }
 
+interface AttendanceData {
+  id: string;
+  status: string;
+  nim?: string;
+  [key: string]: unknown;
+}
+
+interface AssignmentInsertData {
+  attendance_id: string;
+  interviewer_id: string;
+  assigned_by: string;
+  scheduled_at: string;
+  notes?: string;
+}
+
+interface AssignmentResult {
+  id: string;
+  [key: string]: unknown;
+}
+
+interface UpdateAssignmentData {
+  interviewer_id?: string;
+  scheduled_at?: string;
+  status?: string;
+  notes?: string;
+  [key: string]: unknown;
+}
+
 async function handler(request: NextRequest, auth: AuthData) {
   try {
     // Monitor memory usage
@@ -79,7 +107,7 @@ async function handleCreateAssignment(request: NextRequest, auth: AuthData) {
       );
     }
 
-    if (attendance.status !== "PRESENT") {
+    if ((attendance as AttendanceData).status !== "PRESENT") {
       return NextResponse.json(
         {
           success: false,
@@ -107,7 +135,7 @@ async function handleCreateAssignment(request: NextRequest, auth: AuthData) {
     const { data: existingAssignment } = await supabase
       .from("interviewer_assignments")
       .select("id")
-      .eq("attendance_id", attendance.id)
+      .eq("attendance_id", (attendance as AttendanceData).id)
       .single();
 
     if (existingAssignment) {
@@ -119,15 +147,16 @@ async function handleCreateAssignment(request: NextRequest, auth: AuthData) {
 
     // Create assignment
     const adminId = (auth.admin as { id: string })?.id;
+    const assignmentData: AssignmentInsertData = {
+      attendance_id: (attendance as AttendanceData).id,
+      interviewer_id: interviewerId,
+      assigned_by: adminId,
+      scheduled_at: scheduledAt || new Date().toISOString(),
+      notes,
+    };
     const { data: assignment, error: assignmentError } = await supabase
       .from("interviewer_assignments")
-      .insert({
-        attendance_id: attendance.id,
-        interviewer_id: interviewerId,
-        assigned_by: adminId,
-        scheduled_at: scheduledAt || new Date().toISOString(),
-        notes,
-      })
+      .insert(assignmentData as AssignmentInsertData)
       .select(
         `
         id,
@@ -175,7 +204,10 @@ async function handleCreateAssignment(request: NextRequest, auth: AuthData) {
       );
     }
 
-    console.log("✅ Assignment created successfully:", assignment.id);
+    console.log(
+      "✅ Assignment created successfully:",
+      (assignment as AssignmentResult).id
+    );
     return NextResponse.json({
       success: true,
       message: "Penugasan berhasil dibuat",
@@ -320,7 +352,7 @@ async function handleUpdateAssignment(request: NextRequest) {
       );
     }
 
-    const updateData: Record<string, unknown> = {};
+    const updateData: UpdateAssignmentData = {};
     if (interviewerId) updateData.interviewer_id = interviewerId;
     if (scheduledAt) updateData.scheduled_at = scheduledAt;
     if (status) updateData.status = status;
@@ -328,7 +360,7 @@ async function handleUpdateAssignment(request: NextRequest) {
 
     const { data: assignment, error } = await supabase
       .from("interviewer_assignments")
-      .update(updateData)
+      .update(updateData as UpdateAssignmentData)
       .eq("id", id)
       .select()
       .single();

@@ -3,6 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { withAuth } from "@/lib/auth-middleware";
 
+interface ApplicationData {
+  status?: string;
+  submittedAt?: string;
+  gender?: string;
+  faculty?: string;
+}
+
 async function getStatistics(request: NextRequest) {
   try {
     // Ambil statistik dari Supabase
@@ -42,7 +49,7 @@ async function getStatistics(request: NextRequest) {
     // Status statistics - convert to expected format
     const statusStats = applications.reduce(
       (acc: Record<string, number>, app) => {
-        const status = app.status || "SEDANG_DITINJAU";
+        const status = (app as ApplicationData).status || "SEDANG_DITINJAU";
         acc[status] = (acc[status] || 0) + 1;
         return acc;
       },
@@ -57,7 +64,7 @@ async function getStatistics(request: NextRequest) {
     // Gender statistics - convert to expected format
     const genderStats = applications.reduce(
       (acc: Record<string, number>, app) => {
-        const gender = app.gender || "TIDAK_DIKETAHUI";
+        const gender = (app as ApplicationData).gender || "TIDAK_DIKETAHUI";
         acc[gender] = (acc[gender] || 0) + 1;
         return acc;
       },
@@ -72,7 +79,7 @@ async function getStatistics(request: NextRequest) {
     // Faculty statistics - convert to expected format
     const facultyStats = applications.reduce(
       (acc: Record<string, number>, app) => {
-        const faculty = app.faculty || "TIDAK_DIKETAHUI";
+        const faculty = (app as ApplicationData).faculty || "TIDAK_DIKETAHUI";
         acc[faculty] = (acc[faculty] || 0) + 1;
         return acc;
       },
@@ -89,8 +96,10 @@ async function getStatistics(request: NextRequest) {
     // Daily statistics (submissions per day) - convert to expected format
     const dailyStats = applications.reduce(
       (acc: Record<string, number>, app) => {
-        if (app.submittedAt) {
-          const date = new Date(app.submittedAt).toLocaleDateString("id-ID", {
+        if ((app as ApplicationData).submittedAt) {
+          const date = new Date(
+            (app as ApplicationData).submittedAt!
+          ).toLocaleDateString("id-ID", {
             year: "numeric",
             month: "2-digit",
             day: "2-digit",

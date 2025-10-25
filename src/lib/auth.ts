@@ -17,6 +17,14 @@ interface AdminUser {
   lastLoginAt?: string;
   loginAttempts: number;
   lockedUntil?: string;
+  passwordHash?: string;
+}
+
+interface SessionTokenData {
+  id: string;
+  adminId: string;
+  token: string;
+  expiresAt: Date;
 }
 
 // Hash password utility
@@ -57,14 +65,15 @@ export async function generateToken(admin: AdminUser): Promise<string> {
   // Generate a unique ID for the session token
   const sessionId = crypto.randomUUID();
 
+  const sessionData: SessionTokenData = {
+    id: sessionId,
+    adminId: admin.id,
+    token,
+    expiresAt: expiresAt, // Use Date object instead of ISO string
+  };
   const { data, error } = await supabase
     .from("session_tokens")
-    .insert({
-      id: sessionId,
-      adminId: admin.id,
-      token,
-      expiresAt: expiresAt, // Use Date object instead of ISO string
-    })
+    .insert(sessionData as SessionTokenData)
     .select();
 
   if (error) {

@@ -2,6 +2,15 @@ import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { verifyToken } from "@/lib/auth";
 
+interface SettingData {
+  key: string;
+  value: string;
+}
+
+interface SettingRecord {
+  value: string;
+}
+
 export async function GET() {
   try {
     console.log("🔍 Mengambil status pendaftaran...");
@@ -30,10 +39,13 @@ export async function GET() {
       );
 
       // Buat entry default
-      const { error: insertError } = await supabase.from("settings").insert({
+      const settingData: SettingData = {
         key: "registrationOpen",
         value: "true",
-      });
+      };
+      const { error: insertError } = await supabase
+        .from("settings")
+        .insert(settingData as SettingData);
 
       if (insertError) {
         console.error("❌ Error membuat setting default:", insertError);
@@ -48,7 +60,7 @@ export async function GET() {
       });
     }
 
-    const isOpen = settings[0].value === "true";
+    const isOpen = (settings[0] as SettingRecord).value === "true";
     console.log(
       `✅ Status pendaftaran berhasil diambil: ${
         isOpen ? "Terbuka" : "Tertutup"
@@ -137,15 +149,15 @@ export async function POST(request: Request) {
     console.log(`🔄 ${isOpen ? "Membuka" : "Menutup"} pendaftaran...`);
 
     // Upsert status pendaftaran menggunakan Supabase
-    const { error } = await supabase.from("settings").upsert(
-      {
-        key: "registrationOpen",
-        value: isOpen.toString(),
-      },
-      {
+    const upsertData: SettingData = {
+      key: "registrationOpen",
+      value: isOpen.toString(),
+    };
+    const { error } = await supabase
+      .from("settings")
+      .upsert(upsertData as SettingData, {
         onConflict: "key",
-      }
-    );
+      });
 
     if (error) {
       console.error("❌ Error memperbarui status pendaftaran:", error);

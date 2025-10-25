@@ -2,6 +2,58 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import jsPDF from "jspdf";
 
+interface ApplicantData {
+  id?: string;
+  fullName?: string;
+  email?: string;
+  nim?: string;
+  nia?: string;
+  faculty?: string;
+  department?: string;
+  studyProgram?: string;
+  educationLevel?: string;
+}
+
+interface InterviewerData {
+  id?: string;
+  fullName?: string;
+  email?: string;
+  username?: string;
+}
+
+interface QuestionData {
+  id?: string;
+  question?: string;
+  category?: string;
+  questionNumber?: number;
+  questionText?: string;
+}
+
+interface ResponseData {
+  id?: string;
+  sessionId?: string;
+  questionId?: string;
+  response?: string;
+  score?: number;
+  notes?: string;
+  interview_questions?: QuestionData | QuestionData[];
+}
+
+interface SessionData {
+  id?: string;
+  applicantId?: string;
+  interviewerId?: string;
+  status?: string;
+  totalScore?: number;
+  notes?: string;
+  recommendation?: string;
+  interviewDate?: string;
+  interviewerName?: string;
+  location?: string;
+  applicants?: ApplicantData | ApplicantData[];
+  interviewers?: InterviewerData | InterviewerData[];
+}
+
 async function handler(
   request: NextRequest,
   { params }: { params: { sessionId: string } }
@@ -61,12 +113,6 @@ async function handler(
     }
 
     // Type assertion to include new fields
-    const sessionData = session as typeof session & {
-      interviewerName?: string;
-      totalScore?: number;
-      recommendation?: string;
-      assignment_id?: string;
-    };
 
     // Get responses with questions
     const { data: responses, error: responsesError } = await supabase
@@ -150,9 +196,10 @@ async function handler(
 
     pdf.setFontSize(10);
     pdf.setFont("helvetica", "normal");
-    const applicant = Array.isArray(sessionData.applicants)
-      ? sessionData.applicants[0]
-      : sessionData.applicants;
+    const typedSessionData = session as SessionData;
+    const applicant = Array.isArray(typedSessionData.applicants)
+      ? typedSessionData.applicants[0]
+      : typedSessionData.applicants;
 
     if (applicant) {
       yPosition = addText(
@@ -206,31 +253,35 @@ async function handler(
 
     pdf.setFontSize(10);
     pdf.setFont("helvetica", "normal");
-    const interviewer = Array.isArray(sessionData.interviewers)
-      ? sessionData.interviewers[0]
-      : sessionData.interviewers;
+    const interviewer = Array.isArray(typedSessionData.interviewers)
+      ? typedSessionData.interviewers[0]
+      : typedSessionData.interviewers;
     yPosition = addText(
       `Pewawancara: ${
-        sessionData.interviewerName || interviewer?.fullName || "N/A"
+        typedSessionData.interviewerName || interviewer?.fullName || "N/A"
       }`,
       margin,
       yPosition
     );
     yPosition = addText(
       `Tanggal: ${
-        sessionData.interviewDate
-          ? new Date(sessionData.interviewDate).toLocaleDateString("id-ID")
+        typedSessionData.interviewDate
+          ? new Date(typedSessionData.interviewDate).toLocaleDateString("id-ID")
           : "-"
       }`,
       margin,
       yPosition
     );
     yPosition = addText(
-      `Lokasi: ${sessionData.location || "-"}`,
+      `Lokasi: ${typedSessionData.location || "-"}`,
       margin,
       yPosition
     );
-    yPosition = addText(`Status: ${sessionData.status}`, margin, yPosition);
+    yPosition = addText(
+      `Status: ${typedSessionData.status}`,
+      margin,
+      yPosition
+    );
     yPosition += 10;
 
     // Questions and Responses
@@ -247,9 +298,10 @@ async function handler(
           yPosition = margin;
         }
 
-        const question = Array.isArray(response.interview_questions)
-          ? response.interview_questions[0]
-          : response.interview_questions;
+        const typedResponse = response as ResponseData;
+        const question = Array.isArray(typedResponse.interview_questions)
+          ? typedResponse.interview_questions[0]
+          : typedResponse.interview_questions;
 
         pdf.setFontSize(10);
         pdf.setFont("helvetica", "bold");
@@ -274,19 +326,19 @@ async function handler(
         pdf.setFontSize(10);
         pdf.setFont("helvetica", "normal");
         yPosition = addText(
-          `Jawaban: ${response.response || "Tidak ada jawaban"}`,
+          `Jawaban: ${typedResponse.response || "Tidak ada jawaban"}`,
           margin,
           yPosition,
           pageWidth - 2 * margin
         );
         yPosition = addText(
-          `Skor: ${response.score || 0}/5`,
+          `Skor: ${typedResponse.score || 0}/5`,
           margin,
           yPosition
         );
-        if (response.notes) {
+        if (typedResponse.notes) {
           yPosition = addText(
-            `Catatan: ${response.notes}`,
+            `Catatan: ${typedResponse.notes}`,
             margin,
             yPosition,
             pageWidth - 2 * margin
@@ -327,7 +379,10 @@ async function handler(
 
     // Calculate total score from responses
     const totalScore =
-      responses?.reduce((sum, r) => sum + (r.score || 0), 0) || 0;
+      responses?.reduce(
+        (sum, r) => sum + ((r as ResponseData).score || 0),
+        0
+      ) || 0;
     const maxScore = responses?.length ? responses.length * 5 : 0;
     const avgScoreNum = responses?.length ? totalScore / responses.length : 0;
     const avgScore = avgScoreNum.toFixed(2);
@@ -353,11 +408,11 @@ async function handler(
 
     yPosition = addText(`Rekomendasi: ${recommendation}`, margin, yPosition);
 
-    if (sessionData.notes) {
+    if (typedSessionData.notes) {
       yPosition += 5;
       yPosition = addText(`Catatan Tambahan:`, margin, yPosition);
       yPosition = addText(
-        sessionData.notes,
+        typedSessionData.notes,
         margin,
         yPosition,
         pageWidth - 2 * margin

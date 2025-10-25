@@ -9,6 +9,28 @@ interface AuthData {
   token?: string;
 }
 
+interface AttendanceInsertData {
+  nim: string;
+  applicant_id: string;
+  checked_in_by: string;
+  status: string;
+  notes?: string;
+}
+
+interface AttendanceUpdateData {
+  status?: string;
+  notes?: string;
+}
+
+interface ApplicantData {
+  id: string;
+  nim?: string;
+  fullName?: string;
+  status?: string;
+  email?: string;
+  [key: string]: unknown;
+}
+
 async function handler(request: NextRequest, auth: AuthData) {
   try {
     // Monitor memory usage
@@ -99,9 +121,9 @@ async function handleCreateAttendance(request: NextRequest, auth: AuthData) {
 
     // Create attendance record
     const adminId = (auth.admin as { id: string })?.id;
-    const attendanceData = {
+    const attendanceData: AttendanceInsertData = {
       nim,
-      applicant_id: applicant.id,
+      applicant_id: (applicant as ApplicantData).id,
       checked_in_by: adminId,
       status,
       notes,
@@ -109,7 +131,7 @@ async function handleCreateAttendance(request: NextRequest, auth: AuthData) {
 
     const { data: attendanceResult, error: attendanceError } = await supabase
       .from("interview_attendance")
-      .insert(attendanceData)
+      .insert(attendanceData as AttendanceInsertData)
       .select(
         `
         id,
@@ -276,13 +298,13 @@ async function handleUpdateAttendance(request: NextRequest) {
       );
     }
 
-    const updateData: { status?: string; notes?: string } = {};
+    const updateData: AttendanceUpdateData = {};
     if (status) updateData.status = status;
     if (notes !== undefined) updateData.notes = notes;
 
     const { data: attendanceData, error } = await supabase
       .from("interview_attendance")
-      .update(updateData)
+      .update(updateData as AttendanceUpdateData)
       .eq("id", id)
       .select()
       .single();
