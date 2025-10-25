@@ -4,13 +4,61 @@ import { generateRegistrationConfirmation } from "@/utils/pdfGeneratorJsPDF";
 import { ApplicationData } from "@/types";
 import JSZip from "jszip";
 
+// Interface untuk data applicant dari database
+interface ApplicantBulkData {
+  id: string;
+  email?: string;
+  fullName?: string;
+  nickname?: string;
+  gender?: "LAKI_LAKI" | "PEREMPUAN";
+  birthDate?: string;
+  faculty?: string;
+  department?: string;
+  studyProgram?: string;
+  nim?: string;
+  nia?: string;
+  previousSchool?: string;
+  padangAddress?: string;
+  phoneNumber?: string;
+  motivation?: string;
+  futurePlans?: string;
+  whyYouShouldBeAccepted?: string;
+  corelDraw?: boolean;
+  photoshop?: boolean;
+  adobePremierePro?: boolean;
+  adobeAfterEffect?: boolean;
+  autodeskEagle?: boolean;
+  arduinoIde?: boolean;
+  androidStudio?: boolean;
+  visualStudio?: boolean;
+  missionPlaner?: boolean;
+  autodeskInventor?: boolean;
+  autodeskAutocad?: boolean;
+  solidworks?: boolean;
+  otherSoftware?: string;
+  studyPlanCard?: string;
+  igFollowProof?: string;
+  tiktokFollowProof?: string;
+  status?:
+    | "SEDANG_DITINJAU"
+    | "DAFTAR_PENDEK"
+    | "INTERVIEW"
+    | "DITERIMA"
+    | "DITOLAK";
+  submittedAt?: string | Date;
+  mbtiProof?: string;
+  photo?: string;
+}
+
 export async function GET() {
   try {
     // Ambil semua data dari Supabase
-    const { data: applications, error } = await supabase
+    const { data, error } = await supabase
       .from("applicants")
       .select("*")
       .order("submittedAt", { ascending: false });
+
+    const applications = data as ApplicantBulkData[] | null;
 
     if (error) {
       console.error("Error mengambil aplikasi:", error);
@@ -20,14 +68,14 @@ export async function GET() {
       );
     }
 
-    console.log(`Ditemukan ${applications.length} aplikasi untuk diproses`);
-
     if (!applications || applications.length === 0) {
       return NextResponse.json(
         { error: "Tidak ada aplikasi ditemukan" },
         { status: 404 }
       );
     }
+
+    console.log(`Ditemukan ${applications.length} aplikasi untuk diproses`);
 
     // Buat file ZIP menggunakan JSZip
     const zip = new JSZip();

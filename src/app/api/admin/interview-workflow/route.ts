@@ -2,6 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/auth-middleware";
 import { supabase } from "@/lib/supabase";
 
+interface InterviewerData {
+  id: string;
+  username: string;
+  name?: string;
+  [key: string]: unknown;
+}
+
+interface SupabaseResponse<T = unknown> {
+  data: T | null;
+  error: {
+    message: string;
+    code?: string;
+  } | null;
+}
+
 async function handler(request: NextRequest) {
   if (request.method === "POST") {
     return await handleWorkflowAction(request);
@@ -38,11 +53,19 @@ async function handleWorkflowAction(request: NextRequest) {
       console.log("Looking for applicant with NIM:", nim);
 
       // Find applicant by NIM
-      const { data: applicant, error: applicantError } = await supabase
+      const { data: applicantData, error: applicantError } = await supabase
         .from("applicants")
         .select("id, nim, fullName, status, attendanceConfirmed")
         .eq("nim", nim)
         .single();
+
+      const applicant = applicantData as {
+        id: string;
+        nim: string;
+        fullName: string;
+        status: string;
+        attendanceConfirmed: boolean;
+      } | null;
 
       console.log("Applicant query result:", { applicant, applicantError });
 
@@ -59,7 +82,11 @@ async function handleWorkflowAction(request: NextRequest) {
 
       // Update applicant's status to INTERVIEW and mark attendance
       console.log("Updating applicant with ID:", applicant.id);
-      const updateData = {
+      const updateData: {
+        status: string;
+        attendanceConfirmed: boolean;
+        updatedAt: string;
+      } = {
         status: "INTERVIEW",
         attendanceConfirmed: true,
         updatedAt: new Date().toISOString(),
@@ -138,10 +165,11 @@ async function handleWorkflowAction(request: NextRequest) {
 
       console.log("Query result from 'interviewers' table:", result1);
 
-      if (result1.data) {
-        interviewer = result1.data;
+      const typedResult1 = result1 as SupabaseResponse<InterviewerData>;
+      if (typedResult1.data) {
+        interviewer = typedResult1.data;
       } else {
-        interviewerError = result1.error;
+        interviewerError = typedResult1.error;
       }
 
       // If not found, the interviewer doesn't exist in the expected format
@@ -168,7 +196,11 @@ async function handleWorkflowAction(request: NextRequest) {
       }
 
       // Update applicant's assignment
-      const assignmentData = {
+      const assignmentData: {
+        assignedInterviewer: string;
+        interviewStatus: string;
+        updatedAt: string;
+      } = {
         assignedInterviewer: interviewerId,
         interviewStatus: "ASSIGNED",
         updatedAt: new Date().toISOString(),

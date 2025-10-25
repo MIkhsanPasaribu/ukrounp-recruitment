@@ -2,6 +2,25 @@ import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/auth-middleware";
 import { supabase } from "@/lib/supabase";
 
+// Interface untuk candidate data
+interface InterviewCandidateData {
+  id: string;
+  nim: string;
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  faculty: string;
+  department: string;
+  studyProgram: string;
+  educationLevel: string;
+  status: string;
+  submittedAt: string | Date;
+  updatedAt: string | Date;
+  interviewStatus?: string;
+  assignedInterviewer?: string;
+  attendanceConfirmed: boolean;
+}
+
 async function handler(request: NextRequest) {
   if (request.method === "GET") {
     return await getInterviewCandidates(request);
@@ -62,7 +81,8 @@ async function getInterviewCandidates(request: NextRequest) {
       query = query.is("assignedInterviewer", null);
     }
 
-    const { data: candidates, error, count } = await query;
+    const { data: candidatesData, error, count } = await query;
+    const candidates = candidatesData as InterviewCandidateData[] | null;
 
     console.log("Interview candidates query result:", {
       candidates: candidates?.length || 0,

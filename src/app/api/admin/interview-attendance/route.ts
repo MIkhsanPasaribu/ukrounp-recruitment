@@ -58,12 +58,19 @@ async function handleCreateAttendance(request: NextRequest, auth: AuthData) {
     console.log("📝 Creating attendance for NIM:", nim);
 
     // Find applicant by NIM
-    const { data: applicant, error: applicantError } = await supabase
+    const { data: applicantData, error: applicantError } = await supabase
       .from("applicants")
       .select("id, nim, fullName, status")
       .eq("nim", nim)
       .eq("status", "INTERVIEW")
       .single();
+
+    const applicant = applicantData as {
+      id: string;
+      nim: string;
+      fullName: string;
+      status: string;
+    } | null;
 
     if (applicantError || !applicant) {
       return NextResponse.json(
@@ -92,15 +99,17 @@ async function handleCreateAttendance(request: NextRequest, auth: AuthData) {
 
     // Create attendance record
     const adminId = (auth.admin as { id: string })?.id;
-    const { data: attendance, error: attendanceError } = await supabase
+    const attendanceData = {
+      nim,
+      applicant_id: applicant.id,
+      checked_in_by: adminId,
+      status,
+      notes,
+    };
+
+    const { data: attendanceResult, error: attendanceError } = await supabase
       .from("interview_attendance")
-      .insert({
-        nim,
-        applicant_id: applicant.id,
-        checked_in_by: adminId,
-        status,
-        notes,
-      })
+      .insert(attendanceData)
       .select(
         `
         id,
@@ -123,6 +132,16 @@ async function handleCreateAttendance(request: NextRequest, auth: AuthData) {
       )
       .single();
 
+    const attendance = attendanceResult as {
+      id: string;
+      nim: string;
+      applicant_id: string;
+      checked_in_at: string;
+      checked_in_by: string;
+      status: string;
+      notes: string;
+    } | null;
+
     if (attendanceError) {
       console.error("❌ Error creating attendance:", attendanceError);
       return NextResponse.json(
@@ -131,7 +150,7 @@ async function handleCreateAttendance(request: NextRequest, auth: AuthData) {
       );
     }
 
-    console.log("✅ Attendance created successfully:", attendance.id);
+    console.log("✅ Attendance created successfully:", attendance?.id);
     return NextResponse.json({
       success: true,
       message: "Absensi berhasil dibuat",
@@ -257,16 +276,22 @@ async function handleUpdateAttendance(request: NextRequest) {
       );
     }
 
-    const updateData: Record<string, unknown> = {};
+    const updateData: { status?: string; notes?: string } = {};
     if (status) updateData.status = status;
     if (notes !== undefined) updateData.notes = notes;
 
-    const { data: attendance, error } = await supabase
+    const { data: attendanceData, error } = await supabase
       .from("interview_attendance")
       .update(updateData)
       .eq("id", id)
       .select()
       .single();
+
+    const attendance = attendanceData as {
+      id: string;
+      status: string;
+      notes: string;
+    } | null;
 
     if (error) {
       console.error("❌ Error updating attendance:", error);

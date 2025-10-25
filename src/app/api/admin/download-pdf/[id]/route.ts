@@ -3,6 +3,53 @@ import { supabase } from "@/lib/supabase";
 import { generateRegistrationConfirmation } from "@/utils/pdfGeneratorJsPDF";
 import { ApplicationData } from "@/types";
 
+// Interface untuk data applicant dari database
+interface ApplicantDownloadData {
+  id: string;
+  email?: string;
+  fullName?: string;
+  nickname?: string;
+  gender?: "LAKI_LAKI" | "PEREMPUAN";
+  birthDate?: string;
+  faculty?: string;
+  department?: string;
+  studyProgram?: string;
+  nim?: string;
+  nia?: string;
+  previousSchool?: string;
+  padangAddress?: string;
+  phoneNumber?: string;
+  motivation?: string;
+  futurePlans?: string;
+  whyYouShouldBeAccepted?: string;
+  corelDraw?: boolean;
+  photoshop?: boolean;
+  adobePremierePro?: boolean;
+  adobeAfterEffect?: boolean;
+  autodeskEagle?: boolean;
+  arduinoIde?: boolean;
+  androidStudio?: boolean;
+  visualStudio?: boolean;
+  missionPlaner?: boolean;
+  autodeskInventor?: boolean;
+  autodeskAutocad?: boolean;
+  solidworks?: boolean;
+  otherSoftware?: string;
+  mbtiProof?: string;
+  photo?: string;
+  studentCard?: string;
+  studyPlanCard?: string;
+  igFollowProof?: string;
+  tiktokFollowProof?: string;
+  status?:
+    | "SEDANG_DITINJAU"
+    | "DAFTAR_PENDEK"
+    | "INTERVIEW"
+    | "DITERIMA"
+    | "DITOLAK";
+  submittedAt?: string | Date;
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -11,11 +58,13 @@ export async function GET(
     const { id } = await params;
 
     // Ambil data dari Supabase
-    const { data: applicants, error } = await supabase
+    const { data, error } = await supabase
       .from("applicants")
       .select("*")
       .eq("id", id)
       .limit(1);
+
+    const applicants = data as ApplicantDownloadData[] | null;
 
     if (error) {
       console.error("Error mengambil data pelamar:", error);
@@ -78,14 +127,14 @@ export async function GET(
         solidworks: Boolean(applicantData.solidworks),
         others: applicantData.otherSoftware || "",
       },
-      mbtiProof: applicantData.mbtiProof,
-      photo: applicantData.photo,
-      studentCard: applicantData.studentCard,
-      studyPlanCard: applicantData.studyPlanCard,
-      igFollowProof: applicantData.igFollowProof,
-      tiktokFollowProof: applicantData.tiktokFollowProof,
-      status: applicantData.status,
-      submittedAt: applicantData.submittedAt,
+      mbtiProof: applicantData.mbtiProof || "",
+      photo: applicantData.photo || "",
+      studentCard: applicantData.studentCard || "",
+      studyPlanCard: applicantData.studyPlanCard || "",
+      igFollowProof: applicantData.igFollowProof || "",
+      tiktokFollowProof: applicantData.tiktokFollowProof || "",
+      status: applicantData.status || "SEDANG_DITINJAU",
+      submittedAt: applicantData.submittedAt || undefined,
     };
 
     // Generate PDF

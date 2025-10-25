@@ -34,7 +34,17 @@ export async function GET(
       motivation?: string;
       futurePlans?: string;
       whyYouShouldBeAccepted?: string;
-      [key: string]: string | number | boolean | null | undefined;
+      submittedAt?: string | Date;
+      birthDate?: string | Date;
+      software?: Record<string, boolean | string>;
+      [key: string]:
+        | string
+        | number
+        | boolean
+        | null
+        | undefined
+        | Date
+        | Record<string, boolean | string>;
     }
     const applicantData = data as ApplicantDetailData | null;
 
@@ -140,7 +150,7 @@ export async function GET(
 
     // Enhance application data with computed fields
     const enhancedData = {
-      ...data,
+      ...applicantData,
       // Add computed fields
       hasAllRequiredFiles: fileFields.every(
         (field) => fileMetadata[field].exists
@@ -157,27 +167,33 @@ export async function GET(
       fileMetadata,
 
       // Add formatted dates
-      submittedAtFormatted: data.submittedAt
-        ? new Date(data.submittedAt).toLocaleString("id-ID", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          })
+      submittedAtFormatted: applicantData.submittedAt
+        ? new Date(applicantData.submittedAt as string | Date).toLocaleString(
+            "id-ID",
+            {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            }
+          )
         : null,
 
       // Add age calculation if birthDate exists
-      age: data.birthDate
+      age: applicantData.birthDate
         ? Math.floor(
-            (Date.now() - new Date(data.birthDate).getTime()) /
+            (Date.now() -
+              new Date(applicantData.birthDate as string | Date).getTime()) /
               (365.25 * 24 * 60 * 60 * 1000)
           )
         : null,
 
       // Software experience summary
-      softwareExperienceCount: data.software
-        ? Object.values(data.software).filter((val) => val === true).length
+      softwareExperienceCount: applicantData.software
+        ? Object.values(
+            applicantData.software as Record<string, boolean>
+          ).filter((val) => val === true).length
         : 0,
     };
 
