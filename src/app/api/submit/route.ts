@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabase, supabaseUntyped } from "@/lib/supabase";
 import { ApplicationData } from "@/types";
 import { ApplicantInsert } from "@/types/supabase";
 
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
     };
 
     // Masukkan data menggunakan Supabase
-    const { data, error } = await supabase
+    const { data, error } = await supabaseUntyped
       .from("applicants")
       .insert([applicationData as Record<string, unknown>])
       .select("id")

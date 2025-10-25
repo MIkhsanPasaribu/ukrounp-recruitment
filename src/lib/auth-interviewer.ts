@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { NextRequest } from "next/server";
-import { supabase } from "./supabase";
+import { supabase, supabaseUntyped } from "./supabase";
 import { InterviewerUser } from "@/types/interview";
 
 interface TokenInsertData {
@@ -65,7 +65,7 @@ export async function generateInterviewerToken(
     expiresAt: expiresAt.toISOString(),
   };
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseUntyped
     .from("interviewer_tokens")
     .insert(tokenData as Record<string, unknown>)
     .select();
@@ -148,7 +148,7 @@ export async function loginInterviewer(
     .eq("isActive", true)
     .single();
 
-  const interviewerTyped = interviewer as InterviewerData;
+  const interviewerTyped = interviewer as unknown as InterviewerData;
   console.log("🔍 Database query result:", {
     found: !!interviewer,
     error: error?.message,
@@ -196,7 +196,7 @@ export async function loginInterviewer(
       updateData.lockedUntil = new Date(Date.now() + LOCK_TIME).toISOString();
     }
 
-    await supabase
+    await supabaseUntyped
       .from("interviewers")
       .update(updateData as Record<string, unknown>)
       .eq("id", interviewerTyped.id);
@@ -211,7 +211,7 @@ export async function loginInterviewer(
     lastLoginAt: new Date().toISOString(),
   };
 
-  await supabase
+  await supabaseUntyped
     .from("interviewers")
     .update(resetData as Record<string, unknown>)
     .eq("id", interviewerTyped.id);
@@ -234,7 +234,7 @@ export async function logoutInterviewer(token: string): Promise<void> {
     revokedAt: new Date().toISOString(),
   };
 
-  await supabase
+  await supabaseUntyped
     .from("interviewer_tokens")
     .update(revokeData as Record<string, unknown>)
     .eq("token", token);

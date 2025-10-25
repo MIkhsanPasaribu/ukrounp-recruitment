@@ -161,7 +161,7 @@ export async function revokeToken(token: string): Promise<void> {
     revokedAt: new Date().toISOString(),
   };
 
-  await supabase
+  await supabaseUntyped
     .from("session_tokens")
     .update(revokeData as Record<string, unknown>)
     .eq("token", token);
@@ -174,7 +174,7 @@ export async function revokeAllTokensForAdmin(adminId: string): Promise<void> {
     revokedAt: new Date().toISOString(),
   };
 
-  await supabase
+  await supabaseUntyped
     .from("session_tokens")
     .update(revokeData as Record<string, unknown>)
     .eq("adminId", adminId)
@@ -238,7 +238,7 @@ export async function authenticateAdmin(
         updateData.lockedUntil = new Date(Date.now() + LOCK_TIME).toISOString();
       }
 
-      await supabase
+      await supabaseUntyped
         .from("admins")
         .update(updateData as Record<string, unknown>)
         .eq("id", adminTyped.id);
@@ -253,7 +253,7 @@ export async function authenticateAdmin(
       lastLoginAt: new Date().toISOString(),
     };
 
-    await supabase
+    await supabaseUntyped
       .from("admins")
       .update(resetData as Record<string, unknown>)
       .eq("id", adminTyped.id);

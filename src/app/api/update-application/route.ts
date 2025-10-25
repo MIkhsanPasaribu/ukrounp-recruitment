@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabase, supabaseUntyped } from "@/lib/supabase";
 
 export async function PUT(request: NextRequest) {
   try {
@@ -216,7 +216,7 @@ export async function PUT(request: NextRequest) {
     console.log("Final update object:", JSON.stringify(updateObject, null, 2));
 
     // Update data aplikasi
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseUntyped
       .from("applicants")
       .update(updateObject as Record<string, unknown>)
       .eq("id", id);

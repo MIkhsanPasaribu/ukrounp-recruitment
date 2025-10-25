@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextRequest, NextResponse } from "next/server";
 import { withInterviewerAuth } from "@/lib/auth-interviewer-middleware";
-import { supabase } from "@/lib/supabase";
+import { supabase, supabaseUntyped } from "@/lib/supabase";
 import { InterviewerUser } from "@/types/interview";
 
 async function handler(
@@ -116,7 +116,7 @@ async function handler(
     }
 
     // Insert new responses
-    const { error: responsesError } = await supabase
+    const { error: responsesError } = await supabaseUntyped
       .from("interview_responses")
       .insert(validResponses);
 
@@ -163,7 +163,7 @@ async function handler(
 
     console.log("📝 Updating session:", sessionUpdateData);
 
-    const { error: sessionUpdateError } = await supabase
+    const { error: sessionUpdateError } = await supabaseUntyped
       .from("interview_sessions")
       .update(sessionUpdateData)
       .eq("id", sessionId);
@@ -192,7 +192,7 @@ async function handler(
           basicUpdateData.interviewerName = interviewerName.trim();
         }
 
-        const { error: retryError } = await supabase
+        const { error: retryError } = await supabaseUntyped
           .from("interview_sessions")
           .update(basicUpdateData)
           .eq("id", sessionId);

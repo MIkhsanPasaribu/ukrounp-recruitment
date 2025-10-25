@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withInterviewerAuth } from "@/lib/auth-interviewer-middleware";
-import { supabase } from "@/lib/supabase";
+import { supabase, supabaseUntyped } from "@/lib/supabase";
 import { InterviewerUser } from "@/types/interview";
 
 interface ApplicantData {
@@ -108,7 +108,7 @@ async function handler(
 
     // Check if interview session already exists for this applicant
     const { data: existingSession, error: existingSessionError } =
-      await supabase
+      await supabaseUntyped
         .from("interview_sessions")
         .select("id, status, interviewDate, location, notes")
         .eq("applicantId", applicantId)
@@ -117,7 +117,7 @@ async function handler(
     if (existingSession && !existingSessionError) {
       console.log(
         "✅ Session already exists, returning existing session:",
-        existingSession.id
+        (existingSession as unknown as { id: string }).id
       );
       return NextResponse.json({
         success: true,
@@ -149,7 +149,7 @@ async function handler(
 
     console.log("📝 Creating session with data:", sessionData);
 
-    const { data: session, error: sessionError } = await supabase
+    const { data: session, error: sessionError } = await supabaseUntyped
       .from("interview_sessions")
       .insert(sessionData as Record<string, unknown>)
       .select(
@@ -182,7 +182,10 @@ async function handler(
       );
     }
 
-    console.log("✅ Interview session created successfully:", session.id);
+    console.log(
+      "✅ Interview session created successfully:",
+      (session as unknown as { id: string }).id
+    );
 
     return NextResponse.json({
       success: true,

@@ -156,9 +156,9 @@ async function handler(
 
       return {
         question,
-        response: (existingResponse as ResponseData)?.response || "",
-        score: (existingResponse as ResponseData)?.score || 0,
-        notes: (existingResponse as ResponseData)?.notes || "",
+        response: (existingResponse as unknown as ResponseData)?.response || "",
+        score: (existingResponse as unknown as ResponseData)?.score || 0,
+        notes: (existingResponse as unknown as ResponseData)?.notes || "",
       };
     });
 
