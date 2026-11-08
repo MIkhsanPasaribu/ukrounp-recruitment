@@ -32,7 +32,10 @@ interface UpdateData {
   [key: string]: unknown;
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret-key";
+const JWT_SECRET = process.env.JWT_SECRET!;
+if (!JWT_SECRET || JWT_SECRET.length < 32) {
+  throw new Error("JWT_SECRET must contain at least 32 characters");
+}
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCK_TIME = 15 * 60 * 1000; // 15 minutes
 
@@ -52,7 +55,6 @@ export async function generateInterviewerToken(
     expiresIn: "8h", // 8 jam untuk sesi wawancara
   });
 
-  console.log("🔑 Generating interviewer token for:", interviewer.id);
 
   // Store token in database
   const expiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000); // 8 hours
@@ -65,17 +67,15 @@ export async function generateInterviewerToken(
     expiresAt: expiresAt.toISOString(),
   };
 
-  const { data, error } = await supabaseUntyped
+  const { error } = await supabaseUntyped
     .from("interviewer_tokens")
     .insert(tokenData as Record<string, unknown>)
     .select();
 
   if (error) {
-    console.error("❌ Error storing interviewer token:", error);
     throw new Error("Failed to store interviewer session token");
   }
 
-  console.log("✅ Interviewer token stored successfully:", data);
   return token;
 }
 
@@ -102,10 +102,6 @@ export function verifyInterviewerToken(token: string): {
 
 // Check if interviewer token is valid
 export async function isInterviewerTokenValid(token: string): Promise<boolean> {
-  console.log(
-    "🔍 Checking interviewer token validity:",
-    token.substring(0, 20) + "..."
-  );
 
   const { data, error } = await supabase
     .from("interviewer_tokens")
@@ -115,15 +111,12 @@ export async function isInterviewerTokenValid(token: string): Promise<boolean> {
     .gt("expiresAt", new Date().toISOString())
     .single();
 
-  console.log("🔍 Interviewer token query result:", { data, error });
 
   if (error) {
-    console.log("❌ Interviewer token validation error:", error.message);
     return false;
   }
 
   const isValid = !error && !!data;
-  console.log("🔍 Interviewer token is valid:", isValid);
   return isValid;
 }
 
@@ -138,7 +131,6 @@ export async function loginInterviewer(
   token?: string;
   message: string;
 }> {
-  console.log("🔐 Authenticating interviewer:", { identifier, ipAddress });
 
   // Get interviewer by username or email
   const { data: interviewer, error } = await supabase
@@ -149,18 +141,9 @@ export async function loginInterviewer(
     .single();
 
   const interviewerTyped = interviewer as unknown as InterviewerData;
-  console.log("🔍 Database query result:", {
-    found: !!interviewer,
-    error: error?.message,
-    hasPasswordHash: !!interviewerTyped?.passwordHash,
-    isActive: interviewerTyped?.isActive,
-    username: interviewerTyped?.username,
-    email: interviewerTyped?.email,
-  });
 
   if (error || !interviewer) {
-    console.log("❌ Interviewer not found:", error?.message);
-    return { success: false, message: "Username/email atau password salah" };
+      return { success: false, message: "Username/email atau password salah" };
   }
 
   // Check if account is locked (jika kolom ada)
@@ -176,16 +159,13 @@ export async function loginInterviewer(
   }
 
   // Verify password
-  console.log("🔑 Comparing passwords...");
   const isPasswordValid = await bcrypt.compare(
     password,
     interviewerTyped.passwordHash
   );
-  console.log("🔑 Password validation result:", isPasswordValid);
 
   if (!isPasswordValid) {
-    console.log("❌ Password verification failed");
-    // Increment login attempts
+      // Increment login attempts
     const newAttempts = (interviewerTyped.loginAttempts || 0) + 1;
     const updateData: { loginAttempts: number; lockedUntil?: string } = {
       loginAttempts: newAttempts,
@@ -219,9 +199,11 @@ export async function loginInterviewer(
   // Generate token
   const token = await generateInterviewerToken(interviewer as InterviewerUser);
 
+  const { passwordHash: _passwordHash, ...safeInterviewer } = interviewer;
+  void _passwordHash;
   return {
     success: true,
-    interviewer,
+    interviewer: safeInterviewer as InterviewerUser,
     token,
     message: "Login berhasil",
   };
@@ -265,12 +247,6 @@ export async function getInterviewerAuthData(request: NextRequest): Promise<{
     token = request.cookies.get("interviewerToken")?.value || null;
   }
 
-  console.log("🔑 Interviewer auth check:", {
-    hasAuthHeader: !!authHeader,
-    hasXInterviewerToken: !!request.headers.get("X-Interviewer-Token"),
-    hasCookie: !!request.cookies.get("interviewerToken"),
-    finalToken: !!token,
-  });
 
   if (!token) {
     return { isAuthenticated: false };
@@ -279,14 +255,12 @@ export async function getInterviewerAuthData(request: NextRequest): Promise<{
   // Verify JWT token
   const decoded = verifyInterviewerToken(token);
   if (!decoded) {
-    console.log("❌ Interviewer token verification failed");
     return { isAuthenticated: false };
   }
 
   // Check if token exists and is valid in database
   const isValid = await isInterviewerTokenValid(token);
   if (!isValid) {
-    console.log("❌ Interviewer token not valid in database");
     return { isAuthenticated: false };
   }
 
@@ -299,18 +273,14 @@ export async function getInterviewerAuthData(request: NextRequest): Promise<{
     .single();
 
   if (error || !interviewer) {
-    console.log("❌ Interviewer not found or inactive:", error);
     return { isAuthenticated: false };
   }
 
-  const interviewerResult = interviewer as InterviewerData;
-  console.log(
-    "✅ Interviewer authentication successful for:",
-    interviewerResult.username
-  );
+  const { passwordHash: _passwordHash, ...safeInterviewer } = interviewer;
+  void _passwordHash;
   return {
     isAuthenticated: true,
-    interviewer: interviewer as InterviewerUser,
+    interviewer: safeInterviewer as InterviewerUser,
     token,
   };
 }
