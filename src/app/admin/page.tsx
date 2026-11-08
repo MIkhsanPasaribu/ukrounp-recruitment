@@ -177,7 +177,7 @@ export default function AdminPage() {
         <AdminTabNavigation
           activeTab={activeTab}
           setActiveTab={setActiveTab}
-          applicationsCount={applications.length}
+          applicationsCount={pagination?.total ?? applications.length}
         />
 
         {/* Tab Content */}
