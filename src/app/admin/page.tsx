@@ -16,6 +16,7 @@ import BulkActions from "@/components/admin/BulkActions";
 import ApplicationsTable from "@/components/admin/ApplicationsTable";
 import MobileApplicationsView from "@/components/admin/MobileApplicationsView";
 import InterviewAssignmentTab from "@/components/admin/InterviewAssignmentTab";
+import ImportApplicants from "@/components/admin/ImportApplicants";
 import AnalyticsDashboard from "@/components/dashboard/AnalyticsDashboard";
 import { exportApplicationsToCSV } from "@/utils/csvExport";
 
@@ -219,7 +220,10 @@ export default function AdminPage() {
 
           {/* Interview Assignment Tab */}
           {activeTab === "interviews" && token && (
-            <InterviewAssignmentTab token={token} />
+            <div className="space-y-6">
+              <ImportApplicants token={token} onImported={() => { fetchApplications(); }} />
+              <InterviewAssignmentTab token={token} />
+            </div>
           )}
 
           {/* Analytics Tab */}
