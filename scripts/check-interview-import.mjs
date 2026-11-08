@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import ts from 'typescript';
+
+const source = fs.readFileSync(new URL('../src/lib/interview-import.ts', import.meta.url), 'utf8');
+const { outputText } = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } });
+const { previewInterviewImport, validateWorkbookArchive } = await import(`data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`);
+const headers = ['Timestamp', 'Email Address', 'Email Aktif', 'Nama Lengkap', 'NIM', 'No. HP/WA', 'Departemen', 'Program Studi', 'Motivasi', 'Alasan Masuk Robotic'];
+const row = (time, name = 'Peserta Uji', nim = '24065039', email = 'uji@example.invalid') => [time, email, email, name, nim, '081234567890', 'Teknik', 'Teknik', 'Motivasi uji', 'Alasan uji'];
+const first = row('7/22/2026 18:59:47');
+const last = row('7/23/2026 18:59:47');
+last[8] = 'Motivasi terbaru';
+const result = previewInterviewImport([headers, first, last]);
+assert.equal(result.totalRows, 2);
+assert.equal(result.candidates.length, 1);
+assert.equal(result.duplicatesRemoved, 1);
+assert.equal(result.candidates[0].motivation, 'Motivasi terbaru');
+assert.equal(previewInterviewImport([headers, first, row('7/23/2026 18:59:47', 'Identitas Berbeda')]).candidates.length, 0);
+assert.equal(previewInterviewImport([headers, first, row('7/23/2026 18:59:47', 'Peserta Uji', '24065040')]).candidates.length, 0);
+assert.equal(previewInterviewImport([headers, row('2/30/2026 18:59:47')]).issues.length, 1);
+assert.equal(previewInterviewImport([headers, row('7/22/2026 18:59:47', '24065039')]).candidates.length, 0);
+assert.throws(() => previewInterviewImport([['Nama'], ['Peserta']]));
+assert.throws(() => validateWorkbookArchive(Buffer.from('not an xlsx')));
+assert.throws(() => validateWorkbookArchive(Buffer.alloc(4 * 1024 * 1024 + 1)));
+console.log('PASS: validasi, entri terbaru, konflik identitas/email, tanggal, header, ukuran arsip.');
