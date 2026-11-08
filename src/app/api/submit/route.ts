@@ -11,6 +11,11 @@ interface InsertResult {
 
 export async function POST(request: Request) {
   try {
+    const { data: registration, error: registrationError } = await supabaseUntyped
+      .from("settings").select("value").eq("key", "registrationOpen").maybeSingle();
+    if (registrationError || registration?.value !== "true") {
+      return NextResponse.json({ success: false, message: "Pendaftaran sudah ditutup." }, { status: registrationError ? 503 : 403 });
+    }
     const body = await request.json();
 
     // Validasi email untuk mencegah duplikasi
