@@ -196,13 +196,13 @@ export default function InterviewAssignmentTab({
           <span>✅</span>
           Konfirmasi Kehadiran
         </h3>
-        <div className="flex gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row">
           <input
             type="text"
             value={nimInput}
             onChange={(e) => setNimInput(e.target.value)}
             placeholder="Masukkan NIM untuk konfirmasi kehadiran..."
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="min-w-0 flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             onKeyPress={(e) => e.key === "Enter" && confirmAttendance()}
             disabled={confirmingAttendance}
           />
