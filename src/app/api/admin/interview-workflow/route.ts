@@ -135,12 +135,14 @@ async function handleWorkflowAction(request: NextRequest) {
         );
       }
 
-      console.log("Assigning interviewer:", { applicantId, interviewerId });
+      if (typeof applicantId !== "string" || !/^[0-9a-f-]{36}$/i.test(applicantId) || typeof interviewerId !== "string" || !/^pewawancara[1-7]$/.test(interviewerId)) {
+        return NextResponse.json({ success: false, message: "Identitas peserta atau pewawancara tidak valid." }, { status: 400 });
+      }
 
       // Get applicant data
       const { data: applicant, error: applicantError } = await supabase
         .from("applicants")
-        .select("id, nim, fullName, status, attendanceConfirmed")
+        .select("id, nim, fullName, status, attendanceConfirmed, assignedInterviewer")
         .eq("id", applicantId)
         .single();
 
@@ -152,6 +154,15 @@ async function handleWorkflowAction(request: NextRequest) {
           { success: false, message: "Peserta tidak ditemukan" },
           { status: 404 }
         );
+      }
+
+      const candidate = applicant as { status: string; attendanceConfirmed: boolean; assignedInterviewer?: string };
+      if (candidate.status !== "INTERVIEW" || !candidate.attendanceConfirmed) {
+        return NextResponse.json({ success: false, message: "Konfirmasi kehadiran peserta sebelum penugasan." }, { status: 409 });
+      }
+      const { data: session, error: sessionLookupError } = await supabaseUntyped.from("interview_sessions").select("id").eq("applicantId", applicantId).maybeSingle();
+      if (sessionLookupError || session) {
+        return NextResponse.json({ success: false, message: "Peserta sudah memiliki sesi atau sesi belum dapat diperiksa. Penugasan tidak diubah." }, { status: 409 });
       }
 
       // Debug: First check if table exists and what tables we have
@@ -166,6 +177,7 @@ async function handleWorkflowAction(request: NextRequest) {
         .from("interviewers")
         .select("*")
         .eq("username", interviewerId)
+        .eq("isActive", true)
         .single();
 
       console.log("Query result from 'interviewers' table:", result1);
