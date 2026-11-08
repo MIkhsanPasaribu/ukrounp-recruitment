@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { ApplicationData, ApplicationStatus } from "@/types";
 import { adminApi } from "@/services/adminApi";
 
@@ -17,17 +17,43 @@ export const useApplications = (token: string | null) => {
   const [applications, setApplications] = useState<ApplicationData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [searchTerm, updateSearchTerm] = useState("");
+  const [statusFilter, updateStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [applicationsPerPage, setApplicationsPerPage] = useState(20);
+  const [applicationsPerPage, updateApplicationsPerPage] = useState(20);
   const [pagination, setPagination] = useState<PaginationData | null>(null);
+
+  const requestId = useRef(0);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // Filter changes always restart at page 1; stale responses must not overwrite newer ones.
+  const setSearchTerm = (value: string) => {
+    requestId.current++;
+    setCurrentPage(1);
+    updateSearchTerm(value);
+  };
+  const setStatusFilter = (value: string) => {
+    requestId.current++;
+    setCurrentPage(1);
+    updateStatusFilter(value);
+  };
+  const setApplicationsPerPage = useCallback((value: number) => {
+    requestId.current++;
+    setCurrentPage(1);
+    updateApplicationsPerPage(value);
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 400);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   // Function to fetch applications with pagination and timeout
   const fetchApplications = useCallback(
     async (page = 1, limit = 20, search = "", status = "all") => {
       if (!token) return;
 
+      const id = ++requestId.current;
       try {
         setLoading(true);
         setError("");
@@ -39,9 +65,11 @@ export const useApplications = (token: string | null) => {
           status,
         });
 
+        if (id !== requestId.current) return;
         setApplications(data.applications || []);
         setPagination(data.pagination || null);
       } catch (error: unknown) {
+        if (id !== requestId.current) return;
         console.error("Error fetching applications:", error);
         if (error instanceof Error && error.name === "AbortError") {
           setError(
@@ -51,31 +79,18 @@ export const useApplications = (token: string | null) => {
           setError("Error dalam mengambil data aplikasi - Silakan coba lagi");
         }
       } finally {
-        setLoading(false);
+        if (id === requestId.current) setLoading(false);
       }
     },
     [token]
   );
 
-  // Debounced search effect
-  useEffect(() => {
-    const debounceTimer = setTimeout(() => {
-      if (token) {
-        setCurrentPage(1);
-        fetchApplications(1, applicationsPerPage, searchTerm, statusFilter);
-      }
-    }, 500);
-
-    return () => clearTimeout(debounceTimer);
-  }, [searchTerm, statusFilter, token, fetchApplications, applicationsPerPage]);
-
-  // Fetch data when dependencies change
   useEffect(() => {
     if (token) {
       fetchApplications(
         currentPage,
         applicationsPerPage,
-        searchTerm,
+        debouncedSearch,
         statusFilter
       );
     }
@@ -83,7 +98,7 @@ export const useApplications = (token: string | null) => {
     token,
     currentPage,
     applicationsPerPage,
-    searchTerm,
+    debouncedSearch,
     statusFilter,
     fetchApplications,
   ]);
@@ -117,8 +132,8 @@ export const useApplications = (token: string | null) => {
 
     try {
       await adminApi.deleteApplication(token, id);
-      setApplications(applications.filter((app) => app.id !== id));
       alert("Data pendaftaran berhasil dihapus");
+      fetchApplications(currentPage, applicationsPerPage, debouncedSearch, statusFilter);
     } catch (error) {
       console.error("Error deleting application:", error);
       alert("Gagal menghapus data pendaftaran");
