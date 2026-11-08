@@ -3,7 +3,10 @@ import bcrypt from "bcryptjs";
 import { NextRequest } from "next/server";
 import { supabase, supabaseUntyped } from "./supabase";
 
-const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret-key";
+const JWT_SECRET = process.env.JWT_SECRET!;
+if (!JWT_SECRET || JWT_SECRET.length < 32) {
+  throw new Error("JWT_SECRET must contain at least 32 characters");
+}
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCK_TIME = 15 * 60 * 1000; // 15 minutes
 
@@ -78,12 +81,10 @@ export async function generateToken(admin: AdminUser): Promise<string> {
     expiresIn: "24h",
   });
 
-  console.log("🔑 Generating token for admin:", admin.id);
 
   // Store token in database
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-  console.log("🔑 Storing token with expiresAt:", expiresAt.toISOString());
 
   // Generate a unique ID for the session token
   const sessionId = crypto.randomUUID();
@@ -94,18 +95,15 @@ export async function generateToken(admin: AdminUser): Promise<string> {
     token,
     expiresAt: expiresAt, // Use Date object instead of ISO string
   };
-  const { data, error } = await supabaseUntyped
+  const { error } = await supabaseUntyped
     .from("session_tokens")
     .insert(sessionData as Record<string, unknown>)
     .select();
 
   if (error) {
-    console.error("❌ Error storing token:", error);
-    console.error("❌ Error details:", JSON.stringify(error, null, 2));
     throw new Error(`Failed to store session token: ${error.message}`);
   }
 
-  console.log("✅ Token stored successfully:", data);
   return token;
 }
 
@@ -132,7 +130,6 @@ export function verifyToken(token: string): {
 
 // Check if token is valid in database
 export async function isTokenValid(token: string): Promise<boolean> {
-  console.log("🔍 Checking token validity:", token.substring(0, 20) + "...");
 
   const { data, error } = await supabase
     .from("session_tokens")
@@ -142,15 +139,12 @@ export async function isTokenValid(token: string): Promise<boolean> {
     .gt("expiresAt", new Date().toISOString())
     .single();
 
-  console.log("🔍 Token query result:", { data, error });
 
   if (error) {
-    console.log("❌ Token validation error:", error.message);
     return false;
   }
 
   const isValid = !error && !!data;
-  console.log("🔍 Token is valid:", isValid);
   return isValid;
 }
 
@@ -271,15 +265,16 @@ export async function authenticateAdmin(
       userAgent
     );
 
+    const { passwordHash: _passwordHash, ...safeAdmin } = admin;
+    void _passwordHash;
     return {
       success: true,
-      admin,
+      admin: safeAdmin,
       token,
       message: "Login berhasil",
     };
   } catch (error) {
-    console.error("Authentication error:", error);
-    return { success: false, message: "Terjadi kesalahan server" };
+      return { success: false, message: "Terjadi kesalahan server" };
   }
 }
 
@@ -308,12 +303,6 @@ export async function getAuthData(request: NextRequest): Promise<{
     token = request.cookies.get("adminToken")?.value || null;
   }
 
-  console.log("🔑 Auth check:", {
-    hasAuthHeader: !!authHeader,
-    hasXAdminToken: !!request.headers.get("X-Admin-Token"),
-    hasCookie: !!request.cookies.get("adminToken"),
-    finalToken: !!token,
-  });
 
   if (!token) {
     return { isAuthenticated: false };
@@ -322,14 +311,12 @@ export async function getAuthData(request: NextRequest): Promise<{
   // Verify JWT token
   const decoded = verifyToken(token);
   if (!decoded) {
-    console.log("❌ Token verification failed");
     return { isAuthenticated: false };
   }
 
   // Check if token exists and is valid in database
   const isValid = await isTokenValid(token);
   if (!isValid) {
-    console.log("❌ Token not valid in database");
     return { isAuthenticated: false };
   }
 
@@ -342,15 +329,12 @@ export async function getAuthData(request: NextRequest): Promise<{
     .single();
 
   if (error || !admin) {
-    console.log("❌ Admin not found or inactive:", error);
     return { isAuthenticated: false };
   }
 
-  console.log(
-    "✅ Authentication successful for:",
-    (admin as AdminData).username
-  );
-  return { isAuthenticated: true, admin, token };
+  const { passwordHash: _passwordHash, ...safeAdmin } = admin;
+  void _passwordHash;
+  return { isAuthenticated: true, admin: safeAdmin, token };
 }
 
 // Log admin actions for audit trail
@@ -372,8 +356,7 @@ export async function logAdminAction(
       userAgent,
     } as Record<string, unknown>);
   } catch (error) {
-    console.error("Error logging admin action:", error);
-  }
+    }
 }
 
 // Create first admin (for setup)
@@ -408,14 +391,12 @@ export async function createFirstAdmin(
     } as Record<string, unknown>);
 
     if (error) {
-      console.error("Error creating admin:", error);
       return { success: false, message: "Gagal membuat admin" };
     }
 
     return { success: true, message: "Admin berhasil dibuat" };
   } catch (error) {
-    console.error("Error in createFirstAdmin:", error);
-    return { success: false, message: "Terjadi kesalahan server" };
+      return { success: false, message: "Terjadi kesalahan server" };
   }
 }
 
@@ -443,8 +424,7 @@ export async function cleanupExpiredTokens(): Promise<void> {
       .delete()
       .lt("expiresAt", new Date().toISOString());
   } catch (error) {
-    console.error("Error cleaning up expired tokens:", error);
-  }
+    }
 }
 
 // Logout admin and invalidate session
@@ -453,6 +433,5 @@ export async function logoutAdmin(token: string): Promise<void> {
     // Invalidate the session token
     await supabaseUntyped.from("session_tokens").delete().eq("token", token);
   } catch (error) {
-    console.error("Error during logout:", error);
-  }
+    }
 }
