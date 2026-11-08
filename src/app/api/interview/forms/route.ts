@@ -9,10 +9,13 @@ interface QuestionData {
   [key: string]: unknown;
 }
 
-async function handler(request: NextRequest) {
+async function handler(request: NextRequest, auth: { interviewer?: { id: string } }) {
   try {
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get("sessionId");
+    if (sessionId !== null && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sessionId)) {
+      return NextResponse.json({ success: false, message: "Session ID tidak valid" }, { status: 400 });
+    }
 
     console.log("🔍 Fetching interview form data for session:", sessionId);
 
@@ -72,6 +75,7 @@ async function handler(request: NextRequest) {
         `
         )
         .eq("id", sessionId)
+        .eq("interviewerId", auth.interviewer!.id)
         .single();
 
       if (sessionError) {
