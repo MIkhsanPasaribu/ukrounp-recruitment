@@ -50,7 +50,7 @@ async function createStreamingResponse(
   return new Response(stream, {
     headers: {
       "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
+      "Cache-Control": "private, no-store",
       Connection: "keep-alive",
     },
   });
@@ -324,21 +324,19 @@ async function getApplications(request: NextRequest) {
               hasNext: false,
               hasPrev: false,
             },
-      });
+      }, { headers: { "Cache-Control": "private, no-store" } });
     }
 
     // Handle single application response
     if (applicationId && Array.isArray(result)) {
       return NextResponse.json({
         applications: result,
-      });
+      }, { headers: { "Cache-Control": "private, no-store" } });
     }
 
     // Handle paginated response
     const cacheHeaders = {
-      "Cache-Control": forceRefresh
-        ? "no-cache"
-        : "public, max-age=60, stale-while-revalidate=300",
+      "Cache-Control": "private, no-store",
       "X-Cache-Status": forceRefresh ? "MISS" : "HIT",
     };
 
