@@ -177,10 +177,18 @@ export class OptimizedDatabase {
 
       // Optimize search with proper indexing
       if (search.trim()) {
-        const searchTerm = search.trim().toLowerCase();
-        query = query.or(
-          `fullName.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,nim.ilike.%${searchTerm}%`
-        );
+        // Comma, parentheses and * are PostgREST filter syntax; strip them before interpolating.
+        const searchTerm = search
+          .trim()
+          .toLowerCase()
+          .replace(/[,()*]/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+        if (searchTerm) {
+          query = query.or(
+            `fullName.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,nim.ilike.%${searchTerm}%`
+          );
+        }
       }
 
       if (status && status !== "all") {
