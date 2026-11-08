@@ -1,37 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import jwt from "jsonwebtoken";
+import { withInterviewerAuth } from "@/lib/auth-interviewer-middleware";
+import { InterviewerUser } from "@/types/interview";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function GET(request: NextRequest) {
+async function handler(request: NextRequest, auth: { interviewer?: InterviewerUser }) {
   try {
-    // Ambil token dari header
-    const authHeader = request.headers.get("authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return NextResponse.json(
-        { success: false, error: "Token tidak valid" },
-        { status: 401 }
-      );
-    }
-
-    const token = authHeader.substring(7);
-    let interviewerUsername = "";
-
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
-        username: string;
-      };
-      interviewerUsername = decoded.username;
-    } catch {
-      return NextResponse.json(
-        { success: false, error: "Token tidak valid" },
-        { status: 401 }
-      );
-    }
+    const interviewerUsername = auth.interviewer!.username;
 
     // Ambil query parameters
     const { searchParams } = new URL(request.url);
@@ -148,7 +127,8 @@ export async function GET(request: NextRequest) {
       const { data: sessions, error: sessionsError } = await supabase
         .from("interview_sessions")
         .select("id, applicantId, status, interviewDate, location, notes")
-        .in("applicantId", applicantIds);
+        .in("applicantId", applicantIds)
+        .eq("interviewerId", auth.interviewer!.id);
 
       if (!sessionsError && sessions) {
         interviewSessions = sessions as InterviewSessionData[];
@@ -209,77 +189,5 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST untuk update status interview atau score
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { applicantId, action, data } = body;
 
-    console.log("POST applications API:", { applicantId, action, data });
-
-    if (!applicantId || !action) {
-      return NextResponse.json(
-        { success: false, error: "applicantId dan action diperlukan" },
-        { status: 400 }
-      );
-    }
-
-    let updateData: Record<string, string | number | boolean | null> = {};
-
-    switch (action) {
-      case "updateInterviewStatus":
-        // Note: These columns don't exist yet, but keeping for future migration
-        updateData = {
-          status: data.status, // Use general status for now
-          updatedAt: new Date().toISOString(),
-        };
-        break;
-
-      case "updateInterviewScore":
-        updateData = {
-          status: "interviewed", // Use general status
-          updatedAt: new Date().toISOString(),
-        };
-        break;
-
-      case "assignInterview":
-        updateData = {
-          status: "scheduled", // Use general status
-          updatedAt: new Date().toISOString(),
-        };
-        break;
-
-      default:
-        return NextResponse.json(
-          { success: false, error: "Action tidak valid" },
-          { status: 400 }
-        );
-    }
-
-    const { data: updatedApplicant, error } = await supabase
-      .from("applicants")
-      .update(updateData)
-      .eq("id", applicantId)
-      .select()
-      .single();
-
-    if (error) {
-      console.error("Error updating applicant:", error);
-      return NextResponse.json(
-        { success: false, error: "Gagal mengupdate data aplikasi" },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: updatedApplicant,
-    });
-  } catch (error) {
-    console.error("Error in applications POST API:", error);
-    return NextResponse.json(
-      { success: false, error: "Internal server error" },
-      { status: 500 }
-    );
-  }
-}
+export const GET = withInterviewerAuth(handler);
