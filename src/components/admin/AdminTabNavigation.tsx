@@ -20,7 +20,7 @@ export default function AdminTabNavigation({
 }: AdminTabNavigationProps) {
   return (
     <div className="border-b border-gray-200 mb-6">
-      <nav className="-mb-px flex space-x-4 sm:space-x-8">
+      <nav className="-mb-px flex overflow-x-auto space-x-4 sm:space-x-8">
         {/* Overview Tab */}
         <button
           onClick={() => setActiveTab("overview")}
