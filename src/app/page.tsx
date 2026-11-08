@@ -16,6 +16,14 @@ export default function Home() {
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [showModifyModal, setShowModifyModal] = useState(false);
   const [showTutorialModal, setShowTutorialModal] = useState(false);
+  const [registrationOpen, setRegistrationOpen] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/admin/registration-status", { cache: "no-store" })
+      .then(response => response.ok ? response.json() : null)
+      .then(data => setRegistrationOpen(data?.isOpen === true))
+      .catch(() => setRegistrationOpen(false));
+  }, []);
 
   // Add floating animation effect to the quick ball
   useEffect(() => {
@@ -95,10 +103,10 @@ export default function Home() {
           {/* Navigation Menu */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <Link
-              href="/form"
+              href={registrationOpen ? "/form" : "/interview"}
               className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-lg transition-colors duration-300"
             >
-              DAFTAR
+              {registrationOpen ? "DAFTAR" : "LOGIN PEWAWANCARA"}
             </Link>
 
             <Link
